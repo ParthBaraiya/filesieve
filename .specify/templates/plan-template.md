@@ -29,9 +29,39 @@
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-[Gates determined based on constitution file]
+Verify against [FileSieve Constitution v1.0.0](.specify/memory/constitution.md):
+
+- [ ] **I. Layered Architecture** — Feature follows `UI → Cubit → Repository → Data Source`;
+      new files placed in correct canonical folder; naming conventions applied
+- [ ] **II. Performance Engineering** — Scan/hash work runs in isolates; staged filtering strategy
+      (size → partial hash → full hash) is respected; ObjectBox cache is used before re-hashing
+- [ ] **III. Widget Modularity** — No screen exceeds 200 lines; each widget has single responsibility;
+      no repository calls from widgets; widgets in correct folder (`views/` vs `modules/<x>/widgets/`)
+- [ ] **IV. Responsive Layout** — Screen divided into named section widgets; `ScreenUtil` applied
+      correctly (spacing/fonts only, not on `Expanded`/`Flexible`); layout adapts to varied window sizes
+- [ ] **V. Immutable State** — All states use `@freezed`; new instance emitted per transition;
+      state names are explicit and descriptive
+- [ ] **VI. Data Safety** — All deletions route through recycle bin; ObjectBox cache fields updated;
+      user confirmation required before destructive operations
+- [ ] **VII. Offline-First** — No network calls introduced; all data operations local
+- [ ] **VIII. Stitch Integration** — If a Stitch URL was provided, `mcp_stitch_apply_design_system`
+      was invoked; generated tokens are registered in `ThemeData` before widget use
+- [ ] **IX. Theme-Driven Styling** — No `Colors.*` literals, hex strings, or inline `TextStyle`
+      calls in widget trees; all styles sourced from `Theme.of(context)`
+
+**Anti-Pattern Block** (reject feature plan if ANY apply):
+
+- Screen file exceeds 200 lines without extraction
+- Widget contains direct repository call
+- State mutated in place
+- File deleted without recycle-bin
+- CPU-bound work on main isolate
+- Hardcoded pixel dimensions for containers
+- ScreenUtil `.w`/`.h` on `Expanded`/`Flexible` child
+- Stitch URL provided but `mcp_stitch_apply_design_system` not invoked
+- `Colors.*` literal or inline `TextStyle` used directly in a widget tree
 
 ## Project Structure
 
@@ -48,6 +78,7 @@ specs/[###-feature]/
 ```
 
 ### Source Code (repository root)
+
 <!--
   ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
   for this feature. Delete unused options and expand the chosen structure with
@@ -98,7 +129,7 @@ directories captured above]
 
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+| Violation                  | Why Needed         | Simpler Alternative Rejected Because |
+| -------------------------- | ------------------ | ------------------------------------ |
+| [e.g., 4th project]        | [current need]     | [why 3 projects insufficient]        |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient]  |

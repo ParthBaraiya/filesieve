@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+
 import 'modules/loading/loading_screen.dart';
 import 'repository/scan_session_repository_impl.dart';
 import 'values/app_routes.dart';
@@ -15,7 +16,7 @@ void main() {
 /// no BuildContext / BlocProvider lookup needed at this level.
 final _repo = ScanSessionRepositoryImpl();
 
-final _router = GoRouter(
+final router = GoRouter(
   initialLocation: AppRoutes.loading,
   routes: [
     GoRoute(
@@ -41,8 +42,7 @@ final _router = GoRouter(
     GoRoute(
       name: AppRouteNames.settings,
       path: AppRoutes.settings,
-      builder: (context, state) =>
-          const _PlaceholderScreen(label: 'Settings'),
+      builder: (context, state) => const _PlaceholderScreen(label: 'Settings'),
     ),
     GoRoute(
       name: AppRouteNames.history,
@@ -65,7 +65,7 @@ class FileSieveApp extends StatelessWidget {
         return MaterialApp.router(
           title: 'FileSieve',
           theme: AppTheme.light(),
-          routerConfig: _router,
+          routerConfig: router,
           debugShowCheckedModeBanner: false,
         );
       },
@@ -84,10 +84,7 @@ class _PlaceholderScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Text(
-          label,
-          style: Theme.of(context).textTheme.headlineSmall,
-        ),
+        child: Text(label, style: Theme.of(context).textTheme.headlineSmall),
       ),
     );
   }

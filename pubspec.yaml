@@ -92,8 +92,8 @@ flutter:
     - family: Inter
       fonts:
         - asset: assets/fonts/inter/inter_italic_variable_opsz_wght.ttf
-        - asset: inter_variable_opsz_wght.ttf
           style: italic
+        - asset: assets/fonts/inter/inter_variable_opsz_wght.ttf
   #         style: italic
   #   - family: Trajan Pro
   #     fonts:

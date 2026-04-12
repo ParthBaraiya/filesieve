@@ -1,20 +1,24 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.0.0 → 1.1.0 (MINOR — two new principles added)
+Version change: 1.1.0 → 1.2.0 (MINOR — one new principle added, existing sections expanded)
 Added principles:
+  - X. Shell-Based Navigation Architecture (NON-NEGOTIABLE)
+Modified sections:
+  - Anti-Pattern Checklist — added 3 new block items (shell wrapping, page key, const children)
+  - Module Boundary Rules — added history module, clarified shell routing
+  - Tech Stack & Tooling Standards — added GoRouter and animations rows
+  - Development Workflow: Feature Implementation Order — no change needed
+Previously added (v1.1.0):
   - VIII. Stitch Design System Integration
   - IX. Theme-Driven Styling (NON-NEGOTIABLE)
-Modified sections:
-  - Tech Stack & Tooling Standards — added Stitch row
-  - Development Workflow: Feature Implementation Order — added Stitch step
-  - Development Workflow: Anti-Pattern Checklist — added 2 new block items
 Templates updated:
   - .specify/templates/constitution-template.md  ✅ source (no change required)
-  - .specify/templates/plan-template.md          ✅ Constitution Check gates updated
+  - .specify/templates/plan-template.md          ⚠ pending (Constitution Check references v1.0.0)
   - .specify/templates/spec-template.md          ✅ aligned (no mandatory section changes)
   - .specify/templates/tasks-template.md         ✅ aligned (no mandatory section changes)
-Deferred TODOs: none
+Deferred TODOs:
+  - plan-template.md Constitution Check should reference v1.2.0 and include Principle X
 -->
 
 # FileSieve Constitution
@@ -168,6 +172,37 @@ app's `Theme`. Hardcoded values in widget trees are forbidden.
 **Rationale**: Centralising styles in `ThemeData` enables single-point theme switching (dark
 mode, accessibility overrides, branding updates) without touching individual widgets.
 
+### X. Shell-Based Navigation Architecture (NON-NEGOTIABLE)
+
+All primary app screens MUST be rendered inside a shared `ShellRoute` that owns the
+persistent layout chrome (sidebar, header, footer). Individual screens MUST return only
+their body content.
+
+- `DashboardScreenContent` is the single shell builder; it derives the active navigation
+  item from `GoRouterState.of(context).uri.path` via `NavigationItem.fromRoute()`
+- Screen widgets (e.g., `HomeScreen`, `ResultsScreen`) MUST NOT wrap themselves in
+  `DashboardScreenContent`, `AppShellWidget`, or any shell/sidebar/header/footer widget.
+  They MUST return only the body content for their route
+- Every `GoRoute` inside the `ShellRoute` MUST use `pageBuilder` with a
+  `CustomTransitionPage` (e.g., `SharedAxisTransitionPage`) — never `builder`, which
+  produces a default `MaterialPage` transition that conflicts with the shell
+- Every `CustomTransitionPage` MUST receive `key: state.pageKey` so that Flutter's
+  Navigator can detect page identity changes and run the transition animation.
+  Omitting the key causes the Navigator to treat all pages as identical, silently
+  suppressing transitions
+- Route path constants MUST be defined in `lib/values/app_routes.dart`; custom
+  transition pages MUST be defined in `lib/utils/routes/`
+- `NavigationItem` enum MUST expose both `route` (item → path) and
+  `fromRoute(String)` (path → item) for bidirectional mapping
+- `const` MUST NOT be applied to widget children lists that contain ScreenUtil-scaled
+  values (`.w`, `.h`, `.r`, `.sp`), as ScreenUtil values are resolved at runtime and
+  cannot be compile-time constants
+
+**Rationale**: A shared shell prevents per-screen duplication of sidebar/header/footer,
+ensures consistent navigation state, and avoids the rebuild cost of reinstantiating the
+entire layout chrome on every route change. The `pageKey` requirement prevents a class of
+silent animation bugs that are difficult to diagnose.
+
 ## Tech Stack & Tooling Standards
 
 The following technology choices are binding for this project. Substitutions require a
@@ -184,6 +219,8 @@ constitution amendment.
 | Responsive Scaling      | `flutter_screenutil` (design size 1440×900)                |
 | Design System Codegen   | Stitch (`mcp_stitch_apply_design_system` MCP)              |
 | Styling Source of Truth | `ThemeData` / `ColorScheme` / `TextTheme` in `lib/values/` |
+| Routing                 | GoRouter (ShellRoute for persistent shell)                 |
+| Route Transitions       | `animations` package (`SharedAxisTransition`)              |
 
 **Dependency addition policy**: New packages MUST be justified against the performance and
 maintainability goals. Packages that duplicate capabilities already provided by mandated
@@ -214,6 +251,9 @@ Every feature MUST follow this sequence before being considered complete:
 - [ ] ScreenUtil `.w`/`.h` applied to an `Expanded` or `Flexible` child
 - [ ] Stitch URL provided but `mcp_stitch_apply_design_system` was not invoked
 - [ ] Color literal (`Colors.*` or hex) or inline `TextStyle` used directly in a widget tree
+- [ ] Screen widget wraps itself in shell/sidebar/header/footer instead of returning body only
+- [ ] `CustomTransitionPage` created without `key: state.pageKey`
+- [ ] `const` applied to a children list containing ScreenUtil-scaled values
 
 ### Module Boundary Rules
 
@@ -221,8 +261,10 @@ Every feature MUST follow this sequence before being considered complete:
 - `modules/scanner/` — scan progress, real-time feedback
 - `modules/results/` — duplicate display, selection, bulk actions
 - `modules/settings/` — user preferences, scan configuration
+- `modules/history/` — past scan session browsing
 
-Cross-module navigation MUST go through a routing layer; modules MUST NOT import each other directly.
+Cross-module navigation MUST go through GoRouter; modules MUST NOT import each other directly.
+All primary modules MUST be registered as child routes inside the `ShellRoute` in `main.dart`.
 
 ## Governance
 
@@ -245,4 +287,4 @@ Complexity deviating from these principles MUST be explicitly justified in the P
 **Runtime guidance**: See `.github/copilot-instructions.md` for detailed coding conventions and
 responsive design usage examples.
 
-**Version**: 1.1.0 | **Ratified**: 2026-04-09 | **Last Amended**: 2026-04-09
+**Version**: 1.2.0 | **Ratified**: 2026-04-09 | **Last Amended**: 2026-04-12

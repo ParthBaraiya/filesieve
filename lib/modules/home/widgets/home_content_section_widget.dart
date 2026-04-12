@@ -27,21 +27,26 @@ class HomeContentSectionWidget extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 24.h),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             AppStrings.homeHeadline,
-            style: textTheme.headlineSmall?.copyWith(
+            textAlign: TextAlign.center,
+            style: textTheme.headlineMedium?.copyWith(
               color: colorScheme.onSurface,
-              fontWeight: FontWeight.w600,
-              letterSpacing: -0.02 * (textTheme.headlineSmall?.fontSize ?? 24),
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.02 * (textTheme.headlineMedium?.fontSize ?? 28),
             ),
           ),
           SizedBox(height: 8.h),
-          Text(
-            AppStrings.homeSubtitle,
-            style: textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: 600.w),
+            child: Text(
+              AppStrings.homeSubtitle,
+              textAlign: TextAlign.center,
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
           SizedBox(height: 24.h),
@@ -52,18 +57,18 @@ class HomeContentSectionWidget extends StatelessWidget {
                 if (isWide) {
                   return Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: const [
-                      Expanded(flex: 8, child: DropZoneWidget()),
-                      SizedBox(width: 16),
-                      Expanded(flex: 4, child: _FeatureCardsColumn()),
+                    children: [
+                      const Expanded(flex: 8, child: DropZoneWidget()),
+                      SizedBox(width: 16.w),
+                      const Expanded(flex: 4, child: _FeatureCardsColumn()),
                     ],
                   );
                 } else {
                   return Column(
-                    children: const [
-                      Expanded(child: DropZoneWidget()),
-                      SizedBox(height: 16),
-                      _FeatureCardsColumn(),
+                    children: [
+                      const Expanded(flex: 3, child: DropZoneWidget()),
+                      SizedBox(height: 16.h),
+                      const Expanded(flex: 2, child: _FeatureCardsColumn()),
                     ],
                   );
                 }
@@ -71,6 +76,12 @@ class HomeContentSectionWidget extends StatelessWidget {
             ),
           ),
           SizedBox(height: 24.h),
+          Divider(
+            height: 1,
+            thickness: 2,
+            color: colorScheme.tertiary.withAlpha(60),
+          ),
+          SizedBox(height: 16.h),
           const StepFlowWidget(),
         ],
       ),
@@ -99,7 +110,8 @@ class _FeatureCardsColumn extends StatelessWidget {
             title: AppStrings.featureCard1Title,
             body: AppStrings.featureCard1Body,
             background: Theme.of(context).colorScheme.surfaceContainer,
-            icon: Icons.bolt_outlined,
+            icon: Icons.speed,
+            iconColor: Theme.of(context).colorScheme.tertiary,
           ),
         ),
         SizedBox(height: 12.h),
@@ -107,8 +119,10 @@ class _FeatureCardsColumn extends StatelessWidget {
           child: _FeatureCard(
             title: AppStrings.featureCard2Title,
             body: AppStrings.featureCard2Body,
-            background: Theme.of(context).colorScheme.primaryFixed,
-            icon: Icons.verified_outlined,
+            background: Theme.of(context).colorScheme.primary,
+            icon: Icons.verified_user,
+            iconColor: Theme.of(context).colorScheme.onPrimary,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
           ),
         ),
       ],
@@ -122,12 +136,16 @@ class _FeatureCard extends StatelessWidget {
     required this.body,
     required this.background,
     required this.icon,
+    this.iconColor,
+    this.foregroundColor,
   });
 
   final String title;
   final String body;
   final Color background;
   final IconData icon;
+  final Color? iconColor;
+  final Color? foregroundColor;
 
   @override
   Widget build(BuildContext context) {
@@ -147,20 +165,20 @@ class _FeatureCard extends StatelessWidget {
           Icon(
             icon,
             size: 24.r,
-            color: colorScheme.primary,
+            color: iconColor ?? colorScheme.primary,
           ),
           SizedBox(height: 8.h),
           Text(
             title,
             style: textTheme.titleSmall?.copyWith(
-              color: colorScheme.onSurface,
+              color: foregroundColor ?? colorScheme.onSurface,
             ),
           ),
           SizedBox(height: 4.h),
           Text(
             body,
             style: textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
+              color: foregroundColor ?? colorScheme.onSurfaceVariant,
             ),
           ),
         ],

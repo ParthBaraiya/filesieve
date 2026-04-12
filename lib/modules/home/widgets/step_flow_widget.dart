@@ -93,16 +93,17 @@ class _StepItem extends StatelessWidget {
       children: [
         Text(
           number,
-          style: textTheme.titleLarge?.copyWith(
+          style: textTheme.headlineLarge?.copyWith(
             color: colorScheme.primary,
             fontWeight: FontWeight.w700,
           ),
         ),
-        SizedBox(height: 6.h),
+        SizedBox(height: 4.h),
         Text(
-          label,
-          style: textTheme.titleSmall?.copyWith(
-            color: colorScheme.onSurface,
+          label.toUpperCase(),
+          style: textTheme.labelSmall?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+            letterSpacing: 0.8,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -110,7 +111,7 @@ class _StepItem extends StatelessWidget {
         Text(
           desc,
           style: textTheme.bodySmall?.copyWith(
-            color: colorScheme.onSurfaceVariant,
+            color: colorScheme.onSurface,
           ),
         ),
       ],

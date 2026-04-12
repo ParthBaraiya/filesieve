@@ -55,12 +55,20 @@ class DropZoneWidget extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.folder_open_outlined,
-                    size: 48.r,
-                    color: isHovering
-                        ? colorScheme.primary
-                        : colorScheme.onSurfaceVariant,
+                  Container(
+                    width: 72.r,
+                    height: 72.r,
+                    decoration: BoxDecoration(
+                      color: isHovering
+                          ? colorScheme.primary
+                          : colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                    child: Icon(
+                      Icons.folder_open_rounded,
+                      size: 40.r,
+                      color: colorScheme.onPrimary,
+                    ),
                   ),
                   SizedBox(height: 12.h),
                   AnimatedSwitcher(
@@ -78,14 +86,44 @@ class DropZoneWidget extends StatelessWidget {
                           AppStrings.dropZonePrompt,
                           style: Theme.of(context)
                               .textTheme
-                              .bodyLarge
+                              .titleMedium
                               ?.copyWith(
+                                fontWeight: FontWeight.w600,
                                 color: isHovering
                                     ? colorScheme.primary
-                                    : colorScheme.onSurfaceVariant,
+                                    : colorScheme.onSurface,
                               ),
                         );
                       },
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  if (state is! HomeScreenDropRejected)
+                    Text(
+                      AppStrings.dropZoneSecondary,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  SizedBox(height: 16.h),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 6.h,
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: colorScheme.outlineVariant,
+                        width: 1,
+                      ),
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
+                    child: Text(
+                      AppStrings.dropZoneFormats,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                   ),
                 ],

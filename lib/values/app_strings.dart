@@ -8,32 +8,32 @@ class AppStrings {
   // Home screen headline / subtitle
   static const String homeHeadline = 'Clean up your workspace.';
   static const String homeSubtitle =
-      'FileSieve uses checksum-based detection to find exact duplicate files '
-      'across your drives \u2014 fast, accurate, and completely offline.';
+      'FileSieve uses clinical-grade checksum algorithms to find identical files '
+      'across your local and network drives.';
 
   // Feature cards
   static const String featureCard1Title = 'High-Speed Analysis';
   static const String featureCard1Body =
-      'Multi-threaded scanning processes thousands of files per second using '
-      'parallel hash computation.';
+      'Optimized multi-threaded scanning processes millions of files in seconds '
+      'without system lag.';
 
   static const String featureCard2Title = 'Byte-Perfect Accuracy';
   static const String featureCard2Body =
-      'SHA-256 checksums guarantee zero false positives. Every flagged '
-      'duplicate is an exact byte-for-byte match.';
+      "We don't just look at names. We compare the DNA of your files to ensure "
+      '100% accurate identification.';
 
   // Step-flow labels and descriptions
-  static const String stepFlowStep1Label = 'Add Folders';
-  static const String stepFlowStep1Desc =
-      'Select the source directories you want to deduplicate.';
+  static const String stepFlowStep1Number = '01';
+  static const String stepFlowStep1Label = 'Step One';
+  static const String stepFlowStep1Desc = 'Select source directories';
 
-  static const String stepFlowStep2Label = 'Set Filters';
-  static const String stepFlowStep2Desc =
-      'Configure file type exclusions and minimum file size.';
+  static const String stepFlowStep2Number = '02';
+  static const String stepFlowStep2Label = 'Step Two';
+  static const String stepFlowStep2Desc = 'Configure file exclusions';
 
-  static const String stepFlowStep3Label = 'Review \u0026 Resolve';
-  static const String stepFlowStep3Desc =
-      'Inspect flagged duplicates and choose what to delete.';
+  static const String stepFlowStep3Number = '03';
+  static const String stepFlowStep3Label = 'Step Three';
+  static const String stepFlowStep3Desc = 'Review and resolve duplicates';
 
   // Header context label
   static const String headerContextLabel = 'Initialize New Scan';
@@ -43,6 +43,8 @@ class AppStrings {
 
   // Drop zone
   static const String dropZonePrompt = 'Drop folders here to sieve';
+  static const String dropZoneSecondary = 'or click to browse your file system';
+  static const String dropZoneFormats = 'SUPPORTS: APFS, NTFS, EXFAT';
 
   // Rejection messages
   static const String dropRejectionNotFolder =
@@ -55,17 +57,17 @@ class AppStrings {
 /// Used by StepFlowWidget (T026).
 const List<({String number, String label, String desc})> stepFlowData = [
   (
-    number: '01',
+    number: AppStrings.stepFlowStep1Number,
     label: AppStrings.stepFlowStep1Label,
     desc: AppStrings.stepFlowStep1Desc,
   ),
   (
-    number: '02',
+    number: AppStrings.stepFlowStep2Number,
     label: AppStrings.stepFlowStep2Label,
     desc: AppStrings.stepFlowStep2Desc,
   ),
   (
-    number: '03',
+    number: AppStrings.stepFlowStep3Number,
     label: AppStrings.stepFlowStep3Label,
     desc: AppStrings.stepFlowStep3Desc,
   ),

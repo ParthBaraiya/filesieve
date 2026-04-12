@@ -7,9 +7,8 @@ import 'package:flutter/material.dart';
 /// [header] (static height), [body] (fills remaining space), and [footer]
 /// (static height).
 ///
-/// All slots accept plain [Widget] parameters so each screen can supply its
-/// own concrete section widgets. Placeholder [SizedBox.shrink] widgets are
-/// used until a section is implemented in later phases.
+/// Route-level transitions are handled by [SharedAxisTransitionPage] in
+/// GoRouter's child `pageBuilder`, so this widget renders [body] directly.
 class AppShellWidget extends StatelessWidget {
   const AppShellWidget({
     super.key,

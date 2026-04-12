@@ -6,13 +6,6 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Text(
-          'Settings',
-          style: Theme.of(context).textTheme.headlineSmall,
-        ),
-      ),
-    );
+    return const Center(child: Text('Settings Screen'));
   }
 }

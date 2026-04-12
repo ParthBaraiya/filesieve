@@ -1,7 +1,9 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'package:filesieve/utils/routes/shared_axis_transition_page.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
+import 'modules/dashboard_screen.dart';
 import 'modules/history/history_screen.dart';
 import 'modules/home/home_screen.dart';
 import 'modules/loading/loading_screen.dart';
@@ -28,30 +30,42 @@ final router = GoRouter(
       path: AppRoutes.loading,
       builder: (context, state) => LoadingScreen(repository: _repo),
     ),
-    GoRoute(
-      name: AppRouteNames.home,
-      path: AppRoutes.home,
-      builder: (context, state) => const HomeScreen(),
-    ),
-    GoRoute(
-      name: AppRouteNames.scanner,
-      path: AppRoutes.scanner,
-      builder: (context, state) => const _PlaceholderScreen(label: 'Scanner'),
-    ),
-    GoRoute(
-      name: AppRouteNames.results,
-      path: AppRoutes.results,
-      builder: (context, state) => const ResultsScreen(),
-    ),
-    GoRoute(
-      name: AppRouteNames.settings,
-      path: AppRoutes.settings,
-      builder: (context, state) => const SettingsScreen(),
-    ),
-    GoRoute(
-      name: AppRouteNames.history,
-      path: AppRoutes.history,
-      builder: (context, state) => const HistoryScreen(),
+    ShellRoute(
+      builder: (context, state, child) => DashboardScreenContent(child: child),
+      // pageBuilder: (context, state, child) =>
+      //     SharedAxisTransitionPage(child: DashboardScreenContent(child: child)),
+      routes: [
+        GoRoute(
+          name: AppRouteNames.home,
+          path: AppRoutes.home,
+          pageBuilder: (context, state) =>
+              SharedAxisTransitionPage(key: state.pageKey, child: HomeScreen()),
+        ),
+        GoRoute(
+          name: AppRouteNames.results,
+          path: AppRoutes.results,
+          pageBuilder: (context, state) => SharedAxisTransitionPage(
+            key: state.pageKey,
+            child: ResultsScreen(),
+          ),
+        ),
+        GoRoute(
+          name: AppRouteNames.settings,
+          path: AppRoutes.settings,
+          pageBuilder: (context, state) => SharedAxisTransitionPage(
+            key: state.pageKey,
+            child: SettingsScreen(),
+          ),
+        ),
+        GoRoute(
+          name: AppRouteNames.history,
+          path: AppRoutes.history,
+          pageBuilder: (context, state) => SharedAxisTransitionPage(
+            key: state.pageKey,
+            child: HistoryScreen(),
+          ),
+        ),
+      ],
     ),
   ],
 );
@@ -73,23 +87,6 @@ class FileSieveApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
         );
       },
-    );
-  }
-}
-
-/// Temporary placeholder used until each route's real screen is implemented
-/// in later phases. Replaced by HomeScreen (T020), etc.
-class _PlaceholderScreen extends StatelessWidget {
-  const _PlaceholderScreen({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Text(label, style: Theme.of(context).textTheme.headlineSmall),
-      ),
     );
   }
 }

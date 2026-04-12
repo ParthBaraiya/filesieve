@@ -6,13 +6,6 @@ class HistoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Text(
-          'History',
-          style: Theme.of(context).textTheme.headlineSmall,
-        ),
-      ),
-    );
+    return const Center(child: Text('History Screen'));
   }
 }

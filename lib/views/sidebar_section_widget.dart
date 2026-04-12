@@ -170,7 +170,7 @@ class _NavItemRow extends StatelessWidget {
                 _iconForItem(item),
                 size: 20.r,
                 color: isActive
-                    ? colorScheme.onPrimaryFixedVariant
+                    ? colorScheme.primary
                     : colorScheme.onSurfaceVariant,
               ),
               SizedBox(width: 12.w),
@@ -178,7 +178,7 @@ class _NavItemRow extends StatelessWidget {
                 _labelForItem(item),
                 style: textTheme.bodyMedium?.copyWith(
                   color: isActive
-                      ? colorScheme.onPrimaryFixedVariant
+                      ? colorScheme.primary
                       : colorScheme.onSurfaceVariant,
                   fontWeight:
                       isActive ? FontWeight.w600 : FontWeight.normal,

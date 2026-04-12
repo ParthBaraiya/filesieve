@@ -27,12 +27,6 @@ class HeaderSectionWidget extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 24.w),
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        border: Border(
-          bottom: BorderSide(
-            color: colorScheme.outlineVariant,
-            width: 1,
-          ),
-        ),
       ),
       child: Row(
         children: [
@@ -45,19 +39,7 @@ class HeaderSectionWidget extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          IconButton(
-            onPressed: null,
-            icon: const Icon(Icons.notifications_outlined),
-            color: colorScheme.onSurfaceVariant,
-            tooltip: 'Notifications',
-          ),
-          SizedBox(width: 4.w),
-          IconButton(
-            onPressed: null,
-            icon: const Icon(Icons.help_outline),
-            color: colorScheme.onSurfaceVariant,
-            tooltip: 'Help',
-          ),
+          
         ],
       ),
     );

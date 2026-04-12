@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 /// AppShapeTokens — ThemeExtension carrying border-radius tokens sourced from
 /// the Stitch "Precision Core" design system (roundness: ROUND_FOUR).
@@ -6,11 +7,16 @@ import 'package:flutter/material.dart';
 /// Attach to ThemeData.extensions in AppTheme so any widget can retrieve these
 /// via `Theme.of(context).extension<AppShapeTokens>()!`.
 class AppShapeTokens extends ThemeExtension<AppShapeTokens> {
-  const AppShapeTokens({
-    this.borderRadiusXl = const BorderRadius.all(Radius.circular(12)),
-    this.borderRadiusMd = const BorderRadius.all(Radius.circular(6)),
-    this.dropZoneBorderRadius = const BorderRadius.all(Radius.circular(12)),
-  });
+  AppShapeTokens({
+    BorderRadius? borderRadiusXl,
+    BorderRadius? borderRadiusMd,
+    BorderRadius? dropZoneBorderRadius,
+  })  : borderRadiusXl = borderRadiusXl ??
+            BorderRadius.all(Radius.circular(12.r)),
+        borderRadiusMd = borderRadiusMd ??
+            BorderRadius.all(Radius.circular(6.r)),
+        dropZoneBorderRadius = dropZoneBorderRadius ??
+            BorderRadius.all(Radius.circular(12.r));
 
   /// 12 px — used for cards, buttons, panels.
   final BorderRadius borderRadiusXl;

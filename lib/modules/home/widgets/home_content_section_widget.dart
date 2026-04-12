@@ -29,10 +29,11 @@ class HomeContentSectionWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          SizedBox(height: 80.h),
           Text(
             AppStrings.homeHeadline,
             textAlign: TextAlign.center,
-            style: textTheme.headlineMedium?.copyWith(
+            style: textTheme.headlineLarge?.copyWith(
               color: colorScheme.onSurface,
               fontWeight: FontWeight.w700,
               letterSpacing: -0.02 * (textTheme.headlineMedium?.fontSize ?? 28),
@@ -49,7 +50,7 @@ class HomeContentSectionWidget extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(height: 24.h),
+          SizedBox(height: 50.h),
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -75,14 +76,9 @@ class HomeContentSectionWidget extends StatelessWidget {
               },
             ),
           ),
-          SizedBox(height: 24.h),
-          Divider(
-            height: 1,
-            thickness: 2,
-            color: colorScheme.tertiary.withAlpha(60),
-          ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 50.h),
           const StepFlowWidget(),
+          SizedBox(height: 30.h),
         ],
       ),
     );

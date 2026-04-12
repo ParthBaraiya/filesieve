@@ -1,10 +1,12 @@
 import 'dart:io';
 
+import 'package:filesieve/utils/extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../values/app_strings.dart';
 import '../../values/enums.dart';
+import '../values/app_shape_tokens.dart';
 
 /// SidebarSectionWidget — fixed-width sidebar with navigation items and an
 /// optional "Add Folder" action button.
@@ -83,8 +85,31 @@ class SidebarSectionWidget extends StatelessWidget {
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16.w),
                 child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
+                    padding: .symmetric(vertical: 16.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: context.theme
+                          .extension<AppShapeTokens>()!
+                          .borderRadiusMd,
+                    ),
+                  ),
                   onPressed: onAddFolder,
-                  child: const Text('Add Folder'),
+                  child: Row(
+                    mainAxisAlignment: .center,
+                    children: [
+                      Icon(Icons.add_rounded, size: 16.r),
+                      SizedBox(width: 8.w),
+                      Text(
+                        'Add Folder',
+                        style: textTheme.labelLarge?.copyWith(
+                          color: colorScheme.onPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               SizedBox(height: 16.h),

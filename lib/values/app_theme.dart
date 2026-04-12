@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import 'app_shape_tokens.dart';
 
 /// AppTheme — maps Stitch "Precision Core" design system tokens to Flutter
@@ -62,7 +64,7 @@ class AppTheme {
       fontFamily: 'Inter',
       textTheme: textTheme,
       scaffoldBackgroundColor: colorScheme.surface,
-      extensions: const [AppShapeTokens()],
+      extensions: [AppShapeTokens()],
     );
   }
 
@@ -75,42 +77,87 @@ class AppTheme {
     //   body-sm      → 0.75rem  = 12sp, Regular (w400)
     //   label-sm     → 0.6875rem = 11sp, Regular (w400)
     //   label-md     → 0.875rem  = 14sp, Medium (w500) — nav items
-    return const TextTheme(
+    return TextTheme(
       // Display
       displayLarge: TextStyle(
-          fontSize: 57, fontWeight: FontWeight.w400, letterSpacing: -0.02),
+        fontSize: 57.sp,
+        fontWeight: FontWeight.w400,
+        letterSpacing: -0.02,
+      ),
       displayMedium: TextStyle(
-          fontSize: 45, fontWeight: FontWeight.w400, letterSpacing: -0.02),
+        fontSize: 45.sp,
+        fontWeight: FontWeight.w400,
+        letterSpacing: -0.02,
+      ),
       displaySmall: TextStyle(
-          fontSize: 36, fontWeight: FontWeight.w400, letterSpacing: -0.02),
+        fontSize: 36.sp,
+        fontWeight: FontWeight.w400,
+        letterSpacing: -0.02,
+      ),
       // Headline
       headlineLarge: TextStyle(
-          fontSize: 32, fontWeight: FontWeight.w600, letterSpacing: -0.02),
+        fontSize: 32.sp,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.02,
+      ),
       headlineMedium: TextStyle(
-          fontSize: 28, fontWeight: FontWeight.w600, letterSpacing: -0.02),
+        fontSize: 28.sp,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.02,
+      ),
       headlineSmall: TextStyle(
-          fontSize: 24, fontWeight: FontWeight.w600, letterSpacing: -0.02),
+        fontSize: 24.sp,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.02,
+      ),
       // Title
       titleLarge: TextStyle(
-          fontSize: 20, fontWeight: FontWeight.w600, letterSpacing: -0.02),
+        fontSize: 20.sp,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.02,
+      ),
       titleMedium: TextStyle(
-          fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0),
+        fontSize: 16.sp,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0,
+      ),
       titleSmall: TextStyle(
-          fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 0),
+        fontSize: 14.sp,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0,
+      ),
       // Body
       bodyLarge: TextStyle(
-          fontSize: 16, fontWeight: FontWeight.w400, letterSpacing: 0),
+        fontSize: 16.sp,
+        fontWeight: FontWeight.w400,
+        letterSpacing: 0,
+      ),
       bodyMedium: TextStyle(
-          fontSize: 14, fontWeight: FontWeight.w400, letterSpacing: 0),
+        fontSize: 14.sp,
+        fontWeight: FontWeight.w400,
+        letterSpacing: 0,
+      ),
       bodySmall: TextStyle(
-          fontSize: 12, fontWeight: FontWeight.w400, letterSpacing: 0),
+        fontSize: 12.sp,
+        fontWeight: FontWeight.w400,
+        letterSpacing: 0,
+      ),
       // Label
       labelLarge: TextStyle(
-          fontSize: 14, fontWeight: FontWeight.w500, letterSpacing: 0),
+        fontSize: 14.sp,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 0,
+      ),
       labelMedium: TextStyle(
-          fontSize: 12, fontWeight: FontWeight.w500, letterSpacing: 0),
+        fontSize: 12.sp,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 0,
+      ),
       labelSmall: TextStyle(
-          fontSize: 11, fontWeight: FontWeight.w400, letterSpacing: 0),
+        fontSize: 11.sp,
+        fontWeight: FontWeight.w400,
+        letterSpacing: 0,
+      ),
     );
   }
 }

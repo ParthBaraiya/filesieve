@@ -1,4 +1,5 @@
-﻿import 'package:filesieve/utils/routes/shared_axis_transition_page.dart';
+﻿import 'package:bitsdojo_window/bitsdojo_window.dart';
+import 'package:filesieve/utils/routes/shared_axis_transition_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -13,9 +14,19 @@ import 'repository/scan_session_repository_impl.dart';
 import 'values/app_routes.dart';
 import 'values/app_theme.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   runApp(const FileSieveApp());
+
+  doWhenWindowReady(() {
+    const initialSize = Size(1600, 1000);
+    appWindow.minSize = initialSize;
+    appWindow.title = "FileSieve";
+    appWindow.size = initialSize;
+    appWindow.alignment = Alignment.center;
+    appWindow.show();
+  });
 }
 
 /// Instantiate the repository once at startup and pass it down explicitly —
@@ -76,7 +87,7 @@ class FileSieveApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
-      designSize: const Size(1440, 900),
+      designSize: const Size(1600, 1000),
       minTextAdapt: true,
       splitScreenMode: false,
       builder: (context, child) {

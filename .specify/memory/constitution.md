@@ -1,14 +1,16 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.1.0 → 1.2.0 (MINOR — one new principle added, existing sections expanded)
+Version change: 1.2.0 → 1.3.0 (MINOR — three new principles added, anti-pattern checklist expanded)
 Added principles:
-  - X. Shell-Based Navigation Architecture (NON-NEGOTIABLE)
+  - XI. Cubit Accumulator & Transient State Management
+  - XII. Ephemeral Form State & Cubit Migration Path
+  - XIII. Theme Color Modification Rules
 Modified sections:
-  - Anti-Pattern Checklist — added 3 new block items (shell wrapping, page key, const children)
-  - Module Boundary Rules — added history module, clarified shell routing
-  - Tech Stack & Tooling Standards — added GoRouter and animations rows
-  - Development Workflow: Feature Implementation Order — no change needed
+  - Anti-Pattern Checklist — added 5 new block items (unmodifiable wrapping, transient data loss,
+    dismiss-to-initial, unwired form state, Colors literal with withAlpha)
+Previously added (v1.2.0):
+  - X. Shell-Based Navigation Architecture (NON-NEGOTIABLE)
 Previously added (v1.1.0):
   - VIII. Stitch Design System Integration
   - IX. Theme-Driven Styling (NON-NEGOTIABLE)
@@ -18,7 +20,7 @@ Templates updated:
   - .specify/templates/spec-template.md          ✅ aligned (no mandatory section changes)
   - .specify/templates/tasks-template.md         ✅ aligned (no mandatory section changes)
 Deferred TODOs:
-  - plan-template.md Constitution Check should reference v1.2.0 and include Principle X
+  - plan-template.md Constitution Check should reference v1.3.0 and include Principles XI–XIII
 -->
 
 # FileSieve Constitution
@@ -178,6 +180,7 @@ All primary app screens MUST be rendered inside a shared `ShellRoute` that owns 
 persistent layout chrome (sidebar, header, footer). Individual screens MUST return only
 their body content.
 
+
 - `DashboardScreenContent` is the single shell builder; it derives the active navigation
   item from `GoRouterState.of(context).uri.path` via `NavigationItem.fromRoute()`
 - Screen widgets (e.g., `HomeScreen`, `ResultsScreen`) MUST NOT wrap themselves in
@@ -202,6 +205,62 @@ their body content.
 ensures consistent navigation state, and avoids the rebuild cost of reinstantiating the
 entire layout chrome on every route change. The `pageKey` requirement prevents a class of
 silent animation bugs that are difficult to diagnose.
+
+### XI. Cubit Accumulator & Transient State Management
+
+When a Cubit accumulates data across multiple user interactions (e.g., adding folders
+one by one, building a selection set), it MUST follow these rules:
+
+- The Cubit MAY maintain a **private mutable collection** (e.g., `final List<T> _items = []`)
+  as an internal accumulator. All state emissions MUST wrap the accumulator with
+  `List.unmodifiable(...)` — the state itself remains immutable per Principle V
+- **All state variants** that can coexist with accumulated data MUST carry the accumulated
+  data as a field (use `@Default([])` for transient variants like drag-hover or error).
+  The UI MUST NOT lose visibility of accumulated data during transient state transitions
+- A **Dart extension** on the Freezed state class SHOULD provide a cross-variant accessor
+  (e.g., `allFolders`) using an exhaustive Dart 3 `switch` expression with destructuring.
+  This eliminates repeated `is`-checks in the UI layer
+- Transient state dismissal methods (e.g., `dismissTransient()`) MUST return to the correct
+  resting state based on whether accumulated data exists — never unconditionally to `initial`
+- `removeItem(int index)` or equivalent MUST emit `initial` when the accumulator becomes
+  empty, and the data-carrying state otherwise
+
+**Rationale**: Drag-and-drop and multi-step configuration flows require incremental data
+accumulation. Losing accumulated context during hover, error, or rejection states creates
+a confusing user experience and forces re-entry.
+
+### XII. Ephemeral Form State & Cubit Migration Path
+
+Configuration/form UI (checkboxes, sliders, toggles, text fields) that is local to a
+single panel MAY use `StatefulWidget` with `setState()` during the **prototyping phase**
+when the data is not yet wired to any Cubit or repository.
+
+- Once the feature's data flow is connected (Cubit → Repository → scan execution),
+  form state MUST be migrated into the Cubit so it participates in the unidirectional
+  flow from Principle I
+- `StatefulWidget` remains acceptable for **mouse-hover tracking**, **animation controllers**,
+  and other purely visual ephemeral state that has no business-logic consequence
+- Private helper widgets (`_FileTypeCheckbox`, `_ToggleRow`, etc.) used only within a
+  single file are acceptable and SHOULD receive data via constructor parameters
+
+**Rationale**: Local `setState()` is pragmatic for rapid UI iteration, but form state that
+drives business logic (scan configuration, filter parameters) must eventually be centralized
+in the Cubit to maintain testability and state auditability.
+
+### XIII. Theme Color Modification Rules
+
+Colors sourced from `Theme.of(context).colorScheme` MAY be modified with `.withAlpha()`
+or `.withOpacity()` for transparency effects. This is NOT a violation of Principle IX.
+
+- Modified theme colors (e.g., `colorScheme.primaryContainer.withAlpha(80)`) are acceptable
+  because the base token still comes from `ThemeData`
+- `Colors.*` literals modified with `.withAlpha()` or `.withOpacity()` remain FORBIDDEN
+- If a specific alpha-modified color is used in **three or more places**, it SHOULD be
+  extracted into a `ThemeExtension` token rather than repeated inline
+
+**Rationale**: Transparency variants of theme colors are a natural part of layered UI design.
+Forbidding them would force unnecessary theme extension boilerplate for one-off decorative use,
+while still ensuring the palette remains centrally switchable.
 
 ## Tech Stack & Tooling Standards
 
@@ -254,6 +313,11 @@ Every feature MUST follow this sequence before being considered complete:
 - [ ] Screen widget wraps itself in shell/sidebar/header/footer instead of returning body only
 - [ ] `CustomTransitionPage` created without `key: state.pageKey`
 - [ ] `const` applied to a children list containing ScreenUtil-scaled values
+- [ ] Cubit emits accumulated data without `List.unmodifiable()` wrapping
+- [ ] Transient state variant (drag-hover, error) drops accumulated data from its fields
+- [ ] `dismissTransient()` / reset method unconditionally returns to `initial` when accumulated data exists
+- [ ] Form state still in `StatefulWidget.setState()` after feature data flow is wired to Cubit
+- [ ] `Colors.*` literal modified with `.withAlpha()` / `.withOpacity()` (must use theme-sourced color)
 
 ### Module Boundary Rules
 
@@ -287,4 +351,4 @@ Complexity deviating from these principles MUST be explicitly justified in the P
 **Runtime guidance**: See `.github/copilot-instructions.md` for detailed coding conventions and
 responsive design usage examples.
 
-**Version**: 1.2.0 | **Ratified**: 2026-04-09 | **Last Amended**: 2026-04-12
+**Version**: 1.3.0 | **Ratified**: 2026-04-09 | **Last Amended**: 2026-04-16

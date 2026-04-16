@@ -1,23 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../values/app_strings.dart';
+import '../home_screen_cubit.dart';
+import '../home_screen_state.dart';
 import 'drop_zone_widget.dart';
+import 'scan_config_body_widget.dart';
 import 'step_flow_widget.dart';
 
 /// HomeContentSectionWidget — the main body content for the home / onboarding
 /// screen.
 ///
-/// Displays:
-/// - A headline ([AppStrings.homeHeadline])
-/// - A subtitle ([AppStrings.homeSubtitle])
-/// - A bento-grid section with the drop zone and two feature cards.
-///   Above 900 px wide: drop zone (flex 8) and cards (flex 4) are side-by-side.
-///   Below 900 px wide: they stack vertically.
-///
-/// T024: [_FeatureCardsColumn] is defined inline in this file.
+/// When folders have been added ([HomeScreenStateX.hasFolders]), displays the
+/// scan configuration body. Otherwise displays the onboarding layout.
 class HomeContentSectionWidget extends StatelessWidget {
   const HomeContentSectionWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<HomeScreenCubit, HomeScreenState>(
+      builder: (context, state) {
+        if (state.hasFolders) {
+          return Padding(
+            padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 24.h),
+            child: const ScanConfigBodyWidget(),
+          );
+        }
+        return const _OnboardingBody();
+      },
+    );
+  }
+}
+
+class _OnboardingBody extends StatelessWidget {
+  const _OnboardingBody();
 
   @override
   Widget build(BuildContext context) {

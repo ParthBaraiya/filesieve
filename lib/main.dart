@@ -2,8 +2,11 @@
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
+import 'modules/history/history_screen.dart';
 import 'modules/home/home_screen.dart';
 import 'modules/loading/loading_screen.dart';
+import 'modules/results/results_screen.dart';
+import 'modules/settings/settings_screen.dart';
 import 'repository/scan_session_repository_impl.dart';
 import 'values/app_routes.dart';
 import 'values/app_theme.dart';
@@ -38,17 +41,17 @@ final router = GoRouter(
     GoRoute(
       name: AppRouteNames.results,
       path: AppRoutes.results,
-      builder: (context, state) => const _PlaceholderScreen(label: 'Results'),
+      builder: (context, state) => const ResultsScreen(),
     ),
     GoRoute(
       name: AppRouteNames.settings,
       path: AppRoutes.settings,
-      builder: (context, state) => const _PlaceholderScreen(label: 'Settings'),
+      builder: (context, state) => const SettingsScreen(),
     ),
     GoRoute(
       name: AppRouteNames.history,
       path: AppRoutes.history,
-      builder: (context, state) => const _PlaceholderScreen(label: 'History'),
+      builder: (context, state) => const HistoryScreen(),
     ),
   ],
 );

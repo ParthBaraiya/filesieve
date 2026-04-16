@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../values/app_strings.dart';
 import '../../values/enums.dart';
 
 /// SidebarSectionWidget — fixed-width sidebar with navigation items and an
@@ -37,6 +40,13 @@ class SidebarSectionWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    final username =
+        Platform.environment['USERNAME'] ?? 'Administrator';
+    final initials = username.isNotEmpty
+        ? username.trim().split(RegExp(r'\s+')).map((w) => w[0]).take(2).join().toUpperCase()
+        : 'A';
 
     return SizedBox(
       width: 280.w,
@@ -45,7 +55,30 @@ class SidebarSectionWidget extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SizedBox(height: 24.h),
+            // ── Logo / app-name row ──────────────────────────────────────────
+            Padding(
+              padding: EdgeInsets.fromLTRB(20.w, 24.h, 16.w, 0),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.filter_alt_outlined,
+                    size: 22.r,
+                    color: colorScheme.primary,
+                  ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    AppStrings.appName,
+                    style: textTheme.titleMedium?.copyWith(
+                      color: colorScheme.onSurface,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 28.h),
+            // ── Add Folder button ────────────────────────────────────────────
             if (onAddFolder != null) ...[
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -56,11 +89,42 @@ class SidebarSectionWidget extends StatelessWidget {
               ),
               SizedBox(height: 16.h),
             ],
+            // ── Navigation items ─────────────────────────────────────────────
             ...items.map(
               (item) => _NavItemRow(
                 item: item,
                 isActive: item == activeItem,
                 onTap: () => onNavItemTap(item),
+              ),
+            ),
+            const Spacer(),
+            // ── User-profile row ─────────────────────────────────────────────
+            Padding(
+              padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 20.h),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 16.r,
+                    backgroundColor: colorScheme.primaryContainer,
+                    child: Text(
+                      initials,
+                      style: textTheme.labelSmall?.copyWith(
+                        color: colorScheme.onPrimaryContainer,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 10.w),
+                  Expanded(
+                    child: Text(
+                      username,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -106,7 +170,7 @@ class _NavItemRow extends StatelessWidget {
                 _iconForItem(item),
                 size: 20.r,
                 color: isActive
-                    ? colorScheme.primary
+                    ? colorScheme.onPrimaryFixedVariant
                     : colorScheme.onSurfaceVariant,
               ),
               SizedBox(width: 12.w),
@@ -114,7 +178,7 @@ class _NavItemRow extends StatelessWidget {
                 _labelForItem(item),
                 style: textTheme.bodyMedium?.copyWith(
                   color: isActive
-                      ? colorScheme.primary
+                      ? colorScheme.onPrimaryFixedVariant
                       : colorScheme.onSurfaceVariant,
                   fontWeight:
                       isActive ? FontWeight.w600 : FontWeight.normal,

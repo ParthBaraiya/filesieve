@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../values/app_strings.dart';
 import 'folder_list_panel_widget.dart';
+import 'scan_settings_panel_widget.dart';
 
 class ScanConfigBodyWidget extends StatelessWidget {
   const ScanConfigBodyWidget({super.key});
@@ -66,12 +67,9 @@ class ScanConfigBodyWidget extends StatelessWidget {
                       child: FolderListPanelWidget(),
                     ),
                     SizedBox(width: 16.w),
-                    Expanded(
+                    const Expanded(
                       flex: 5,
-                      child: _PanelPlaceholder(
-                        label: AppStrings.scanSettings,
-                        colorScheme: colorScheme,
-                      ),
+                      child: ScanSettingsPanelWidget(),
                     ),
                   ],
                 );
@@ -83,12 +81,9 @@ class ScanConfigBodyWidget extends StatelessWidget {
                       child: FolderListPanelWidget(),
                     ),
                     SizedBox(height: 16.h),
-                    Expanded(
+                    const Expanded(
                       flex: 2,
-                      child: _PanelPlaceholder(
-                        label: AppStrings.scanSettings,
-                        colorScheme: colorScheme,
-                      ),
+                      child: ScanSettingsPanelWidget(),
                     ),
                   ],
                 );
@@ -97,34 +92,6 @@ class ScanConfigBodyWidget extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _PanelPlaceholder extends StatelessWidget {
-  const _PanelPlaceholder({
-    required this.label,
-    required this.colorScheme,
-  });
-
-  final String label;
-  final ColorScheme colorScheme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: colorScheme.outlineVariant),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-      ),
     );
   }
 }

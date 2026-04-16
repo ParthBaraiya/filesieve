@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../values/app_strings.dart';
+import 'folder_list_panel_widget.dart';
 
 class ScanConfigBodyWidget extends StatelessWidget {
   const ScanConfigBodyWidget({super.key});
@@ -60,12 +61,9 @@ class ScanConfigBodyWidget extends StatelessWidget {
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(
+                    const Expanded(
                       flex: 7,
-                      child: _PanelPlaceholder(
-                        label: AppStrings.activeScanTargets,
-                        colorScheme: colorScheme,
-                      ),
+                      child: FolderListPanelWidget(),
                     ),
                     SizedBox(width: 16.w),
                     Expanded(
@@ -80,12 +78,9 @@ class ScanConfigBodyWidget extends StatelessWidget {
               } else {
                 return Column(
                   children: [
-                    Expanded(
+                    const Expanded(
                       flex: 3,
-                      child: _PanelPlaceholder(
-                        label: AppStrings.activeScanTargets,
-                        colorScheme: colorScheme,
-                      ),
+                      child: FolderListPanelWidget(),
                     ),
                     SizedBox(height: 16.h),
                     Expanded(

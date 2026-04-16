@@ -2,6 +2,7 @@
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
+import 'modules/home/home_screen.dart';
 import 'modules/loading/loading_screen.dart';
 import 'repository/scan_session_repository_impl.dart';
 import 'values/app_routes.dart';
@@ -27,7 +28,7 @@ final router = GoRouter(
     GoRoute(
       name: AppRouteNames.home,
       path: AppRoutes.home,
-      builder: (context, state) => const _PlaceholderScreen(label: 'Home'),
+      builder: (context, state) => const HomeScreen(),
     ),
     GoRoute(
       name: AppRouteNames.scanner,

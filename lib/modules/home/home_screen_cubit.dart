@@ -23,13 +23,22 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
   // ignore: unused_field
   final ScanSessionRepository _repository;
 
+  final List<ScanFolderModel> _folders = [];
+
   // -------------------------------------------------------------------------
   // Drag-and-drop events
   // -------------------------------------------------------------------------
 
-  void onDragEnter() => emit(const HomeScreenState.dragHover());
+  void onDragEnter() =>
+      emit(HomeScreenState.dragHover(folders: List.unmodifiable(_folders)));
 
-  void onDragExit() => emit(const HomeScreenState.initial());
+  void onDragExit() {
+    if (_folders.isNotEmpty) {
+      emit(HomeScreenState.foldersAdded(folders: List.unmodifiable(_folders)));
+    } else {
+      emit(const HomeScreenState.initial());
+    }
+  }
 
   /// Called when the user drops items onto the drop zone.
   ///
@@ -65,9 +74,15 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
     }
 
     if (validFolders.isNotEmpty) {
-      emit(HomeScreenState.foldersAdded(folders: validFolders));
+      _folders.addAll(validFolders);
+      emit(HomeScreenState.foldersAdded(folders: List.unmodifiable(_folders)));
     } else if (lastRejectionReason != null) {
-      emit(HomeScreenState.dropRejected(reason: lastRejectionReason));
+      emit(
+        HomeScreenState.dropRejected(
+          reason: lastRejectionReason,
+          folders: List.unmodifiable(_folders),
+        ),
+      );
     }
   }
 
@@ -88,6 +103,7 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
       emit(
         HomeScreenState.dropRejected(
           reason: AppStrings.dropRejectionNotFolder,
+          folders: List.unmodifiable(_folders),
         ),
       );
       return;
@@ -96,31 +112,50 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
     final accessible = await _checkReadAccess(path);
     if (!accessible) {
       emit(
-        HomeScreenState.dropRejected(reason: AppStrings.dropRejectionNoAccess),
+        HomeScreenState.dropRejected(
+          reason: AppStrings.dropRejectionNoAccess,
+          folders: List.unmodifiable(_folders),
+        ),
       );
       return;
     }
 
-    emit(
-      HomeScreenState.foldersAdded(
-        folders: [
-          ScanFolderModel(
-            path: path,
-            displayName: _displayNameFor(path),
-            hasReadAccess: true,
-          ),
-        ],
+    _folders.add(
+      ScanFolderModel(
+        path: path,
+        displayName: _displayNameFor(path),
+        hasReadAccess: true,
       ),
     );
+    emit(HomeScreenState.foldersAdded(folders: List.unmodifiable(_folders)));
   }
 
   // -------------------------------------------------------------------------
   // Utility
   // -------------------------------------------------------------------------
 
-  /// Resets the cubit to the initial idle state.
-  /// Called by [DropZoneWidget] after the rejection auto-dismiss timer fires.
-  void resetToInitial() => emit(const HomeScreenState.initial());
+  /// Dismisses transient states (dragHover, dropRejected) back to the
+  /// appropriate resting state — foldersAdded if folders exist, initial
+  /// otherwise.
+  void dismissTransient() {
+    if (_folders.isNotEmpty) {
+      emit(HomeScreenState.foldersAdded(folders: List.unmodifiable(_folders)));
+    } else {
+      emit(const HomeScreenState.initial());
+    }
+  }
+
+  /// Removes the folder at [index] from the accumulator list.
+  /// Emits foldersAdded if folders remain, initial if the list is now empty.
+  void removeFolder(int index) {
+    if (index < 0 || index >= _folders.length) return;
+    _folders.removeAt(index);
+    if (_folders.isNotEmpty) {
+      emit(HomeScreenState.foldersAdded(folders: List.unmodifiable(_folders)));
+    } else {
+      emit(const HomeScreenState.initial());
+    }
+  }
 
   /// Returns [true] when the directory at [path] can be listed.
   ///

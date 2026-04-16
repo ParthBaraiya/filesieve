@@ -155,7 +155,7 @@ class _RejectionMessageState extends State<_RejectionMessage> {
     super.initState();
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
-        context.read<HomeScreenCubit>().resetToInitial();
+        context.read<HomeScreenCubit>().dismissTransient();
       }
     });
   }

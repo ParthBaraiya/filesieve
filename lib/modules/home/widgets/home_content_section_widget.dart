@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../values/app_strings.dart';
 import 'drop_zone_widget.dart';
+import 'step_flow_widget.dart';
 
 /// HomeContentSectionWidget — the main body content for the home / onboarding
 /// screen.
@@ -69,6 +70,8 @@ class HomeContentSectionWidget extends StatelessWidget {
               },
             ),
           ),
+          SizedBox(height: 24.h),
+          const StepFlowWidget(),
         ],
       ),
     );

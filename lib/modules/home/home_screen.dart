@@ -4,11 +4,14 @@ import 'package:go_router/go_router.dart';
 
 import '../../repository/scan_session_repository_impl.dart';
 import '../../values/app_routes.dart';
+import '../../values/app_strings.dart';
 import '../../values/enums.dart';
 import '../../views/app_shell_widget.dart';
+import '../../views/header_section_widget.dart';
 import '../../views/sidebar_section_widget.dart';
 import 'home_screen_cubit.dart';
 import 'home_screen_state.dart';
+import 'widgets/home_content_section_widget.dart';
 
 /// HomeScreen — the onboarding / empty-state screen shown when no scan data
 /// exists (routed to from [LoadingScreen] when neither an active session nor
@@ -57,8 +60,8 @@ class _HomeScreenContent extends StatelessWidget {
           onAddFolder: () => cubit.onPickFolder(),
           onNavItemTap: (item) => context.go(_routeForItem(item)),
         ),
-        header: const SizedBox.shrink(),
-        body: const SizedBox.shrink(),
+        header: const HeaderSectionWidget(label: AppStrings.headerContextLabel),
+        body: const HomeContentSectionWidget(),
         footer: const SizedBox.shrink(),
       ),
     );

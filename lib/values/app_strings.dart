@@ -51,6 +51,31 @@ class AppStrings {
       'Only folders can be dropped here.';
   static const String dropRejectionNoAccess =
       'This folder could not be read. Check your permissions.';
+
+  // Scan configuration
+  static const String scanConfigTitle = 'Scan Configuration';
+  static const String scanConfigSubtitle =
+      'Define target directories and file parameters...';
+  static const String deleteSelected = 'Delete Selected';
+  static const String startScan = 'Start Scan';
+  static const String activeScanTargets = 'Active Scan Targets';
+  static const String foldersQueued = 'Folders queued for processing';
+  static const String addNewTarget = 'Add New Target';
+  static const String scanSettings = 'Scan Settings';
+  static const String includeFileTypes = 'Include File Types';
+  static const String fileSizeThreshold = 'File Size Threshold';
+  static const String deepMetadataAnalysis = 'Deep Metadata Analysis';
+  static const String deepMetadataDesc =
+      'Analyze headers and file signatures';
+  static const String includeSubdirectories = 'Include Subdirectories';
+  static const String includeSubdirectoriesDesc =
+      'Recursive scan for all nested paths';
+  static const String executeScanSequence = 'Execute Scan Sequence';
+  static const String estimatedScanTime = 'Estimated Scan Time';
+  static const String images = 'Images';
+  static const String videos = 'Videos';
+  static const String documents = 'Documents';
+  static const String archives = 'Archives';
 }
 
 /// stepFlowData — Dart 3 record list for the three-step workflow guide.

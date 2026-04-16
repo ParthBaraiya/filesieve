@@ -13,6 +13,10 @@ import '../home_screen_state.dart';
 /// Renders a hover highlight when [HomeScreenDragHover] is active and
 /// an inline rejection message when [HomeScreenDropRejected] is active.
 /// Rejection messages auto-dismiss after 2 seconds.
+///
+/// SC-004 Performance Baseline (drag-and-drop drop-to-state-change):
+/// Target: ≤200 ms. Measure with Flutter DevTools frame timings.
+/// Result: [TODO — measure on target Windows hardware and record here]
 class DropZoneWidget extends StatelessWidget {
   const DropZoneWidget({super.key});
 
@@ -59,17 +63,31 @@ class DropZoneWidget extends StatelessWidget {
                         : colorScheme.onSurfaceVariant,
                   ),
                   SizedBox(height: 12.h),
-                  if (state case HomeScreenDropRejected(:final reason))
-                    _RejectionMessage(reason: reason)
-                  else
-                    Text(
-                      AppStrings.dropZonePrompt,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: isHovering
-                                ? colorScheme.primary
-                                : colorScheme.onSurfaceVariant,
-                          ),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: Builder(
+                      builder: (_) {
+                        if (state case HomeScreenDropRejected(:final reason)) {
+                          return _RejectionMessage(
+                            key: const ValueKey('rejected'),
+                            reason: reason,
+                          );
+                        }
+                        return Text(
+                          key: const ValueKey('prompt'),
+                          AppStrings.dropZonePrompt,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyLarge
+                              ?.copyWith(
+                                color: isHovering
+                                    ? colorScheme.primary
+                                    : colorScheme.onSurfaceVariant,
+                              ),
+                        );
+                      },
                     ),
+                  ),
                 ],
               ),
             ),
@@ -85,7 +103,7 @@ class DropZoneWidget extends StatelessWidget {
 /// The [mounted] guard in [initState] prevents a [FlutterError] if the widget
 /// is disposed before the timer fires (e.g. rapid repeated drops).
 class _RejectionMessage extends StatefulWidget {
-  const _RejectionMessage({required this.reason});
+  const _RejectionMessage({super.key, required this.reason});
 
   final String reason;
 

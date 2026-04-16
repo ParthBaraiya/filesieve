@@ -7,6 +7,7 @@ import '../../values/app_routes.dart';
 import '../../values/app_strings.dart';
 import '../../values/enums.dart';
 import '../../views/app_shell_widget.dart';
+import '../../views/footer_section_widget.dart';
 import '../../views/header_section_widget.dart';
 import '../../views/sidebar_section_widget.dart';
 import 'home_screen_cubit.dart';
@@ -62,7 +63,7 @@ class _HomeScreenContent extends StatelessWidget {
         ),
         header: const HeaderSectionWidget(label: AppStrings.headerContextLabel),
         body: const HomeContentSectionWidget(),
-        footer: const SizedBox.shrink(),
+        footer: const FooterSectionWidget(),
       ),
     );
   }

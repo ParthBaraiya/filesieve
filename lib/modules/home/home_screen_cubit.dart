@@ -4,7 +4,9 @@ import 'package:file_selector/file_selector.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../models/scan_folder_model.dart';
+import '../../repository/duplicate_finder_repository.dart';
 import '../../repository/scan_session_repository.dart';
+import '../../utils/cancel_token.dart';
 import '../../values/app_strings.dart';
 import 'home_screen_state.dart';
 
@@ -16,14 +18,25 @@ import 'home_screen_state.dart';
 /// - Attempts [Directory.list().first] to verify read access; a [StateError]
 ///   (empty dir) is treated as accessible; a [FileSystemException] is not.
 class HomeScreenCubit extends Cubit<HomeScreenState> {
-  HomeScreenCubit({required ScanSessionRepository repository})
-      : _repository = repository,
+  HomeScreenCubit({
+    required ScanSessionRepository repository,
+    required DuplicateFinderRepository scanRepository,
+  }) : _repository = repository,
+       _scanRepository = scanRepository,
         super(const HomeScreenState.initial());
 
   // ignore: unused_field
   final ScanSessionRepository _repository;
+  final DuplicateFinderRepository _scanRepository;
+  final CancelToken _cancelToken = CancelToken();
 
   final List<ScanFolderModel> _folders = [];
+
+  @override
+  Future<void> close() {
+    _cancelToken.cancel();
+    return super.close();
+  }
 
   // -------------------------------------------------------------------------
   // Drag-and-drop events

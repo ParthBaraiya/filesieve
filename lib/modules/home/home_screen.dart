@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../repository/duplicate_finder_repository_impl.dart';
 import '../../repository/scan_session_repository_impl.dart';
 import 'home_screen_cubit.dart';
 import 'widgets/home_content_section_widget.dart';
@@ -21,7 +22,13 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => HomeScreenCubit(repository: ScanSessionRepositoryImpl()),
+      create: (_) => HomeScreenCubit(
+        repository: ScanSessionRepositoryImpl(),
+        scanRepository: DuplicateFinderRepositoryImpl(
+          storePath:
+              '', // TODO(phase-6): thread actual ObjectBox storePath from app initialization
+        ),
+      ),
       child: const HomeContentSectionWidget(),
     );
   }

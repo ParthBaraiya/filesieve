@@ -116,6 +116,7 @@ class DuplicateFinderService {
     required void Function(ScanProgress) onProgress,
     required CancelToken cancelToken,
     bool byteByByteCompare = false,
+    void Function(DuplicateGroup, List<int> sizes)? onGroupFound,
   }) async {
     // -----------------------------------------------------------------------
     // Stage 1: Metadata collection
@@ -189,6 +190,7 @@ class DuplicateFinderService {
             stage: 'partial',
             stageTotal: partialTotal,
             stageProcessed: ++partialProcessed,
+              currentPath: meta.path,
           ));
           return MapEntry(meta, cached.partialHash!);
         }
@@ -201,6 +203,7 @@ class DuplicateFinderService {
             stage: 'partial',
             stageTotal: partialTotal,
             stageProcessed: ++partialProcessed,
+              currentPath: meta.path,
           ));
           return MapEntry(meta, hash);
         } finally {
@@ -256,6 +259,7 @@ class DuplicateFinderService {
             stage: 'full',
             stageTotal: fullTotal,
             stageProcessed: ++fullProcessed,
+              currentPath: meta.path,
           ));
           return MapEntry(meta, metaToPartialHash[meta]!);
         }
@@ -270,6 +274,7 @@ class DuplicateFinderService {
             stage: 'full',
             stageTotal: fullTotal,
             stageProcessed: ++fullProcessed,
+              currentPath: meta.path,
           ));
           return MapEntry(meta, cached.fullHash!);
         }
@@ -282,6 +287,7 @@ class DuplicateFinderService {
             stage: 'full',
             stageTotal: fullTotal,
             stageProcessed: ++fullProcessed,
+              currentPath: meta.path,
           ));
           return MapEntry(meta, hash);
         } finally {
@@ -298,14 +304,17 @@ class DuplicateFinderService {
     // -----------------------------------------------------------------------
     // Stage 6: Group by full hash — confirmed duplicate groups
     // -----------------------------------------------------------------------
-    final fullHashGroups = fullHashMap.values
-        .where((g) => g.length >= 2)
-        .map(
-          (g) => DuplicateGroup(
-            paths: List.unmodifiable(g.map((m) => m.path).toList()),
-          ),
-        )
-        .toList();
+    final duplicateGroups = <DuplicateGroup>[];
+    final fullHashGroups = <DuplicateGroup>[];
+    for (final g in fullHashMap.values.where((g) => g.length >= 2)) {
+      final group = DuplicateGroup(
+        paths: List.unmodifiable(g.map((m) => m.path)),
+      );
+      final sizes = g.map((m) => m.size).toList();
+      onGroupFound?.call(group, sizes);
+      duplicateGroups.add(group);
+      fullHashGroups.add(group);
+    }
 
     // -----------------------------------------------------------------------
     // Stage 7: Byte-by-byte compare (skipped when byteByByteCompare == false)
@@ -317,8 +326,8 @@ class DuplicateFinderService {
     // Each comparison is guarded by the semaphore (FR-010) and checked for
     // cancellation before acquiring (FR-016).
     // -----------------------------------------------------------------------
-    final duplicateGroups = <DuplicateGroup>[];
     if (byteByByteCompare && fullHashGroups.isNotEmpty) {
+      duplicateGroups.clear();
       final compareTotal = fullHashGroups.length;
       int compareProcessed = 0;
       onProgress(ScanProgress(
@@ -336,8 +345,6 @@ class DuplicateFinderService {
           stageProcessed: ++compareProcessed,
         ));
       }
-    } else {
-      duplicateGroups.addAll(fullHashGroups);
     }
 
     // -----------------------------------------------------------------------
@@ -433,6 +440,7 @@ class DuplicateFinderRepositoryImpl implements DuplicateFinderRepository {
     required void Function(ScanProgress) onProgress,
     required CancelToken cancelToken,
     bool byteByByteCompare = false,
+    void Function(DuplicateGroup, List<int> sizes)? onGroupFound,
   }) async {
     // All worker→main messages (progress, result, error) arrive on this port.
     final resultRp = ReceivePort();
@@ -468,7 +476,13 @@ class DuplicateFinderRepositoryImpl implements DuplicateFinderRepository {
             stageTotal: msg['stageTotal'] as int,
             stageProcessed: msg['stageProcessed'] as int,
             stage: msg['stage'] as String,
+              currentPath: msg['currentPath'] as String,
           ));
+        case 'group':
+          final paths = List<String>.from(msg['paths'] as List);
+          final sizes = List<int>.from(msg['sizes'] as List);
+          final group = DuplicateGroup(paths: List.unmodifiable(paths));
+          onGroupFound?.call(group, sizes);
         case 'result':
           final groups = (msg['groups'] as List<dynamic>)
               .map(
@@ -529,6 +543,7 @@ Future<void> _workerEntrypoint(Map<String, dynamic> message) async {
         'stageTotal': p.stageTotal,
         'stageProcessed': p.stageProcessed,
         'stage': p.stage,
+    'currentPath': p.currentPath,
       });
 
   // Attach to the main isolate's ObjectBox store (if a path was supplied).
@@ -553,6 +568,11 @@ Future<void> _workerEntrypoint(Map<String, dynamic> message) async {
         cancelToken: localCancelToken,
         onProgress: onProgress,
         byteByByteCompare: byteByByteCompare,
+        onGroupFound: (group, sizes) => progressPort.send({
+          'type': 'group',
+          'paths': group.paths,
+          'sizes': sizes,
+        }),
       );
       progressPort.send({
         'type': 'result',

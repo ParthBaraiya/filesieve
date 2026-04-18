@@ -76,6 +76,16 @@ class AppStrings {
   static const String videos = 'Videos';
   static const String documents = 'Documents';
   static const String archives = 'Archives';
+
+  // Scan progress UI
+  static const String scanProgressAnalysing = 'Analysing files…';
+  static const String scanProgressCancelButton = 'Cancel Scan';
+  static const String scanLiveFeedTitle = 'Recently Found Duplicates';
+  static const String scanLiveFeedLiveLabel = 'LIVE';
+  static const String scanLiveFeedEmpty = 'No duplicates found yet…';
+  static const String scanStatsFiles = 'Files Analysed';
+  static const String scanStatsDuplicates = 'Duplicates Found';
+  static const String scanStatsSavings = 'Potential Savings';
 }
 
 /// stepFlowData — Dart 3 record list for the three-step workflow guide.

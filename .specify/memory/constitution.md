@@ -1,11 +1,15 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.3.0 → 1.3.1 (PATCH — design size reference corrected to 1600×1000)
+Version change: 1.3.1 → 1.4.0 (MINOR — two new principles derived from specs 001 + 002)
 Modified sections:
+  - Added Principle XIV — Worker Isolate Communication Protocol
+  - Added Principle XV — Incremental Pipeline Results & Progress Mapping
+  - Anti-Pattern Checklist — added 6 new entries for isolate/pipeline violations
+  - Module Boundary Rules — added scanner module responsibilities clarification
+Previously added (v1.3.1):
   - Principle IV — ScreenUtil designSize updated to Size(1600, 1000)
-  - Tech Stack table — Responsive Scaling entry updated to design size 1600×1000
-  - Development Workflow step 6 — responsiveness breakpoints updated (design size now 1600×1000)
+  - Tech Stack table — Responsive Scaling entry updated
 Previously added (v1.3.0):
   - XI. Cubit Accumulator & Transient State Management
   - XII. Ephemeral Form State & Cubit Migration Path
@@ -18,11 +22,11 @@ Previously added (v1.1.0):
 Templates updated:
   - .specify/templates/constitution-template.md  ✅ source (no change required)
   - .specify/templates/plan-template.md          ⚠ pending (Constitution Check references v1.0.0;
-    should reference v1.3.1 and include Principles XI–XIII)
+    should reference v1.4.0 and include Principles XI–XV)
   - .specify/templates/spec-template.md          ✅ aligned (no mandatory section changes)
   - .specify/templates/tasks-template.md         ✅ aligned (no mandatory section changes)
 Deferred TODOs:
-  - plan-template.md Constitution Check should reference v1.3.1 and include Principles XI–XIII
+  - plan-template.md Constitution Check should reference v1.4.0 and include Principles XIV–XV
 -->
 
 # FileSieve Constitution
@@ -263,6 +267,71 @@ or `.withOpacity()` for transparency effects. This is NOT a violation of Princip
 Forbidding them would force unnecessary theme extension boilerplate for one-off decorative use,
 while still ensuring the palette remains centrally switchable.
 
+### XIV. Worker Isolate Communication Protocol (NON-NEGOTIABLE)
+
+All long-running operations (scanning, hashing, file comparison) execute in spawned Dart
+isolates. Communication between the main isolate and worker isolates MUST follow these rules:
+
+- **ObjectBox sharing**: Worker isolates MUST use `Store.attach(getObjectBoxModel(), storePath)`
+  to access the ObjectBox store — never `Store(...)`. The main isolate holds the primary
+  `Store` handle; opening a second independent `Store` on the same directory causes file-lock
+  contention on Windows. The `storePath` MUST be passed as a `String` in the spawn message
+- **Store cleanup**: Worker isolates MUST close their attached `Store` in a `finally` block,
+  even on cancellation or error. Failing to close leaves file handles open (FR-017)
+- **Cancel handshake**: Cancellation MUST use a two-phase handshake:
+  1. The spawn message includes a `cancelHandshakePort: SendPort`
+  2. The worker creates a local `ReceivePort`, listens for cancel signals on it, and sends
+     its `SendPort` back via `cancelHandshakePort`
+  3. The main isolate awaits the worker's `SendPort`, then wires
+     `cancelToken.cancelFuture.then((_) => workerCancelSendPort.send('cancel'))`
+     The Cubit MUST only call `cancelToken.cancel()` — it MUST NOT touch ports directly
+- **Message format**: All worker→main messages MUST be `Map<String, dynamic>` with a `'type'`
+  discriminator (e.g., `'progress'`, `'result'`, `'error'`, `'group'`). Non-serializable
+  objects (native pointers, `Store`, `Box`, `File`) MUST NOT be sent across isolate boundaries
+- **Semaphore-guarded I/O**: Concurrent file-I/O within a worker isolate MUST be bounded by
+  a permit-based semaphore (configurable limit, default 4). Unbounded parallelism is forbidden
+  (FR-010). Every `acquire()` MUST have a matching `release()` in a `finally` block
+
+**Rationale**: Dart isolates do not share memory. Incorrect ObjectBox access causes file-lock
+contention; missing cancel handshakes make scans unstoppable; unserialisable messages cause
+silent failures. These patterns were established in spec 001 and must be followed by all
+future worker isolate features (e.g., bulk delete, export, thumbnail generation).
+
+### XV. Incremental Pipeline Results & Progress Mapping
+
+Multi-stage background pipelines (e.g., duplicate detection) MUST expose both fine-grained
+progress and incremental results to the UI layer:
+
+- **Dual callback contract**: Repository `find()` methods MUST accept both
+  `onProgress: void Function(ScanProgress)` for stage-level progress AND
+  `onGroupFound: void Function(DuplicateGroup, List<int> sizes)` (or equivalent) for
+  incremental result delivery. Results MUST NOT be withheld until pipeline completion
+- **Weighted overall percentage**: The Cubit MUST compute a single `overallPercent` (0–100)
+  by mapping each pipeline stage's ratio to a weighted band:
+  - `scanning` (metadata): 0–10%
+  - `partial` (partial hash): 10–50%
+  - `full` (full hash): 50–90%
+  - `compare` (byte-by-byte): 90–99%
+  - `done`: 100%
+    Stage weights are approximate and SHOULD be adjusted based on profiling, but every stage
+    MUST have a non-zero allocation so the user sees continuous forward progress
+- **Display-layer wrapper models**: The Cubit MUST create display-layer models
+  (e.g., `ScanDuplicateEntryModel`) from domain models (e.g., `DuplicateGroup`). The UI
+  MUST NOT perform path parsing (`p.basename`, `p.dirname`), size formatting, or any
+  data transformation — all display-ready data MUST arrive via the Cubit state
+- **Current file path**: Progress updates MUST include `currentPath` (the file actively being
+  processed) so the UI can display real-time feedback. The path MUST be truncated with
+  ellipsis in the UI; the full path lives in state
+- **Scan configuration propagation**: Configuration flags that affect pipeline behavior
+  (e.g., `byteByByteCompare`) MUST be captured from the current state BEFORE emitting
+  the scanning state, and MUST be carried on ALL state variants (initial, scanning, done,
+  error, cancelled) so the UI can always read the active configuration
+
+**Rationale**: Users scanning large directories need continuous feedback that the app is
+working. Incremental results build trust and let users evaluate partial findings before
+completion. Display-layer model creation in the Cubit keeps widgets free of business logic
+per Principle III. These patterns were established across specs 001 and 002.
+
 ## Tech Stack & Tooling Standards
 
 The following technology choices are binding for this project. Substitutions require a
@@ -319,13 +388,21 @@ Every feature MUST follow this sequence before being considered complete:
 - [ ] `dismissTransient()` / reset method unconditionally returns to `initial` when accumulated data exists
 - [ ] Form state still in `StatefulWidget.setState()` after feature data flow is wired to Cubit
 - [ ] `Colors.*` literal modified with `.withAlpha()` / `.withOpacity()` (must use theme-sourced color)
+- [ ] Worker isolate opens ObjectBox via `Store(...)` instead of `Store.attach()` when main isolate holds a Store
+- [ ] Worker isolate fails to close `Store` in a `finally` block
+- [ ] Non-serializable object (native pointer, Store, Box, File) sent across isolate boundary
+- [ ] Semaphore `acquire()` without matching `release()` in `finally` block
+- [ ] Pipeline withholds all results until completion instead of streaming via `onGroupFound` callback
+- [ ] UI widget performs path parsing, size formatting, or data transformation instead of receiving display-ready data from Cubit state
 
 ### Module Boundary Rules
 
-- `modules/home/` — launch screen, directory selection
-- `modules/scanner/` — scan progress, real-time feedback
-- `modules/results/` — duplicate display, selection, bulk actions
-- `modules/settings/` — user preferences, scan configuration
+- `modules/home/` — launch screen, directory selection, scan initiation, scan progress UI,
+  live duplicate feed. Owns `HomeScreenCubit` which bridges to `DuplicateFinderRepository`
+- `modules/scanner/` — standalone scan screen (alternative entry point), scan progress,
+  real-time feedback. Owns `ScannerScreenCubit` with independent lifecycle
+- `modules/results/` — duplicate display, selection, bulk actions, deletion via recycle bin
+- `modules/settings/` — user preferences, scan configuration persistence
 - `modules/history/` — past scan session browsing
 
 Cross-module navigation MUST go through GoRouter; modules MUST NOT import each other directly.
@@ -352,4 +429,4 @@ Complexity deviating from these principles MUST be explicitly justified in the P
 **Runtime guidance**: See `.github/copilot-instructions.md` for detailed coding conventions and
 responsive design usage examples.
 
-**Version**: 1.3.1 | **Ratified**: 2026-04-09 | **Last Amended**: 2026-04-19
+**Version**: 1.4.0 | **Ratified**: 2026-04-09 | **Last Amended**: 2026-04-19

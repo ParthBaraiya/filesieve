@@ -281,7 +281,7 @@ Use `flutter_screenutil` for scaling:
 
 ```id="screenutil_init"
 ScreenUtilInit(
-  designSize: Size(1440, 900),
+  designSize: Size(1600, 1000),
 )
 ```
 

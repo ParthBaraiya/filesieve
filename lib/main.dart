@@ -1,5 +1,4 @@
 ﻿import 'package:bitsdojo_window/bitsdojo_window.dart';
-import 'package:filesieve/modules/home/home_screen.dart';
 import 'package:filesieve/utils/routes/shared_axis_transition_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -7,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import 'modules/dashboard_screen.dart';
 import 'modules/history/history_screen.dart';
+import 'modules/home/widgets/home_content_section_widget.dart';
 import 'modules/loading/loading_screen.dart';
 import 'modules/results/results_screen.dart';
 import 'modules/scanner/scanner_screen.dart';
@@ -53,8 +53,6 @@ final router = GoRouter(
     ),
     ShellRoute(
       builder: (context, state, child) => DashboardScreenContent(child: child),
-      // pageBuilder: (context, state, child) =>
-      //     SharedAxisTransitionPage(child: DashboardScreenContent(child: child)),
       routes: [
         GoRoute(
           name: AppRouteNames.home,

@@ -10,13 +10,13 @@ import 'scan_config_body_widget.dart';
 import 'scan_progress_body_widget.dart';
 import 'step_flow_widget.dart';
 
-/// HomeContentSectionWidget — the main body content for the home / onboarding
+/// HomeScreen — the main body content for the home / onboarding
 /// screen.
 ///
 /// When folders have been added ([HomeScreenStateX.hasFolders]), displays the
 /// scan configuration body. Otherwise displays the onboarding layout.
-class HomeContentSectionWidget extends StatelessWidget {
-  const HomeContentSectionWidget({super.key});
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +24,7 @@ class HomeContentSectionWidget extends StatelessWidget {
       builder: (context, state) {
         if (state is HomeScreenScanning) {
           return Padding(
-            padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 24.h),
+            padding: .symmetric(horizontal: 32.w, vertical: 24.h),
             child: ScanProgressBodyWidget(
               overallPercent: state.overallPercent,
               progress: state.progress,
@@ -35,12 +35,14 @@ class HomeContentSectionWidget extends StatelessWidget {
             ),
           );
         }
+
         if (state.hasFolders) {
           return Padding(
-            padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 24.h),
+            padding: .symmetric(horizontal: 32.w, vertical: 24.h),
             child: const ScanConfigBodyWidget(),
           );
         }
+
         return const _OnboardingBody();
       },
     );
@@ -56,17 +58,17 @@ class _OnboardingBody extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 24.h),
+      padding: .symmetric(horizontal: 32.w, vertical: 24.h),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: .center,
         children: [
           SizedBox(height: 80.h),
           Text(
             AppStrings.homeHeadline,
-            textAlign: TextAlign.center,
+            textAlign: .center,
             style: textTheme.headlineLarge?.copyWith(
               color: colorScheme.onSurface,
-              fontWeight: FontWeight.w700,
+              fontWeight: .w700,
               letterSpacing: -0.02 * (textTheme.headlineMedium?.fontSize ?? 28),
             ),
           ),
@@ -75,7 +77,7 @@ class _OnboardingBody extends StatelessWidget {
             constraints: BoxConstraints(maxWidth: 600.w),
             child: Text(
               AppStrings.homeSubtitle,
-              textAlign: TextAlign.center,
+              textAlign: .center,
               style: textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -88,7 +90,7 @@ class _OnboardingBody extends StatelessWidget {
                 final isWide = constraints.maxWidth > 900;
                 if (isWide) {
                   return Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    crossAxisAlignment: .stretch,
                     children: [
                       const Expanded(flex: 8, child: DropZoneWidget()),
                       SizedBox(width: 16.w),
@@ -130,7 +132,7 @@ class _FeatureCardsColumn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         Expanded(
           child: _FeatureCard(
@@ -180,20 +182,16 @@ class _FeatureCard extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
-      padding: EdgeInsets.all(16.r),
+      padding: .all(16.r),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: .circular(12.r),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: .start,
+        mainAxisSize: .min,
         children: [
-          Icon(
-            icon,
-            size: 24.r,
-            color: iconColor ?? colorScheme.primary,
-          ),
+          Icon(icon, size: 24.r, color: iconColor ?? colorScheme.primary),
           SizedBox(height: 8.h),
           Text(
             title,

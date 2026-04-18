@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../repository/duplicate_finder_repository_impl.dart';
+import '../repository/scan_session_repository_impl.dart';
 import '../values/app_routes.dart';
 import '../values/app_strings.dart';
 import '../values/enums.dart';
@@ -11,12 +13,10 @@ import '../views/header_section_widget.dart';
 import '../views/sidebar_section_widget.dart';
 import 'dashboard_screen_cubit.dart';
 import 'dashboard_screen_state.dart';
+import 'home/home_screen_cubit.dart';
 
 class DashboardScreenContent extends StatefulWidget {
-  const DashboardScreenContent({
-    super.key,
-    required this.child,
-  });
+  const DashboardScreenContent({super.key, required this.child});
 
   final Widget child;
 
@@ -29,12 +29,22 @@ class _DashboardScreenState extends State<DashboardScreenContent> {
 
   @override
   Widget build(BuildContext context) {
-    final location =
-        GoRouterState.of(context).uri.path;
+    final location = GoRouterState.of(context).uri.path;
     final activeItem = NavigationItem.fromRoute(location);
 
-    return BlocProvider.value(
-      value: _cubit,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: _cubit),
+        BlocProvider(
+          create: (context) => HomeScreenCubit(
+            repository: ScanSessionRepositoryImpl(),
+            scanRepository: DuplicateFinderRepositoryImpl(
+              storePath:
+                  '', // TODO(phase-6): thread actual ObjectBox storePath from app initialization
+            ),
+          ),
+        ),
+      ],
       child: BlocListener<DashboardScreenCubit, DashboardScreenState>(
         bloc: _cubit,
         listener: (context, state) {
@@ -50,8 +60,9 @@ class _DashboardScreenState extends State<DashboardScreenContent> {
                 context.read<DashboardScreenCubit>().onPickFolder(),
             onNavItemTap: (item) => context.go(item.route),
           ),
-          header:
-              const HeaderSectionWidget(label: AppStrings.headerContextLabel),
+          header: const HeaderSectionWidget(
+            label: AppStrings.headerContextLabel,
+          ),
           body: widget.child,
           footer: const FooterSectionWidget(),
         ),

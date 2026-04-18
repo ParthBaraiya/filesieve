@@ -59,39 +59,64 @@ class ScannerScreenCubit extends Cubit<ScannerScreenState> {
   /// and delegates to [DuplicateFinderRepository.find].
   ///
   /// On success: emits [ScannerDone] with the full list of duplicate groups.
-  /// On cancellation: emits [ScannerError] with a cancellation message.
+  /// On cancellation: emits [ScannerCancelled].
   /// On other error: emits [ScannerError] with the exception message.
   Future<void> startScan(List<File> files) async {
     // A Completer cannot be reset; always create a new CancelToken per scan.
     _cancelToken = CancelToken();
 
-    emit(const ScannerScanning(groups: []));
+    // Capture the flag before emitting — state changes after emit.
+    final byteCompare = state.byteByByteCompare;
+
+    emit(ScannerScanning(groups: [], byteByByteCompare: byteCompare));
 
     try {
       final groups = await _repository.find(
         files: files,
         onProgress: (p) {
           // Bridge worker progress to UI state.
-          // allGroups stays [] until done — the pipeline emits groups only
-          // at completion (Phase 6 wires streaming if needed).
-          emit(ScannerScanning(progress: p, groups: state.allGroups));
+          emit(ScannerScanning(
+            progress: p,
+            groups: state.allGroups,
+            byteByByteCompare: byteCompare,
+          ));
         },
         cancelToken: _cancelToken,
-        // byteByByteCompare added in Phase 7 (T037)
+        byteByByteCompare: byteCompare,
       );
-      emit(ScannerDone(groups: groups));
+      emit(ScannerDone(groups: groups, byteByByteCompare: byteCompare));
     } on ScanCancelledException {
-      emit(ScannerCancelled(groups: state.allGroups));
+      emit(ScannerCancelled(
+        groups: state.allGroups,
+        byteByByteCompare: byteCompare,
+      ));
     } catch (e) {
       emit(ScannerError(
         message: e.toString(),
         groups: const [],
+        byteByByteCompare: byteCompare,
       ));
     }
   }
 
   /// Resets to the initial state, clearing any results or error.
   void reset() => emit(const ScannerInitial());
+
+  /// Toggles the byte-by-byte compare flag.
+  ///
+  /// Persists the flag across all state variants via [copyWith].
+  /// No-op when [value] equals the current flag.
+  void setByteCompare(bool value) {
+    if (state.byteByByteCompare == value) return;
+    final s = state;
+    emit(switch (s) {
+      ScannerInitial() => s.copyWith(byteByByteCompare: value),
+      ScannerScanning() => s.copyWith(byteByByteCompare: value),
+      ScannerDone() => s.copyWith(byteByByteCompare: value),
+      ScannerError() => s.copyWith(byteByByteCompare: value),
+      ScannerCancelled() => s.copyWith(byteByByteCompare: value),
+    });
+  }
 
   /// Cancels the in-progress scan.
   ///

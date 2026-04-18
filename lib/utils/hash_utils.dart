@@ -28,6 +28,18 @@ class HashUtils {
     return _dartFullHash(path);
   }
 
+  /// Returns `true` when [pathA] and [pathB] are byte-for-byte identical.
+  ///
+  /// On Windows delegates to the native FFI implementation.
+  /// On non-Windows opens both files and compares content block by block using
+  /// pure Dart — no temporary buffers are allocated beyond the read buffer.
+  static bool byteCompare(String pathA, String pathB) {
+    if (Platform.isWindows) {
+      return nativeByteCompare(pathA, pathB);
+    }
+    return _dartByteCompare(pathA, pathB);
+  }
+
   // ---------------------------------------------------------------------------
   // Non-Windows fallbacks using the `crypto` package
   // ---------------------------------------------------------------------------
@@ -83,5 +95,28 @@ class HashUtils {
 
     input.close();
     return output.value.toString();
+  }
+
+  static bool _dartByteCompare(String pathA, String pathB) {
+    // Quick size check avoids opening files that are obviously different.
+    if (File(pathA).statSync().size != File(pathB).statSync().size) return false;
+
+    final rafA = File(pathA).openSync();
+    final rafB = File(pathB).openSync();
+    try {
+      const bufSize = 65536;
+      while (true) {
+        final chunkA = rafA.readSync(bufSize);
+        final chunkB = rafB.readSync(bufSize);
+        if (chunkA.length != chunkB.length) return false;
+        if (chunkA.isEmpty) return true; // both exhausted simultaneously
+        for (var i = 0; i < chunkA.length; i++) {
+          if (chunkA[i] != chunkB[i]) return false;
+        }
+      }
+    } finally {
+      rafA.closeSync();
+      rafB.closeSync();
+    }
   }
 }

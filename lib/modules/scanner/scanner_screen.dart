@@ -49,8 +49,10 @@ class _ScannerScreenBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<ScannerScreenCubit, ScannerScreenState>(
       builder: (context, state) => switch (state) {
-        ScannerInitial(:final selectedPaths) => _FolderPickerSection(
+        ScannerInitial(:final selectedPaths, :final byteByByteCompare) =>
+          _FolderPickerSection(
             selectedPaths: selectedPaths,
+            byteByByteCompare: byteByByteCompare,
           ),
         ScannerScanning(:final progress) => _ScanningSection(
             progress: progress,
@@ -68,9 +70,13 @@ class _ScannerScreenBody extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _FolderPickerSection extends StatelessWidget {
-  const _FolderPickerSection({required this.selectedPaths});
+  const _FolderPickerSection({
+    required this.selectedPaths,
+    required this.byteByByteCompare,
+  });
 
   final List<String> selectedPaths;
+  final bool byteByByteCompare;
 
   Future<void> _pickFolder(BuildContext context) async {
     final path = await getDirectoryPath();
@@ -141,6 +147,19 @@ class _FolderPickerSection extends StatelessWidget {
                 selectedPaths.isEmpty ? null : () => _startScan(context),
             icon: const Icon(Icons.search),
             label: const Text('Start Scan'),
+          ),
+          SizedBox(height: 24.h),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Switch(
+                value: byteByByteCompare,
+                onChanged: (v) =>
+                    context.read<ScannerScreenCubit>().setByteCompare(v),
+              ),
+              SizedBox(width: 8.w),
+              const Text('Byte-by-byte verification'),
+            ],
           ),
         ],
       ),

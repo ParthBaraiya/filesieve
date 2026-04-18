@@ -10,6 +10,7 @@ sealed class ScannerScreenState with _$ScannerScreenState {
   /// No scan in progress. [selectedPaths] holds directories chosen by the user.
   const factory ScannerScreenState.initial({
     @Default(<String>[]) List<String> selectedPaths,
+    @Default(false) bool byteByByteCompare,
   }) = ScannerInitial;
 
   /// Scan is running. [groups] accumulates confirmed duplicate groups as they
@@ -19,11 +20,13 @@ sealed class ScannerScreenState with _$ScannerScreenState {
     required List<DuplicateGroup> groups,
     @Default(ScanProgress(stageTotal: 0, stageProcessed: 0, stage: 'scanning'))
     ScanProgress progress,
+    @Default(false) bool byteByByteCompare,
   }) = ScannerScanning;
 
   /// Scan finished successfully. [groups] is the complete list of duplicates.
   const factory ScannerScreenState.done({
     required List<DuplicateGroup> groups,
+    @Default(false) bool byteByByteCompare,
   }) = ScannerDone;
 
   /// Scan failed with an unrecoverable error. [message] describes the failure.
@@ -31,12 +34,14 @@ sealed class ScannerScreenState with _$ScannerScreenState {
   const factory ScannerScreenState.error({
     required String message,
     required List<DuplicateGroup> groups,
+    @Default(false) bool byteByByteCompare,
   }) = ScannerError;
 
   /// Scan was cancelled by the user. [groups] contains any duplicate groups
   /// that were confirmed before cancellation.
   const factory ScannerScreenState.cancelled({
     required List<DuplicateGroup> groups,
+    @Default(false) bool byteByByteCompare,
   }) = ScannerCancelled;
 }
 
@@ -50,5 +55,14 @@ extension ScannerScreenStateX on ScannerScreenState {
         ScannerDone(:final groups) => groups,
         ScannerError(:final groups) => groups,
         ScannerCancelled(:final groups) => groups,
+      };
+
+  /// Returns the byte-by-byte compare flag across all state variants.
+  bool get byteByByteCompare => switch (this) {
+        ScannerInitial(:final byteByByteCompare) => byteByByteCompare,
+        ScannerScanning(:final byteByByteCompare) => byteByByteCompare,
+        ScannerDone(:final byteByByteCompare) => byteByByteCompare,
+        ScannerError(:final byteByByteCompare) => byteByByteCompare,
+        ScannerCancelled(:final byteByByteCompare) => byteByByteCompare,
       };
 }

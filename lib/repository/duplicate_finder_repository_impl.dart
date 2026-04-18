@@ -298,7 +298,7 @@ class DuplicateFinderService {
     // -----------------------------------------------------------------------
     // Stage 6: Group by full hash — confirmed duplicate groups
     // -----------------------------------------------------------------------
-    final duplicateGroups = fullHashMap.values
+    final fullHashGroups = fullHashMap.values
         .where((g) => g.length >= 2)
         .map(
           (g) => DuplicateGroup(
@@ -308,10 +308,93 @@ class DuplicateFinderService {
         .toList();
 
     // -----------------------------------------------------------------------
-    // Stage 7: Emit done and return
+    // Stage 7: Byte-by-byte compare (skipped when byteByByteCompare == false)
+    //
+    // For each full-hash group, every file is compared byte-for-byte against
+    // the first file.  Matching files form a confirmed sub-group; excluded
+    // files are recursively verified against each other so that any genuine
+    // identical pair among them is still surfaced (SC-006).
+    // Each comparison is guarded by the semaphore (FR-010) and checked for
+    // cancellation before acquiring (FR-016).
+    // -----------------------------------------------------------------------
+    final duplicateGroups = <DuplicateGroup>[];
+    if (byteByByteCompare && fullHashGroups.isNotEmpty) {
+      final compareTotal = fullHashGroups.length;
+      int compareProcessed = 0;
+      onProgress(ScanProgress(
+        stage: 'compare',
+        stageTotal: compareTotal,
+        stageProcessed: 0,
+      ));
+      for (final group in fullHashGroups) {
+        cancelToken.throwIfCancelled();
+        final verified = await _byteVerifyGroup(group.paths, cancelToken);
+        duplicateGroups.addAll(verified);
+        onProgress(ScanProgress(
+          stage: 'compare',
+          stageTotal: compareTotal,
+          stageProcessed: ++compareProcessed,
+        ));
+      }
+    } else {
+      duplicateGroups.addAll(fullHashGroups);
+    }
+
+    // -----------------------------------------------------------------------
+    // Stage 8: Emit done and return
     // -----------------------------------------------------------------------
     onProgress(ScanProgress(stage: 'done', stageTotal: 0, stageProcessed: 0));
     return duplicateGroups;
+  }
+
+  /// Verifies [paths] (a hash-confirmed group) using byte-for-byte comparison.
+  ///
+  /// Compares every file against the first via the semaphore-guarded
+  /// [HashUtils.byteCompare].  Matching files accumulate in `confirmed`;
+  /// non-matching files accumulate in `excluded`.
+  ///
+  /// If `excluded` has ≥ 2 entries the method calls itself recursively so that
+  /// any genuine identical pair among the excluded files still forms a
+  /// [DuplicateGroup] (SC-006: all true duplicates must appear in results even
+  /// if they were separated from a larger group due to a hash collision).
+  ///
+  /// Returns a list of [DuplicateGroup]s with ≥ 2 paths each.
+  Future<List<DuplicateGroup>> _byteVerifyGroup(
+    List<String> paths,
+    CancelToken cancelToken,
+  ) async {
+    if (paths.length < 2) return const [];
+
+    final first = paths[0];
+    final confirmed = <String>[first];
+    final excluded = <String>[];
+
+    for (final path in paths.sublist(1)) {
+      cancelToken.throwIfCancelled();
+      await _semaphore.acquire();
+      final bool match;
+      try {
+        cancelToken.throwIfCancelled();
+        match = HashUtils.byteCompare(first, path);
+      } finally {
+        _semaphore.release();
+      }
+      if (match) {
+        confirmed.add(path);
+      } else {
+        excluded.add(path);
+      }
+    }
+
+    final groups = <DuplicateGroup>[];
+    if (confirmed.length >= 2) {
+      groups.add(DuplicateGroup(paths: List.unmodifiable(confirmed)));
+    }
+    // Recursively verify excluded files — they may still form duplicate pairs.
+    if (excluded.length >= 2) {
+      groups.addAll(await _byteVerifyGroup(excluded, cancelToken));
+    }
+    return groups;
   }
 }
 

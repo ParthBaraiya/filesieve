@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../models/scan_duplicate_entry_model.dart';
 import '../../../models/scan_progress_model.dart';
+import 'scan_live_feed_widget.dart';
 import 'scan_progress_card_widget.dart';
 import 'scan_stats_card_widget.dart';
 
@@ -82,7 +83,7 @@ class ScanProgressBodyWidget extends StatelessWidget {
           },
         ),
         SizedBox(height: 16.h),
-        const SizedBox.shrink(), // live feed slot — wired in T018
+        ScanLiveFeedWidget(entries: liveEntries),
       ],
     );
   }

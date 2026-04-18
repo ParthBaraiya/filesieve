@@ -92,10 +92,9 @@ class _FolderPickerSection extends StatelessWidget {
     final files = <File>[];
     for (final dirPath in selectedPaths) {
       try {
-        await for (final entity
-            in Directory(dirPath).list(recursive: true)) {
-          if (entity is File) files.add(entity);
-        }
+        final dir = Directory(dirPath);
+        final dirFiles = await _scanDirectory(dir);
+        files.addAll(dirFiles);
       } on FileSystemException {
         // silently skip permission-denied or inaccessible entries
       }
@@ -103,6 +102,20 @@ class _FolderPickerSection extends StatelessWidget {
     if (context.mounted) {
       context.read<ScannerScreenCubit>().startScan(files);
     }
+  }
+
+  Future<List<File>> _scanDirectory(Directory dir) async {
+    final files = <File>[];
+    try {
+      await for (final entity in dir.list(recursive: true)) {
+        if (entity is File) {
+          files.add(entity);
+        }
+      }
+    } on FileSystemException {
+      // silently skip permission-denied or inaccessible entries
+    }
+    return files;
   }
 
   @override

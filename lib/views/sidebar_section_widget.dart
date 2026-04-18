@@ -192,7 +192,7 @@ class _NavItemRow extends StatelessWidget {
           child: Row(
             children: [
               Icon(
-                _iconForItem(item),
+                item.icon,
                 size: 20.r,
                 color: isActive
                     ? colorScheme.primary
@@ -200,7 +200,7 @@ class _NavItemRow extends StatelessWidget {
               ),
               SizedBox(width: 12.w),
               Text(
-                _labelForItem(item),
+                item.label,
                 style: textTheme.bodyMedium?.copyWith(
                   color: isActive
                       ? colorScheme.primary
@@ -215,18 +215,4 @@ class _NavItemRow extends StatelessWidget {
       ),
     );
   }
-
-  IconData _iconForItem(NavigationItem item) => switch (item) {
-        NavigationItem.scan => Icons.search,
-        NavigationItem.results => Icons.list_alt_outlined,
-        NavigationItem.settings => Icons.settings_outlined,
-        NavigationItem.history => Icons.history,
-      };
-
-  String _labelForItem(NavigationItem item) => switch (item) {
-        NavigationItem.scan => 'Scan',
-        NavigationItem.results => 'Results',
-        NavigationItem.settings => 'Settings',
-        NavigationItem.history => 'History',
-      };
 }

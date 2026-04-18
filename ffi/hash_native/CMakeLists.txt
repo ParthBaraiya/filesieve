@@ -9,6 +9,7 @@ target_compile_features(hash_native PRIVATE cxx_std_17)
 target_compile_definitions(hash_native PRIVATE
   UNICODE
   _UNICODE
+  _CRT_SECURE_NO_WARNINGS   # suppress MSVC deprecation warning for _wfopen
 )
 
 install(TARGETS hash_native

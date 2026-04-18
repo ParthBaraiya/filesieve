@@ -1,4 +1,5 @@
 ﻿import 'package:bitsdojo_window/bitsdojo_window.dart';
+import 'package:filesieve/modules/home/home_screen.dart';
 import 'package:filesieve/utils/routes/shared_axis_transition_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -59,10 +60,7 @@ final router = GoRouter(
           name: AppRouteNames.home,
           path: AppRoutes.home,
           pageBuilder: (context, state) =>
-              SharedAxisTransitionPage(
-            key: state.pageKey,
-            child: ScannerScreen(),
-          ),
+              SharedAxisTransitionPage(key: state.pageKey, child: HomeScreen()),
         ),
         GoRoute(
           name: AppRouteNames.results,
@@ -93,9 +91,7 @@ final router = GoRouter(
           path: AppRoutes.scanner,
           pageBuilder: (context, state) => SharedAxisTransitionPage(
             key: state.pageKey,
-            child: ScannerScreen(
-              storePath: _objectBoxStore.directoryPath,
-            ),
+            child: ScannerScreen(storePath: _objectBoxStore.directoryPath),
           ),
         ),
       ],

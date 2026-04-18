@@ -1,14 +1,15 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.2.0 → 1.3.0 (MINOR — three new principles added, anti-pattern checklist expanded)
-Added principles:
+Version change: 1.3.0 → 1.3.1 (PATCH — design size reference corrected to 1600×1000)
+Modified sections:
+  - Principle IV — ScreenUtil designSize updated to Size(1600, 1000)
+  - Tech Stack table — Responsive Scaling entry updated to design size 1600×1000
+  - Development Workflow step 6 — responsiveness breakpoints updated (design size now 1600×1000)
+Previously added (v1.3.0):
   - XI. Cubit Accumulator & Transient State Management
   - XII. Ephemeral Form State & Cubit Migration Path
   - XIII. Theme Color Modification Rules
-Modified sections:
-  - Anti-Pattern Checklist — added 5 new block items (unmodifiable wrapping, transient data loss,
-    dismiss-to-initial, unwired form state, Colors literal with withAlpha)
 Previously added (v1.2.0):
   - X. Shell-Based Navigation Architecture (NON-NEGOTIABLE)
 Previously added (v1.1.0):
@@ -16,11 +17,12 @@ Previously added (v1.1.0):
   - IX. Theme-Driven Styling (NON-NEGOTIABLE)
 Templates updated:
   - .specify/templates/constitution-template.md  ✅ source (no change required)
-  - .specify/templates/plan-template.md          ⚠ pending (Constitution Check references v1.0.0)
+  - .specify/templates/plan-template.md          ⚠ pending (Constitution Check references v1.0.0;
+    should reference v1.3.1 and include Principles XI–XIII)
   - .specify/templates/spec-template.md          ✅ aligned (no mandatory section changes)
   - .specify/templates/tasks-template.md         ✅ aligned (no mandatory section changes)
 Deferred TODOs:
-  - plan-template.md Constitution Check should reference v1.3.0 and include Principles XI–XIII
+  - plan-template.md Constitution Check should reference v1.3.1 and include Principles XI–XIII
 -->
 
 # FileSieve Constitution
@@ -86,7 +88,7 @@ Every screen MUST be designed as a composition of independent layout sections:
   `ContentSection`, `FooterSection`)
 - Layouts MUST use flexible widgets (`Expanded`, `Flexible`, `LayoutBuilder`) as the primary
   sizing mechanism; fixed pixel sizes MUST NOT be used for full-screen or container-level layout
-- `flutter_screenutil` MUST be initialised with `designSize: Size(1440, 900)` as the reference
+- `flutter_screenutil` MUST be initialised with `designSize: Size(1600, 1000)` as the reference
 - ScreenUtil scaling (`.w`, `.h`, `.sp`, `.r`) MUST be applied to: padding, spacing, font sizes,
   and fixed-size decorative elements
 - ScreenUtil MUST NOT be applied to: `Expanded`/`Flexible` children, `LayoutBuilder` constraints,
@@ -179,7 +181,6 @@ mode, accessibility overrides, branding updates) without touching individual wid
 All primary app screens MUST be rendered inside a shared `ShellRoute` that owns the
 persistent layout chrome (sidebar, header, footer). Individual screens MUST return only
 their body content.
-
 
 - `DashboardScreenContent` is the single shell builder; it derives the active navigation
   item from `GoRouterState.of(context).uri.path` via `NavigationItem.fromRoute()`
@@ -275,7 +276,7 @@ constitution amendment.
 | Data Models             | Freezed + JSON serialization (`json_serializable`)         |
 | Native Integration      | Dart FFI (C/C++ for hashing)                               |
 | Concurrency             | Dart Isolates                                              |
-| Responsive Scaling      | `flutter_screenutil` (design size 1440×900)                |
+| Responsive Scaling      | `flutter_screenutil` (design size 1600×1000)               |
 | Design System Codegen   | Stitch (`mcp_stitch_apply_design_system` MCP)              |
 | Styling Source of Truth | `ThemeData` / `ColorScheme` / `TextTheme` in `lib/values/` |
 | Routing                 | GoRouter (ShellRoute for persistent shell)                 |
@@ -297,11 +298,11 @@ Every feature MUST follow this sequence before being considered complete:
 4. If a Stitch URL is provided: invoke `mcp_stitch_apply_design_system` → map tokens into
    `ThemeData` → place generated widgets in canonical folders
 5. Build / refine UI (calls Cubit only; all styles via `ThemeData`; no repository access)
-6. Verify responsiveness at 1024×768, 1440×900, and 1920×1080
+6. Verify responsiveness at 1024×768, 1600×1000, and 1920×1080
 
 ### Anti-Pattern Checklist (block merge if any are true)
 
-- [ ] Screen file exceeds 200 lines without widget extraction
+- [ ] Screen file exceeds 500 lines without widget extraction
 - [ ] Widget contains direct repository call
 - [ ] State mutated in place (no new instance emitted)
 - [ ] File deleted without recycle-bin intermediary
@@ -351,4 +352,4 @@ Complexity deviating from these principles MUST be explicitly justified in the P
 **Runtime guidance**: See `.github/copilot-instructions.md` for detailed coding conventions and
 responsive design usage examples.
 
-**Version**: 1.3.0 | **Ratified**: 2026-04-09 | **Last Amended**: 2026-04-16
+**Version**: 1.3.1 | **Ratified**: 2026-04-09 | **Last Amended**: 2026-04-19

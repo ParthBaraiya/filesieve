@@ -19,18 +19,19 @@ import 'widgets/scan_stage_indicator_widget.dart';
 /// Mounts a [BlocProvider] that owns a [ScannerScreenCubit] backed by a
 /// [DuplicateFinderRepositoryImpl] instance.
 ///
-/// Phase 4 (T025): Adds a progress indicator during [ScannerScanning].
-/// Phase 5 (T030): Adds a cancel button.
-/// Phase 6 (T032): Passes a real [storePath] to [DuplicateFinderRepositoryImpl].
+/// [storePath] is the ObjectBox store directory opened by the main isolate.
+/// It is forwarded to [DuplicateFinderRepositoryImpl] so the worker isolate
+/// can attach to the same store via `Store.attach`.
 class ScannerScreen extends StatelessWidget {
-  const ScannerScreen({super.key});
+  const ScannerScreen({super.key, this.storePath = ''});
+
+  final String storePath;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => ScannerScreenCubit(
-        repository: const DuplicateFinderRepositoryImpl(),
-        // storePath: '' — no-op cache in Phase 3; wired in Phase 6 (T032)
+        repository: DuplicateFinderRepositoryImpl(storePath: storePath),
       ),
       child: const _ScannerScreenBody(),
     );

@@ -10,12 +10,17 @@ import 'modules/loading/loading_screen.dart';
 import 'modules/results/results_screen.dart';
 import 'modules/scanner/scanner_screen.dart';
 import 'modules/settings/settings_screen.dart';
+import 'objectbox.g.dart';
 import 'repository/scan_session_repository_impl.dart';
 import 'values/app_routes.dart';
 import 'values/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Open the ObjectBox store once on the main isolate.
+  // Worker isolates attach to it via Store.attach(getObjectBoxModel(), path).
+  _objectBoxStore = await openStore();
 
   runApp(const FileSieveApp());
 
@@ -32,6 +37,10 @@ Future<void> main() async {
 /// Instantiate the repository once at startup and pass it down explicitly —
 /// no BuildContext / BlocProvider lookup needed at this level.
 final _repo = ScanSessionRepositoryImpl();
+
+/// The ObjectBox store opened once by [main] and kept alive for the app
+/// lifetime.  Worker isolates attach via `Store.attach`.
+late Store _objectBoxStore;
 
 final router = GoRouter(
   initialLocation: AppRoutes.loading,
@@ -84,7 +93,9 @@ final router = GoRouter(
           path: AppRoutes.scanner,
           pageBuilder: (context, state) => SharedAxisTransitionPage(
             key: state.pageKey,
-            child: const ScannerScreen(),
+            child: ScannerScreen(
+              storePath: _objectBoxStore.directoryPath,
+            ),
           ),
         ),
       ],

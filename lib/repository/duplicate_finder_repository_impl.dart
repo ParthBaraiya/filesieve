@@ -7,8 +7,10 @@ import '../models/duplicate_group_model.dart';
 import '../models/file_hash_entity.dart';
 import '../models/file_meta_model.dart';
 import '../models/scan_progress_model.dart';
+import '../objectbox.g.dart';
 import '../repository/duplicate_finder_repository.dart';
 import '../repository/hash_cache_repository.dart';
+import '../repository/hash_cache_repository_impl.dart';
 import '../utils/cancel_token.dart';
 import '../utils/hash_utils.dart';
 
@@ -98,12 +100,9 @@ class DuplicateFinderService {
   DuplicateFinderService({
     required HashCacheRepository hashCache,
     int concurrencyLimit = 4,
-  })  :
-        // ignore: unused_field  — cache integration added in Phase 6 (T033)
-        _hashCache = hashCache,
+  })  : _hashCache = hashCache,
         _semaphore = _Semaphore(concurrencyLimit);
 
-  // ignore: unused_field
   final HashCacheRepository _hashCache;
   final _Semaphore _semaphore;
 
@@ -180,10 +179,24 @@ class DuplicateFinderService {
 
       final hashFutures = sizeCandidates.map((meta) async {
         cancelToken.throwIfCancelled();
+        // Cache hit: entity non-null AND size+lastModified match AND hash present.
+        final cached = _hashCache.getEntity(meta.path);
+        if (cached != null &&
+            cached.size == meta.size &&
+            cached.lastModified == meta.lastModified &&
+            cached.partialHash != null) {
+          onProgress(ScanProgress(
+            stage: 'partial',
+            stageTotal: partialTotal,
+            stageProcessed: ++partialProcessed,
+          ));
+          return MapEntry(meta, cached.partialHash!);
+        }
         await _semaphore.acquire();
         try {
           cancelToken.throwIfCancelled();
           final hash = HashUtils.partialHash(meta.path);
+          _hashCache.savePartialHash(meta, hash);
           onProgress(ScanProgress(
             stage: 'partial',
             stageTotal: partialTotal,
@@ -247,10 +260,24 @@ class DuplicateFinderService {
           return MapEntry(meta, metaToPartialHash[meta]!);
         }
         cancelToken.throwIfCancelled();
+        // Cache hit: entity non-null AND size+lastModified match AND full hash present.
+        final cached = _hashCache.getEntity(meta.path);
+        if (cached != null &&
+            cached.size == meta.size &&
+            cached.lastModified == meta.lastModified &&
+            cached.fullHash != null) {
+          onProgress(ScanProgress(
+            stage: 'full',
+            stageTotal: fullTotal,
+            stageProcessed: ++fullProcessed,
+          ));
+          return MapEntry(meta, cached.fullHash!);
+        }
         await _semaphore.acquire();
         try {
           cancelToken.throwIfCancelled();
           final hash = HashUtils.fullHash(meta.path);
+          _hashCache.saveFullHash(meta, hash);
           onProgress(ScanProgress(
             stage: 'full',
             stageTotal: fullTotal,
@@ -391,26 +418,23 @@ class DuplicateFinderRepositoryImpl implements DuplicateFinderRepository {
 
 /// Worker isolate entry point for the duplicate-detection engine.
 ///
-/// **Phase 3 note**: Uses [_NoOpHashCacheRepository] (no caching; all hashes
-/// are recomputed every scan).
+/// Opens the ObjectBox [Store] via [Store.attach] when a [storePath] is
+/// provided (Phase 6+).  If [storePath] is empty, falls back to the no-op
+/// cache so the pipeline still works without ObjectBox.
 ///
-/// **Phase 6 (T034)** will update this function to open an ObjectBox
-/// [Store] via `Store.attach(getObjectBoxModel(), storePath)` and replace
-/// the no-op cache with [HashCacheRepositoryImpl].
+/// [Store.attach] is used (not `Store(...)`) because the main isolate already
+/// holds an open [Store] on the same directory.  Opening a second independent
+/// [Store] on the same path would cause file-lock contention on Windows.
 Future<void> _workerEntrypoint(Map<String, dynamic> message) async {
   final localCancelToken = CancelToken();
 
   // Set up cancel receive port and send it back to the main isolate.
-  // The main isolate will complete the bridge after receiving this SendPort.
   final cancelRp = ReceivePort();
   cancelRp.first.then((_) => localCancelToken.cancel());
   final handshakePort = message['cancelHandshakePort'] as SendPort;
   handshakePort.send(cancelRp.sendPort);
 
-  // Phase 3: no-op hash cache — recomputes all hashes every scan.
-  // Phase 6 (T034) will replace this block with Store.attach + HashCacheRepositoryImpl.
-  final hashCache = _NoOpHashCacheRepository();
-
+  final storePath = message['storePath'] as String;
   final filePaths = List<String>.from(message['filePaths'] as List);
   final files = filePaths.map((p) => File(p)).toList();
   final concurrencyLimit = message['concurrencyLimit'] as int;
@@ -424,35 +448,47 @@ Future<void> _workerEntrypoint(Map<String, dynamic> message) async {
         'stage': p.stage,
       });
 
-  final service = DuplicateFinderService(
-    hashCache: hashCache,
-    concurrencyLimit: concurrencyLimit,
-  );
+  // Attach to the main isolate's ObjectBox store (if a path was supplied).
+  // A null store means the no-op cache is used instead.
+  final Store? store = storePath.isNotEmpty
+      ? Store.attach(getObjectBoxModel(), storePath)
+      : null;
 
   try {
-    final groups = await service.find(
-      files: files,
-      cancelToken: localCancelToken,
-      onProgress: onProgress,
-      byteByByteCompare: byteByByteCompare,
+    final HashCacheRepository hashCache = store != null
+        ? HashCacheRepositoryImpl(store.box<FileHashEntity>())
+        : _NoOpHashCacheRepository();
+
+    final service = DuplicateFinderService(
+      hashCache: hashCache,
+      concurrencyLimit: concurrencyLimit,
     );
-    progressPort.send({
-      'type': 'result',
-      'groups': groups.map((g) => g.paths).toList(),
-    });
-  } on ScanCancelledException catch (e) {
-    progressPort.send({
-      'type': 'error',
-      'cancelled': true,
-      'message': e.message,
-    });
-  } on Exception catch (e) {
-    progressPort.send({
-      'type': 'error',
-      'cancelled': false,
-      'message': e.toString(),
-    });
+
+    try {
+      final groups = await service.find(
+        files: files,
+        cancelToken: localCancelToken,
+        onProgress: onProgress,
+        byteByByteCompare: byteByByteCompare,
+      );
+      progressPort.send({
+        'type': 'result',
+        'groups': groups.map((g) => g.paths).toList(),
+      });
+    } on ScanCancelledException catch (e) {
+      progressPort.send({
+        'type': 'error',
+        'cancelled': true,
+        'message': e.message,
+      });
+    } on Exception catch (e) {
+      progressPort.send({
+        'type': 'error',
+        'cancelled': false,
+        'message': e.toString(),
+      });
+    }
+  } finally {
+    store?.close(); // always release the ObjectBox file handle (FR-017)
   }
-  // Note: No store.close() in Phase 3 (no ObjectBox store opened).
-  // Phase 6 (T034) will add try/finally { store.close(); } around this body.
 }

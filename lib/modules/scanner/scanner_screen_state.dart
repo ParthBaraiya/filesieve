@@ -26,12 +26,18 @@ sealed class ScannerScreenState with _$ScannerScreenState {
     required List<DuplicateGroup> groups,
   }) = ScannerDone;
 
-  /// Scan failed or was cancelled. [message] describes the failure.
+  /// Scan failed with an unrecoverable error. [message] describes the failure.
   /// [groups] preserves any groups accumulated before the failure.
   const factory ScannerScreenState.error({
     required String message,
     required List<DuplicateGroup> groups,
   }) = ScannerError;
+
+  /// Scan was cancelled by the user. [groups] contains any duplicate groups
+  /// that were confirmed before cancellation.
+  const factory ScannerScreenState.cancelled({
+    required List<DuplicateGroup> groups,
+  }) = ScannerCancelled;
 }
 
 /// Convenience extension for cross-variant group access.
@@ -43,5 +49,6 @@ extension ScannerScreenStateX on ScannerScreenState {
         ScannerScanning(:final groups) => groups,
         ScannerDone(:final groups) => groups,
         ScannerError(:final groups) => groups,
+        ScannerCancelled(:final groups) => groups,
       };
 }

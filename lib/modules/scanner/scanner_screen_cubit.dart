@@ -12,11 +12,8 @@ import 'scanner_screen_state.dart';
 /// - Tracks selected directory paths in [ScannerInitial.selectedPaths].
 /// - Delegates all scan work to [DuplicateFinderRepository] (which owns the
 ///   [Isolate.spawn] and [SendPort]/[ReceivePort] wiring internally).
-/// - Emits [ScannerScanning] → [ScannerDone] on success, or [ScannerError]
-///   on failure / cancellation.
-///
-/// Phase 4 (T025) will wire [onProgress] to emit intermediate [ScannerScanning]
-/// state updates.  Phase 5 (T030) will add a dedicated cancel action.
+/// - Emits [ScannerScanning] → [ScannerDone] on success, [ScannerCancelled]
+///   on cancellation, or [ScannerError] on failure.
 class ScannerScreenCubit extends Cubit<ScannerScreenState> {
   ScannerScreenCubit({required DuplicateFinderRepository repository})
       : _repository = repository,
@@ -84,11 +81,7 @@ class ScannerScreenCubit extends Cubit<ScannerScreenState> {
       );
       emit(ScannerDone(groups: groups));
     } on ScanCancelledException {
-      // Phase 5 (T030) will emit a dedicated ScannerCancelled state.
-      emit(const ScannerError(
-        message: 'Scan was cancelled.',
-        groups: [],
-      ));
+      emit(ScannerCancelled(groups: state.allGroups));
     } catch (e) {
       emit(ScannerError(
         message: e.toString(),
@@ -99,4 +92,15 @@ class ScannerScreenCubit extends Cubit<ScannerScreenState> {
 
   /// Resets to the initial state, clearing any results or error.
   void reset() => emit(const ScannerInitial());
+
+  /// Cancels the in-progress scan.
+  ///
+  /// Calls [CancelToken.cancel] on the active token. The cancel signal is
+  /// bridged to the worker isolate via [DuplicateFinderRepositoryImpl]'s
+  /// internal [SendPort] wiring; the next [CancelToken.throwIfCancelled]
+  /// call inside the pipeline raises [ScanCancelledException], which
+  /// [startScan] catches and converts into a [ScannerCancelled] emit.
+  ///
+  /// No-op when no scan is in progress.
+  void cancelScan() => _cancelToken.cancel();
 }

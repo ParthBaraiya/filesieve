@@ -56,6 +56,7 @@ class _ScannerScreenBody extends StatelessWidget {
           ),
         ScannerDone(:final groups) => _ResultsSummarySection(groups: groups),
         ScannerError(:final message) => _ErrorSection(message: message),
+        ScannerCancelled(:final groups) => _CancelledSection(groups: groups),
       },
     );
   }
@@ -167,6 +168,59 @@ class _ScanningSection extends StatelessWidget {
             ScanStageIndicatorWidget(stage: progress.stage),
             SizedBox(height: 16.h),
             ScanProgressWidget(progress: progress),
+            SizedBox(height: 24.h),
+            Align(
+              alignment: Alignment.center,
+              child: OutlinedButton.icon(
+                onPressed: () =>
+                    context.read<ScannerScreenCubit>().cancelScan(),
+                icon: const Icon(Icons.stop_circle_outlined),
+                label: const Text('Cancel Scan'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _CancelledSection — shown after the user cancels a scan
+// ---------------------------------------------------------------------------
+
+class _CancelledSection extends StatelessWidget {
+  const _CancelledSection({required this.groups});
+
+  final List<DuplicateGroup> groups;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(24.r),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.cancel_outlined, size: 48.r, color: Colors.orange),
+            SizedBox(height: 16.h),
+            Text(
+              'Scan Cancelled',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              groups.isEmpty
+                  ? 'No duplicates found before cancellation.'
+                  : 'Found ${groups.length} group${groups.length == 1 ? '' : 's'} '
+                      'before cancellation.',
+            ),
+            SizedBox(height: 24.h),
+            OutlinedButton.icon(
+              onPressed: () => context.read<ScannerScreenCubit>().reset(),
+              icon: const Icon(Icons.refresh),
+              label: const Text('Scan Again'),
+            ),
           ],
         ),
       ),

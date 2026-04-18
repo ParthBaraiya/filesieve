@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
+import 'package:crypto/src/digest_sink.dart';
 
 import 'hash_native_bindings.dart';
 
@@ -35,7 +36,7 @@ class HashUtils {
     final file = File(path);
     final fileSize = file.statSync().size;
 
-    final output = AccumulatorSink<Digest>();
+    final output = DigestSink();
     final input = md5.startChunkedConversion(output);
 
     final raf = file.openSync();
@@ -60,12 +61,12 @@ class HashUtils {
     }
 
     input.close();
-    return output.events.single.toString();
+    return output.value.toString();
   }
 
   static String _dartFullHash(String path) {
     final file = File(path);
-    final output = AccumulatorSink<Digest>();
+    final output = DigestSink();
     final input = md5.startChunkedConversion(output);
 
     final raf = file.openSync();
@@ -81,6 +82,6 @@ class HashUtils {
     }
 
     input.close();
-    return output.events.single.toString();
+    return output.value.toString();
   }
 }

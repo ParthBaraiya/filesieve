@@ -16,8 +16,6 @@ class ScanProgressCardWidget extends StatelessWidget {
   final double overallPercent;
   final ScanProgress progress;
   final String currentFilePath;
-
-  // ignore: unused_field — button wired in T020 (Phase 5 / US4)
   final VoidCallback onCancel;
 
   String _stageLabel(String stage) {
@@ -80,6 +78,15 @@ class ScanProgressCardWidget extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ],
+            SizedBox(height: 16.h),
+            OutlinedButton(
+              onPressed: onCancel,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: colorScheme.error,
+                side: BorderSide(color: colorScheme.error),
+              ),
+              child: Text(AppStrings.scanProgressCancelButton),
+            ),
           ],
         ),
       ),

@@ -170,12 +170,25 @@ class DuplicateFinderService {
     // -----------------------------------------------------------------------
     final metaToPartialHash = <FileMeta, String>{};
     {
+      final partialTotal = sizeCandidates.length;
+      int partialProcessed = 0;
+      onProgress(ScanProgress(
+        stage: 'partial',
+        stageTotal: partialTotal,
+        stageProcessed: 0,
+      ));
+
       final hashFutures = sizeCandidates.map((meta) async {
         cancelToken.throwIfCancelled();
         await _semaphore.acquire();
         try {
           cancelToken.throwIfCancelled();
           final hash = HashUtils.partialHash(meta.path);
+          onProgress(ScanProgress(
+            stage: 'partial',
+            stageTotal: partialTotal,
+            stageProcessed: ++partialProcessed,
+          ));
           return MapEntry(meta, hash);
         } finally {
           _semaphore.release();
@@ -215,9 +228,22 @@ class DuplicateFinderService {
     // -----------------------------------------------------------------------
     final fullHashMap = <String, List<FileMeta>>{};
     {
+      final fullTotal = partialCandidates.length;
+      int fullProcessed = 0;
+      onProgress(ScanProgress(
+        stage: 'full',
+        stageTotal: fullTotal,
+        stageProcessed: 0,
+      ));
+
       final hashFutures = partialCandidates.map((meta) async {
         if (meta.size <= HashUtils.chunkSize) {
           // Partial hash covers the complete file for small files.
+          onProgress(ScanProgress(
+            stage: 'full',
+            stageTotal: fullTotal,
+            stageProcessed: ++fullProcessed,
+          ));
           return MapEntry(meta, metaToPartialHash[meta]!);
         }
         cancelToken.throwIfCancelled();
@@ -225,6 +251,11 @@ class DuplicateFinderService {
         try {
           cancelToken.throwIfCancelled();
           final hash = HashUtils.fullHash(meta.path);
+          onProgress(ScanProgress(
+            stage: 'full',
+            stageTotal: fullTotal,
+            stageProcessed: ++fullProcessed,
+          ));
           return MapEntry(meta, hash);
         } finally {
           _semaphore.release();

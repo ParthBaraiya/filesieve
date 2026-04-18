@@ -73,7 +73,12 @@ class ScannerScreenCubit extends Cubit<ScannerScreenState> {
     try {
       final groups = await _repository.find(
         files: files,
-        onProgress: (_) {}, // Phase 4 (T025) will forward progress to state
+        onProgress: (p) {
+          // Bridge worker progress to UI state.
+          // allGroups stays [] until done — the pipeline emits groups only
+          // at completion (Phase 6 wires streaming if needed).
+          emit(ScannerScanning(progress: p, groups: state.allGroups));
+        },
         cancelToken: _cancelToken,
         // byteByByteCompare added in Phase 7 (T037)
       );

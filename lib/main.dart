@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 
 import 'modules/dashboard_screen.dart';
 import 'modules/history/history_screen.dart';
-import 'modules/home/home_screen.dart';
 import 'modules/loading/loading_screen.dart';
 import 'modules/results/results_screen.dart';
 import 'modules/scanner/scanner_screen.dart';
@@ -51,7 +50,10 @@ final router = GoRouter(
           name: AppRouteNames.home,
           path: AppRoutes.home,
           pageBuilder: (context, state) =>
-              SharedAxisTransitionPage(key: state.pageKey, child: HomeScreen()),
+              SharedAxisTransitionPage(
+            key: state.pageKey,
+            child: ScannerScreen(),
+          ),
         ),
         GoRoute(
           name: AppRouteNames.results,

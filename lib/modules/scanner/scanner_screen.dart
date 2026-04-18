@@ -6,9 +6,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../models/duplicate_group_model.dart';
+import '../../models/scan_progress_model.dart';
 import '../../repository/duplicate_finder_repository_impl.dart';
 import 'scanner_screen_cubit.dart';
 import 'scanner_screen_state.dart';
+import 'widgets/scan_progress_widget.dart';
+import 'widgets/scan_stage_indicator_widget.dart';
 
 /// Scanner screen — lets the user select directories, run a duplicate scan,
 /// and view a summary of the results.
@@ -48,7 +51,9 @@ class _ScannerScreenBody extends StatelessWidget {
         ScannerInitial(:final selectedPaths) => _FolderPickerSection(
             selectedPaths: selectedPaths,
           ),
-        ScannerScanning() => const _ScanningSection(),
+        ScannerScanning(:final progress) => _ScanningSection(
+            progress: progress,
+          ),
         ScannerDone(:final groups) => _ResultsSummarySection(groups: groups),
         ScannerError(:final message) => _ErrorSection(message: message),
       },
@@ -146,23 +151,24 @@ class _FolderPickerSection extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _ScanningSection extends StatelessWidget {
-  const _ScanningSection();
+  const _ScanningSection({required this.progress});
+
+  final ScanProgress progress;
 
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const CircularProgressIndicator(),
-          SizedBox(height: 16.h),
-          // Phase 4 (T025): Replace with a ScanProgressWidget showing
-          // per-stage progress bar and file count.
-          Text(
-            'Scanning for duplicates…',
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-        ],
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 48.w, vertical: 32.h),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ScanStageIndicatorWidget(stage: progress.stage),
+            SizedBox(height: 16.h),
+            ScanProgressWidget(progress: progress),
+          ],
+        ),
       ),
     );
   }

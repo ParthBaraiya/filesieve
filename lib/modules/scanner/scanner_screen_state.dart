@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../models/duplicate_group_model.dart';
+import '../../models/scan_progress_model.dart';
 
 part 'scanner_screen_state.freezed.dart';
 
@@ -13,8 +14,11 @@ sealed class ScannerScreenState with _$ScannerScreenState {
 
   /// Scan is running. [groups] accumulates confirmed duplicate groups as they
   /// are found (populated in Phase 4 / T025; empty list in Phase 3).
+  /// [progress] reflects the current pipeline stage and file count.
   const factory ScannerScreenState.scanning({
     required List<DuplicateGroup> groups,
+    @Default(ScanProgress(stageTotal: 0, stageProcessed: 0, stage: 'scanning'))
+    ScanProgress progress,
   }) = ScannerScanning;
 
   /// Scan finished successfully. [groups] is the complete list of duplicates.

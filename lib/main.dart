@@ -9,6 +9,7 @@ import 'modules/history/history_screen.dart';
 import 'modules/home/home_screen.dart';
 import 'modules/loading/loading_screen.dart';
 import 'modules/results/results_screen.dart';
+import 'modules/scanner/scanner_screen.dart';
 import 'modules/settings/settings_screen.dart';
 import 'repository/scan_session_repository_impl.dart';
 import 'values/app_routes.dart';
@@ -74,6 +75,14 @@ final router = GoRouter(
           pageBuilder: (context, state) => SharedAxisTransitionPage(
             key: state.pageKey,
             child: HistoryScreen(),
+          ),
+        ),
+        GoRoute(
+          name: AppRouteNames.scanner,
+          path: AppRoutes.scanner,
+          pageBuilder: (context, state) => SharedAxisTransitionPage(
+            key: state.pageKey,
+            child: const ScannerScreen(),
           ),
         ),
       ],

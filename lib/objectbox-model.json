@@ -1,0 +1,59 @@
+{
+  "_note1": "KEEP THIS FILE! Check it into a version control system (VCS) like git.",
+  "_note2": "ObjectBox manages crucial IDs for your object model. See docs for details.",
+  "_note3": "If you have VCS merge conflicts, you must resolve them according to ObjectBox docs.",
+  "entities": [
+    {
+      "id": "1:1016128846196508972",
+      "lastPropertyId": "6:5492059291406478808",
+      "name": "FileHashEntity",
+      "properties": [
+        {
+          "id": "1:4545238124455239444",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7059520010916131535",
+          "name": "path",
+          "indexId": "1:6368101767265748244",
+          "type": 9,
+          "flags": 2048
+        },
+        {
+          "id": "3:2812424070812762453",
+          "name": "size",
+          "type": 6
+        },
+        {
+          "id": "4:7311750492847990358",
+          "name": "lastModified",
+          "type": 6
+        },
+        {
+          "id": "5:5900565119294687400",
+          "name": "partialHash",
+          "type": 9
+        },
+        {
+          "id": "6:5492059291406478808",
+          "name": "fullHash",
+          "type": 9
+        }
+      ],
+      "relations": []
+    }
+  ],
+  "lastEntityId": "1:1016128846196508972",
+  "lastIndexId": "1:6368101767265748244",
+  "lastRelationId": "0:0",
+  "lastSequenceId": "0:0",
+  "modelVersion": 5,
+  "modelVersionParserMinimum": 5,
+  "retiredEntityUids": [],
+  "retiredIndexUids": [],
+  "retiredPropertyUids": [],
+  "retiredRelationUids": [],
+  "version": 1
+}

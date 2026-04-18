@@ -2,8 +2,11 @@ import 'dart:io';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:path/path.dart' as p;
 
+import '../../models/scan_duplicate_entry_model.dart';
 import '../../models/scan_folder_model.dart';
+import '../../models/scan_progress_model.dart';
 import '../../repository/duplicate_finder_repository.dart';
 import '../../repository/scan_session_repository.dart';
 import '../../utils/cancel_token.dart';
@@ -28,7 +31,7 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
   // ignore: unused_field
   final ScanSessionRepository _repository;
   final DuplicateFinderRepository _scanRepository;
-  final CancelToken _cancelToken = CancelToken();
+  CancelToken _cancelToken = CancelToken();
 
   final List<ScanFolderModel> _folders = [];
 
@@ -36,6 +39,113 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
   Future<void> close() {
     _cancelToken.cancel();
     return super.close();
+  }
+
+  // -------------------------------------------------------------------------
+  // Scan
+  // -------------------------------------------------------------------------
+
+  Future<void> startScan() async {
+    if (state is! HomeScreenFoldersAdded) return;
+
+    final currentFolders = state.allFolders;
+    final files = <File>[];
+    for (final folder in currentFolders) {
+      try {
+        await for (final entity in Directory(
+          folder.path,
+        ).list(recursive: true)) {
+          if (entity is File) files.add(entity);
+        }
+      } on FileSystemException {
+        // silently skip unreadable directories
+      }
+    }
+
+    _cancelToken = CancelToken();
+    emit(HomeScreenState.scanning(folders: List.unmodifiable(currentFolders)));
+
+    try {
+      await _scanRepository.find(
+        files: files,
+        onProgress: (sp) {
+          emit(
+            (state as HomeScreenScanning).copyWith(
+              progress: sp,
+              currentFilePath: sp.currentPath,
+              filesAnalyzed: sp.stage == 'scanning'
+                  ? sp.stageProcessed
+                  : (state as HomeScreenScanning).filesAnalyzed,
+              overallPercent: _computeOverallPercent(
+                sp,
+                (state as HomeScreenScanning).overallPercent,
+              ),
+            ),
+          );
+        },
+        onGroupFound: (group, sizes) {
+          final newEntries = <ScanDuplicateEntryModel>[];
+          for (int i = 1; i < group.paths.length; i++) {
+            newEntries.add(
+              ScanDuplicateEntryModel(
+                path: group.paths[i],
+                fileName: p.basename(group.paths[i]),
+                parentPath: p.dirname(group.paths[i]),
+                sizeBytes: sizes[i],
+                matchPercent: 100,
+              ),
+            );
+          }
+          emit(
+            (state as HomeScreenScanning).copyWith(
+              liveEntries: List.unmodifiable([
+                ...(state as HomeScreenScanning).liveEntries,
+                ...newEntries,
+              ]),
+            ),
+          );
+        },
+        cancelToken: _cancelToken,
+      );
+      // TODO(future): navigate to results screen
+    } on ScanCancelledException {
+      emit(
+        HomeScreenState.foldersAdded(
+          folders: List.unmodifiable(state.allFolders),
+        ),
+      );
+    } catch (e) {
+      emit(
+        HomeScreenState.foldersAdded(
+          folders: List.unmodifiable(state.allFolders),
+        ),
+      );
+    }
+  }
+
+  void cancelScan() {
+    if (state is! HomeScreenScanning) return;
+    _cancelToken.cancel();
+  }
+
+  double _computeOverallPercent(ScanProgress sp, double currentOverallPercent) {
+    final ratio = sp.stageTotal == 0
+        ? 0.0
+        : (sp.stageProcessed / sp.stageTotal).clamp(0.0, 1.0);
+    switch (sp.stage) {
+      case 'scanning':
+        return ratio * 10.0;
+      case 'partial':
+        return 10.0 + ratio * 40.0;
+      case 'full':
+        return 50.0 + ratio * 40.0;
+      case 'compare':
+        return 90.0 + ratio * 9.0;
+      case 'done':
+        return 100.0;
+      default:
+        return currentOverallPercent;
+    }
   }
 
   // -------------------------------------------------------------------------

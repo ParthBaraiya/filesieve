@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../values/app_strings.dart';
+import '../home_screen_cubit.dart';
 import 'folder_list_panel_widget.dart';
 import 'scan_settings_panel_widget.dart';
 
@@ -47,7 +49,7 @@ class ScanConfigBodyWidget extends StatelessWidget {
             ),
             SizedBox(width: 8.w),
             FilledButton(
-              onPressed: () {},
+              onPressed: () => context.read<HomeScreenCubit>().startScan(),
               child: Text(AppStrings.startScan),
             ),
           ],

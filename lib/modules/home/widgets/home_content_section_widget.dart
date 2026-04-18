@@ -7,6 +7,7 @@ import '../home_screen_cubit.dart';
 import '../home_screen_state.dart';
 import 'drop_zone_widget.dart';
 import 'scan_config_body_widget.dart';
+import 'scan_progress_body_widget.dart';
 import 'step_flow_widget.dart';
 
 /// HomeContentSectionWidget — the main body content for the home / onboarding
@@ -21,6 +22,19 @@ class HomeContentSectionWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<HomeScreenCubit, HomeScreenState>(
       builder: (context, state) {
+        if (state is HomeScreenScanning) {
+          return Padding(
+            padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 24.h),
+            child: ScanProgressBodyWidget(
+              overallPercent: state.overallPercent,
+              progress: state.progress,
+              currentFilePath: state.currentFilePath,
+              filesAnalyzed: state.filesAnalyzed,
+              liveEntries: state.liveEntries,
+              onCancel: () => context.read<HomeScreenCubit>().cancelScan(),
+            ),
+          );
+        }
         if (state.hasFolders) {
           return Padding(
             padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 24.h),

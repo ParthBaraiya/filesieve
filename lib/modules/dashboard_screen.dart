@@ -5,11 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../repository/duplicate_finder_repository_impl.dart';
 import '../repository/scan_session_repository_impl.dart';
 import '../values/app_routes.dart';
-import '../values/app_strings.dart';
 import '../values/enums.dart';
 import '../views/app_shell_widget.dart';
 import '../views/footer_section_widget.dart';
-import '../views/header_section_widget.dart';
 import '../views/sidebar_section_widget.dart';
 import 'dashboard_screen_cubit.dart';
 import 'dashboard_screen_state.dart';
@@ -59,9 +57,6 @@ class _DashboardScreenState extends State<DashboardScreenContent> {
             onAddFolder: () =>
                 context.read<DashboardScreenCubit>().onPickFolder(),
             onNavItemTap: (item) => context.go(item.route),
-          ),
-          header: const HeaderSectionWidget(
-            label: AppStrings.headerContextLabel,
           ),
           body: widget.child,
           footer: const FooterSectionWidget(),

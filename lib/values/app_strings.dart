@@ -35,9 +35,6 @@ class AppStrings {
   static const String stepFlowStep3Label = 'Step Three';
   static const String stepFlowStep3Desc = 'Review and resolve duplicates';
 
-  // Header context label
-  static const String headerContextLabel = 'Initialize New Scan';
-
   // Footer
   static const String scanningEngineVersion = 'v2.4-STABLE';
 

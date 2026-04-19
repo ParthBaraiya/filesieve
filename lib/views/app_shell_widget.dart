@@ -16,16 +16,12 @@ class AppShellWidget extends StatelessWidget {
   const AppShellWidget({
     super.key,
     required this.sidebar,
-    this.header,
     required this.body,
     this.footer,
   });
 
   /// Fixed-width sidebar column (typically [SidebarSectionWidget]).
   final Widget sidebar;
-
-  /// Top of the body area (typically [HeaderSectionWidget]).
-  final Widget? header;
 
   /// Main content area — receives all remaining vertical space.
   final Widget body;
@@ -96,7 +92,6 @@ class AppShellWidget extends StatelessWidget {
                 Expanded(
                   child: Column(
                     children: [
-                      ?header,
                       Expanded(child: body),
                       ?footer,
                     ],

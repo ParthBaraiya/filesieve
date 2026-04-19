@@ -70,6 +70,7 @@ dependencies:
   uuid: ^4.5.1
   animations: ^2.1.2
   bitsdojo_window: ^0.1.6
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:

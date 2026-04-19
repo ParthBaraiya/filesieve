@@ -31,7 +31,7 @@
 
 _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-Verify against [FileSieve Constitution v1.0.0](.specify/memory/constitution.md):
+Verify against [FileSieve Constitution v1.5.0](.specify/memory/constitution.md):
 
 - [ ] **I. Layered Architecture** — Feature follows `UI → Cubit → Repository → Data Source`;
       new files placed in correct canonical folder; naming conventions applied

@@ -1,32 +1,19 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.3.1 → 1.4.0 (MINOR — two new principles derived from specs 001 + 002)
+Version change: 1.4.0 → 1.5.0 (MINOR — added Dependency Injection principle and DI tooling)
 Modified sections:
-  - Added Principle XIV — Worker Isolate Communication Protocol
-  - Added Principle XV — Incremental Pipeline Results & Progress Mapping
-  - Anti-Pattern Checklist — added 6 new entries for isolate/pipeline violations
-  - Module Boundary Rules — added scanner module responsibilities clarification
-Previously added (v1.3.1):
-  - Principle IV — ScreenUtil designSize updated to Size(1600, 1000)
-  - Tech Stack table — Responsive Scaling entry updated
-Previously added (v1.3.0):
-  - XI. Cubit Accumulator & Transient State Management
-  - XII. Ephemeral Form State & Cubit Migration Path
-  - XIII. Theme Color Modification Rules
-Previously added (v1.2.0):
-  - X. Shell-Based Navigation Architecture (NON-NEGOTIABLE)
-Previously added (v1.1.0):
-  - VIII. Stitch Design System Integration
-  - IX. Theme-Driven Styling (NON-NEGOTIABLE)
-Templates updated:
-  - .specify/templates/constitution-template.md  ✅ source (no change required)
-  - .specify/templates/plan-template.md          ⚠ pending (Constitution Check references v1.0.0;
-    should reference v1.4.0 and include Principles XI–XV)
-  - .specify/templates/spec-template.md          ✅ aligned (no mandatory section changes)
-  - .specify/templates/tasks-template.md         ✅ aligned (no mandatory section changes)
-Deferred TODOs:
-  - plan-template.md Constitution Check should reference v1.4.0 and include Principles XIV–XV
+  - Added Principle XVI — Dependency Injection & Service Registration
+  - Tech Stack & Tooling Standards — added Dependency Injection: get_it
+  - Module Boundary Rules — clarified `FsPickerBase` usage and DI expectations
+  - Templates updated:
+    - .specify/templates/plan-template.md ✅ updated (Constitution Check now references v1.5.0)
+Previously added (v1.4.0):
+  - Principles XI–XV (infrastructure, isolate, and pipeline rules)
+Templates requiring review:
+  - .specify/templates/plan-template.md ✅ updated
+Follow-up TODOs:
+  - Ensure CI and developer README list `get_it` and show `lib/di/service_locator.dart` usage
 -->
 
 # FileSieve Constitution
@@ -332,6 +319,71 @@ working. Incremental results build trust and let users evaluate partial findings
 completion. Display-layer model creation in the Cubit keeps widgets free of business logic
 per Principle III. These patterns were established across specs 001 and 002.
 
+### XVI. Dependency Injection & Service Registration (NON-NEGOTIABLE)
+
+- `get_it` MUST be the canonical dependency-injection / service-locator for the project.
+  All singleton and factory registrations MUST be centralised in a single composition
+  root file: `lib/di/service_locator.dart` (or equivalent) and invoked once during
+  app startup (in `main()` before `runApp()`).
+
+- Register platform adapters by their interface type. Example registration (composition
+  root):
+
+  ```dart
+  // lib/di/service_locator.dart
+  import 'package:get_it/get_it.dart';
+  import 'package:filesieve/utils/file_picker/fs_picker.dart';
+  import 'package:filesieve/utils/file_picker/fs_picker_base.dart';
+
+  final GetIt getIt = GetIt.instance;
+
+  void setupServiceLocator() {
+    getIt.registerLazySingleton<FsPickerBase>(() => FsPicker());
+    // register other singletons and factories here
+  }
+  ```
+
+-- Access rules:
+
+- Constructor injection is MANDATORY for Cubits. Cubits MUST NOT be registered or
+  resolved via `get_it`. Cubits must be created by the composition root (or the
+  caller) and receive their dependencies (repositories, services, `FsPickerBase`,
+  etc.) via constructor parameters. This preserves testability and explicit
+  lifecycle management.
+- Repositories and services (non-Cubit objects) MAY be registered in `get_it`
+  as singletons or factories. When doing so, prefer registering interfaces/types
+  (e.g., `FsPickerBase`) rather than concrete classes.
+- If global access is unavoidable for tiny utilities, restrict `getIt()` calls to
+  the composition root or thin helpers; do NOT call `getIt()` from widget build
+  methods or deep business logic.
+
+- Testing:
+  - Tests MUST call `getIt.reset()` in `setUp()`/`tearDown()` and register test doubles
+    as needed, e.g. `getIt.registerSingleton<FsPickerBase>(FakeFsPicker())`.
+
+- Worker isolate rule: do NOT register non-serialisable objects (ObjectBox `Store`,
+  `Box<T>`, `File`, native pointers) for use across isolates. Worker isolates MUST
+  receive primitive parameters and attach their own resources per Principle XIV.
+
+- Directory picker binding (mandatory):
+  - The canonical abstraction for directory selection is `FsPickerBase`
+    (`lib/utils/file_picker/fs_picker_base.dart`). The concrete implementation
+    `FsPicker` (`lib/utils/file_picker/fs_picker.dart`) MUST be registered as a
+    lazy singleton:
+
+    ```dart
+    getIt.registerLazySingleton<FsPickerBase>(() => FsPicker());
+    ```
+
+  - Consumers (Cubits / Services) that need directory selection MUST accept an
+    `FsPickerBase` instance via constructor injection. UI widgets SHOULD call into
+    Cubit methods which use the injected `FsPickerBase` rather than calling `getIt`
+    or platform APIs directly.
+
+  **Rationale**: Centralised registration improves testability, makes platform
+  substitution straightforward, and avoids duplicated global state across the
+  codebase.
+
 ## Tech Stack & Tooling Standards
 
 The following technology choices are binding for this project. Substitutions require a
@@ -345,6 +397,7 @@ constitution amendment.
 | Data Models             | Freezed + JSON serialization (`json_serializable`)         |
 | Native Integration      | Dart FFI (C/C++ for hashing)                               |
 | Concurrency             | Dart Isolates                                              |
+| Dependency Injection    | get_it (service-locator / DI composition)                  |
 | Responsive Scaling      | `flutter_screenutil` (design size 1600×1000)               |
 | Design System Codegen   | Stitch (`mcp_stitch_apply_design_system` MCP)              |
 | Styling Source of Truth | `ThemeData` / `ColorScheme` / `TextTheme` in `lib/values/` |
@@ -405,6 +458,16 @@ Every feature MUST follow this sequence before being considered complete:
 - `modules/settings/` — user preferences, scan configuration persistence
 - `modules/history/` — past scan session browsing
 
+Directory picker usage:
+
+- Modules that require directory selection MUST rely on the `FsPickerBase` abstraction
+  (`lib/utils/file_picker/fs_picker_base.dart`). The concrete `FsPicker`
+  implementation (`lib/utils/file_picker/fs_picker.dart`) MUST be registered in the
+  composition root (`lib/di/service_locator.dart`) as a lazy singleton and provided to
+  Cubits/services via constructor injection. UI widgets SHOULD call Cubit methods that
+  use the injected `FsPickerBase` instead of calling `getIt()` or platform APIs
+  directly from build methods.
+
 Cross-module navigation MUST go through GoRouter; modules MUST NOT import each other directly.
 All primary modules MUST be registered as child routes inside the `ShellRoute` in `main.dart`.
 
@@ -429,4 +492,4 @@ Complexity deviating from these principles MUST be explicitly justified in the P
 **Runtime guidance**: See `.github/copilot-instructions.md` for detailed coding conventions and
 responsive design usage examples.
 
-**Version**: 1.4.0 | **Ratified**: 2026-04-09 | **Last Amended**: 2026-04-19
+**Version**: 1.5.0 | **Ratified**: 2026-04-09 | **Last Amended**: 2026-04-19

@@ -6,7 +6,7 @@ import '../../utils/cancel_token.dart';
 
 abstract class DuplicateFinderRepositoryBase {
   Future<List<DuplicateGroup>> find({
-    required List<File> files,
+    required List<Directory> folders,
     required void Function(ScanProgress) onProgress,
     required CancelToken cancelToken,
     bool byteByByteCompare = false,

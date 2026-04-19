@@ -50,25 +50,13 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
     if (state is! HomeScreenFoldersAdded) return;
 
     final currentFolders = state.allFolders;
-    final files = <File>[];
-    for (final folder in currentFolders) {
-      try {
-        await for (final entity in Directory(
-          folder.path,
-        ).list(recursive: true)) {
-          if (entity is File) files.add(entity);
-        }
-      } on FileSystemException {
-        // silently skip unreadable directories
-      }
-    }
 
     _cancelToken = CancelToken();
     emit(HomeScreenState.scanning(folders: List.unmodifiable(currentFolders)));
 
     try {
       await _scanRepository.find(
-        files: files,
+        folders: currentFolders.map((f) => Directory(f.path)).toList(),
         onProgress: (sp) {
           emit(
             (state as HomeScreenScanning).copyWith(
@@ -268,7 +256,6 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
   }
   //#endregion
 
-
   //#region Utility
   // -------------------------------------------------------------------------
   // Utility
@@ -294,16 +281,12 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
   void removeFolder(int index) {
     final folders = [...state.allFolders];
     if (index < 0 || index >= folders.length) return;
-    try {
-      folders.removeAt(index);
+    folders.removeAt(index);
 
-      if (folders.isNotEmpty) {
-        emit(HomeScreenState.foldersAdded(folders: List.unmodifiable(folders)));
-      } else {
-        emit(const HomeScreenState.initial());
-      }
-    } catch (e) {
-      print('$e');
+    if (folders.isNotEmpty) {
+      emit(HomeScreenState.foldersAdded(folders: List.unmodifiable(folders)));
+    } else {
+      emit(const HomeScreenState.initial());
     }
   }
 
@@ -347,6 +330,7 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
     ).uri.pathSegments.where((s) => s.isNotEmpty).toList();
     return segments.isNotEmpty ? segments.last : folderPath;
   }
+
   //#endregion
 }
 

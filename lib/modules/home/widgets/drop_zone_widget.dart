@@ -105,27 +105,27 @@ class DropZoneWidget extends StatelessWidget {
                           color: colorScheme.onSurfaceVariant,
                         ),
                       ),
-                    SizedBox(height: 16.h),
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 12.w,
-                        vertical: 6.h,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: colorScheme.outlineVariant,
-                          width: 1,
-                        ),
-                        borderRadius: BorderRadius.circular(4.r),
-                      ),
-                      child: Text(
-                        AppStrings.dropZoneFormats,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ),
+                    // SizedBox(height: 16.h),
+                    // Container(
+                    //   padding: EdgeInsets.symmetric(
+                    //     horizontal: 12.w,
+                    //     vertical: 6.h,
+                    //   ),
+                    //   decoration: BoxDecoration(
+                    //     border: Border.all(
+                    //       color: colorScheme.outlineVariant,
+                    //       width: 1,
+                    //     ),
+                    //     borderRadius: BorderRadius.circular(4.r),
+                    //   ),
+                    //   child: Text(
+                    //     AppStrings.dropZoneFormats,
+                    //     style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    //       color: colorScheme.onSurfaceVariant,
+                    //       letterSpacing: 0.5,
+                    //     ),
+                    //   ),
+                    // ),
                   ],
                 ),
               ),

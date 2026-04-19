@@ -9,8 +9,8 @@ import 'package:path/path.dart' as p;
 import '../../models/scan_duplicate_entry_model.dart';
 import '../../models/scan_folder_model.dart';
 import '../../models/scan_progress_model.dart';
-import '../../repository/duplicate_finder_repository.dart';
-import '../../repository/scan_session_repository.dart';
+import '../../repository/duplicate_finder/duplicate_finder_repository_base.dart';
+import '../../repository/scan_session/scan_session_repository_base.dart';
 import '../../utils/cancel_token.dart';
 import '../../values/app_strings.dart';
 import 'home_screen_state.dart';
@@ -24,15 +24,15 @@ import 'home_screen_state.dart';
 ///   (empty dir) is treated as accessible; a [FileSystemException] is not.
 class HomeScreenCubit extends Cubit<HomeScreenState> {
   HomeScreenCubit({
-    required ScanSessionRepository repository,
-    required DuplicateFinderRepository scanRepository,
+    required ScanSessionRepositoryBase repository,
+    required DuplicateFinderRepositoryBase scanRepository,
   }) : _repository = repository,
        _scanRepository = scanRepository,
        super(const HomeScreenState.initial());
 
   // ignore: unused_field
-  final ScanSessionRepository _repository;
-  final DuplicateFinderRepository _scanRepository;
+  final ScanSessionRepositoryBase _repository;
+  final DuplicateFinderRepositoryBase _scanRepository;
   CancelToken _cancelToken = CancelToken();
 
   @override
@@ -41,6 +41,7 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
     return super.close();
   }
 
+  //#region Scan
   // -------------------------------------------------------------------------
   // Scan
   // -------------------------------------------------------------------------
@@ -147,7 +148,9 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
         return currentOverallPercent;
     }
   }
+  //#endregion
 
+  //#region Drag-and-drop events
   // -------------------------------------------------------------------------
   // Drag-and-drop events
   // -------------------------------------------------------------------------
@@ -214,7 +217,9 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
       );
     }
   }
+  //#endregion
 
+  //#region Folder picker
   // -------------------------------------------------------------------------
   // Folder picker
   // -------------------------------------------------------------------------
@@ -261,7 +266,10 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
       ),
     );
   }
+  //#endregion
 
+
+  //#region Utility
   // -------------------------------------------------------------------------
   // Utility
   // -------------------------------------------------------------------------
@@ -339,6 +347,7 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
     ).uri.pathSegments.where((s) => s.isNotEmpty).toList();
     return segments.isNotEmpty ? segments.last : folderPath;
   }
+  //#endregion
 }
 
 class ScanValidityResult {

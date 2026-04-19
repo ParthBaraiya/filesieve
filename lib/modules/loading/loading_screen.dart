@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../repository/scan_session_repository.dart';
+import '../../repository/scan_session/scan_session_repository_base.dart';
 import '../../values/app_routes.dart';
 
 /// LoadingScreen — performs 3-branch routing on app launch per FR-001.
 ///
-/// Receives a [ScanSessionRepository] as a constructor parameter.
+/// Receives a [ScanSessionRepositoryBase] as a constructor parameter.
 /// Uses [WidgetsBinding.addPostFrameCallback] with a [_navigated] guard so
 /// navigation fires once after the first frame and does NOT re-fire on hot
 /// reload.
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({super.key, required this.repository});
 
-  final ScanSessionRepository repository;
+  final ScanSessionRepositoryBase repository;
 
   @override
   State<LoadingScreen> createState() => _LoadingScreenState();

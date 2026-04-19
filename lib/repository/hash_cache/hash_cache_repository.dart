@@ -1,7 +1,7 @@
-import '../models/file_hash_entity.dart';
-import '../models/file_meta_model.dart';
-import '../objectbox.g.dart';
-import 'hash_cache_repository.dart';
+import '../../models/file_hash_entity.dart';
+import '../../models/file_meta_model.dart';
+import '../../objectbox.g.dart';
+import 'hash_cache_repository_base.dart';
 
 /// ObjectBox-backed implementation of [HashCacheRepository].
 ///
@@ -15,8 +15,8 @@ import 'hash_cache_repository.dart';
 ///   so ObjectBox replaces the existing row rather than inserting a duplicate.
 /// - If no entity exists for the path, `id = 0` causes ObjectBox to insert a
 ///   new row and assign a fresh auto-increment id.
-class HashCacheRepositoryImpl implements HashCacheRepository {
-  HashCacheRepositoryImpl(this._box);
+class HashCacheRepository implements HashCacheRepositoryBase {
+  HashCacheRepository(this._box);
 
   final Box<FileHashEntity> _box;
 
@@ -35,14 +35,16 @@ class HashCacheRepositoryImpl implements HashCacheRepository {
   @override
   void savePartialHash(FileMeta meta, String hash) {
     final existing = getEntity(meta.path);
-    _box.put(FileHashEntity(
-      id: existing?.id ?? 0,
-      path: meta.path,
-      size: meta.size,
-      lastModified: meta.lastModified,
-      partialHash: hash,
-      fullHash: existing?.fullHash, // preserve existing full hash
-    ));
+    _box.put(
+      FileHashEntity(
+        id: existing?.id ?? 0,
+        path: meta.path,
+        size: meta.size,
+        lastModified: meta.lastModified,
+        partialHash: hash,
+        fullHash: existing?.fullHash, // preserve existing full hash
+      ),
+    );
   }
 
   /// Saves (or updates) the full hash for [meta.path].
@@ -52,13 +54,15 @@ class HashCacheRepositoryImpl implements HashCacheRepository {
   @override
   void saveFullHash(FileMeta meta, String hash) {
     final existing = getEntity(meta.path);
-    _box.put(FileHashEntity(
-      id: existing?.id ?? 0,
-      path: meta.path,
-      size: meta.size,
-      lastModified: meta.lastModified,
-      partialHash: existing?.partialHash, // preserve existing partial hash
-      fullHash: hash,
-    ));
+    _box.put(
+      FileHashEntity(
+        id: existing?.id ?? 0,
+        path: meta.path,
+        size: meta.size,
+        lastModified: meta.lastModified,
+        partialHash: existing?.partialHash, // preserve existing partial hash
+        fullHash: hash,
+      ),
+    );
   }
 }

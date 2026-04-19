@@ -3,16 +3,16 @@ import 'dart:collection';
 import 'dart:io';
 import 'dart:isolate';
 
-import '../models/duplicate_group_model.dart';
-import '../models/file_hash_entity.dart';
-import '../models/file_meta_model.dart';
-import '../models/scan_progress_model.dart';
-import '../objectbox.g.dart';
-import '../repository/duplicate_finder_repository.dart';
-import '../repository/hash_cache_repository.dart';
-import '../repository/hash_cache_repository_impl.dart';
-import '../utils/cancel_token.dart';
-import '../utils/hash_utils.dart';
+import '../../models/duplicate_group_model.dart';
+import '../../models/file_hash_entity.dart';
+import '../../models/file_meta_model.dart';
+import '../../models/scan_progress_model.dart';
+import '../../objectbox.g.dart';
+import '../hash_cache/hash_cache_repository.dart';
+import 'duplicate_finder_repository_base.dart';
+import '../hash_cache/hash_cache_repository_base.dart';
+import '../../utils/cancel_token.dart';
+import '../../utils/hash_utils.dart';
 
 // ---------------------------------------------------------------------------
 // _Semaphore — permit-based concurrency limiter
@@ -59,7 +59,7 @@ class _Semaphore {
 ///
 /// All reads return `null` (cache miss), all writes are silent no-ops.
 /// The pipeline still works correctly — it simply recomputes hashes every run.
-class _NoOpHashCacheRepository implements HashCacheRepository {
+class _NoOpHashCacheRepository implements HashCacheRepositoryBase {
   @override
   FileHashEntity? getEntity(String path) => null;
 
@@ -98,12 +98,12 @@ class DuplicateFinderService {
   /// [concurrencyLimit] caps how many concurrent file-I/O operations run at
   /// the same time inside this isolate (via the [_Semaphore]).
   DuplicateFinderService({
-    required HashCacheRepository hashCache,
+    required HashCacheRepositoryBase hashCache,
     int concurrencyLimit = 4,
-  })  : _hashCache = hashCache,
-        _semaphore = _Semaphore(concurrencyLimit);
+  }) : _hashCache = hashCache,
+       _semaphore = _Semaphore(concurrencyLimit);
 
-  final HashCacheRepository _hashCache;
+  final HashCacheRepositoryBase _hashCache;
   final _Semaphore _semaphore;
 
   /// Runs the staged duplicate-detection pipeline and returns confirmed
@@ -126,21 +126,25 @@ class DuplicateFinderService {
       try {
         final stat = file.statSync();
         if (stat.size == 0) continue; // zero-byte files cannot be duplicates
-        metaList.add(FileMeta(
-          path: file.path,
-          size: stat.size,
-          lastModified: stat.modified.millisecondsSinceEpoch,
-        ));
+        metaList.add(
+          FileMeta(
+            path: file.path,
+            size: stat.size,
+            lastModified: stat.modified.millisecondsSinceEpoch,
+          ),
+        );
       } on FileSystemException {
         continue; // skip inaccessible / permission-denied files
       }
     }
 
-    onProgress(ScanProgress(
-      stage: 'scanning',
-      stageTotal: metaList.length,
-      stageProcessed: metaList.length,
-    ));
+    onProgress(
+      ScanProgress(
+        stage: 'scanning',
+        stageTotal: metaList.length,
+        stageProcessed: metaList.length,
+      ),
+    );
 
     // -----------------------------------------------------------------------
     // Stage 2: Group by size — drop singletons, sort descending
@@ -172,11 +176,13 @@ class DuplicateFinderService {
     {
       final partialTotal = sizeCandidates.length;
       int partialProcessed = 0;
-      onProgress(ScanProgress(
-        stage: 'partial',
-        stageTotal: partialTotal,
-        stageProcessed: 0,
-      ));
+      onProgress(
+        ScanProgress(
+          stage: 'partial',
+          stageTotal: partialTotal,
+          stageProcessed: 0,
+        ),
+      );
 
       final hashFutures = sizeCandidates.map((meta) async {
         cancelToken.throwIfCancelled();
@@ -186,12 +192,14 @@ class DuplicateFinderService {
             cached.size == meta.size &&
             cached.lastModified == meta.lastModified &&
             cached.partialHash != null) {
-          onProgress(ScanProgress(
-            stage: 'partial',
-            stageTotal: partialTotal,
-            stageProcessed: ++partialProcessed,
+          onProgress(
+            ScanProgress(
+              stage: 'partial',
+              stageTotal: partialTotal,
+              stageProcessed: ++partialProcessed,
               currentPath: meta.path,
-          ));
+            ),
+          );
           return MapEntry(meta, cached.partialHash!);
         }
         await _semaphore.acquire();
@@ -199,12 +207,14 @@ class DuplicateFinderService {
           cancelToken.throwIfCancelled();
           final hash = HashUtils.partialHash(meta.path);
           _hashCache.savePartialHash(meta, hash);
-          onProgress(ScanProgress(
-            stage: 'partial',
-            stageTotal: partialTotal,
-            stageProcessed: ++partialProcessed,
+          onProgress(
+            ScanProgress(
+              stage: 'partial',
+              stageTotal: partialTotal,
+              stageProcessed: ++partialProcessed,
               currentPath: meta.path,
-          ));
+            ),
+          );
           return MapEntry(meta, hash);
         } finally {
           _semaphore.release();
@@ -246,21 +256,21 @@ class DuplicateFinderService {
     {
       final fullTotal = partialCandidates.length;
       int fullProcessed = 0;
-      onProgress(ScanProgress(
-        stage: 'full',
-        stageTotal: fullTotal,
-        stageProcessed: 0,
-      ));
+      onProgress(
+        ScanProgress(stage: 'full', stageTotal: fullTotal, stageProcessed: 0),
+      );
 
       final hashFutures = partialCandidates.map((meta) async {
         if (meta.size <= HashUtils.chunkSize) {
           // Partial hash covers the complete file for small files.
-          onProgress(ScanProgress(
-            stage: 'full',
-            stageTotal: fullTotal,
-            stageProcessed: ++fullProcessed,
+          onProgress(
+            ScanProgress(
+              stage: 'full',
+              stageTotal: fullTotal,
+              stageProcessed: ++fullProcessed,
               currentPath: meta.path,
-          ));
+            ),
+          );
           return MapEntry(meta, metaToPartialHash[meta]!);
         }
         cancelToken.throwIfCancelled();
@@ -270,12 +280,14 @@ class DuplicateFinderService {
             cached.size == meta.size &&
             cached.lastModified == meta.lastModified &&
             cached.fullHash != null) {
-          onProgress(ScanProgress(
-            stage: 'full',
-            stageTotal: fullTotal,
-            stageProcessed: ++fullProcessed,
+          onProgress(
+            ScanProgress(
+              stage: 'full',
+              stageTotal: fullTotal,
+              stageProcessed: ++fullProcessed,
               currentPath: meta.path,
-          ));
+            ),
+          );
           return MapEntry(meta, cached.fullHash!);
         }
         await _semaphore.acquire();
@@ -283,12 +295,14 @@ class DuplicateFinderService {
           cancelToken.throwIfCancelled();
           final hash = HashUtils.fullHash(meta.path);
           _hashCache.saveFullHash(meta, hash);
-          onProgress(ScanProgress(
-            stage: 'full',
-            stageTotal: fullTotal,
-            stageProcessed: ++fullProcessed,
+          onProgress(
+            ScanProgress(
+              stage: 'full',
+              stageTotal: fullTotal,
+              stageProcessed: ++fullProcessed,
               currentPath: meta.path,
-          ));
+            ),
+          );
           return MapEntry(meta, hash);
         } finally {
           _semaphore.release();
@@ -330,20 +344,24 @@ class DuplicateFinderService {
       duplicateGroups.clear();
       final compareTotal = fullHashGroups.length;
       int compareProcessed = 0;
-      onProgress(ScanProgress(
-        stage: 'compare',
-        stageTotal: compareTotal,
-        stageProcessed: 0,
-      ));
+      onProgress(
+        ScanProgress(
+          stage: 'compare',
+          stageTotal: compareTotal,
+          stageProcessed: 0,
+        ),
+      );
       for (final group in fullHashGroups) {
         cancelToken.throwIfCancelled();
         final verified = await _byteVerifyGroup(group.paths, cancelToken);
         duplicateGroups.addAll(verified);
-        onProgress(ScanProgress(
-          stage: 'compare',
-          stageTotal: compareTotal,
-          stageProcessed: ++compareProcessed,
-        ));
+        onProgress(
+          ScanProgress(
+            stage: 'compare',
+            stageTotal: compareTotal,
+            stageProcessed: ++compareProcessed,
+          ),
+        );
       }
     }
 
@@ -409,7 +427,7 @@ class DuplicateFinderService {
 // DuplicateFinderRepositoryImpl — main-isolate adapter
 // ---------------------------------------------------------------------------
 
-/// Main-isolate adapter that implements [DuplicateFinderRepository].
+/// Main-isolate adapter that implements [DuplicateFinderRepositoryBase].
 ///
 /// Owns all [Isolate.spawn] and [SendPort]/[ReceivePort] wiring.
 /// The [DuplicateFinderService] pipeline is executed inside the worker isolate.
@@ -418,8 +436,8 @@ class DuplicateFinderService {
 ///   1. Worker sends its cancel [SendPort] back over [_cancelHandshakePort].
 ///   2. Repo registers a listener on [CancelToken.cancelFuture] that forwards
 ///      a `'cancel'` message to the worker when the token fires.
-class DuplicateFinderRepositoryImpl implements DuplicateFinderRepository {
-  const DuplicateFinderRepositoryImpl({
+class DuplicateFinderRepository implements DuplicateFinderRepositoryBase {
+  const DuplicateFinderRepository({
     this.storePath = '',
     this.concurrencyLimit = 4,
   });
@@ -472,12 +490,14 @@ class DuplicateFinderRepositoryImpl implements DuplicateFinderRepository {
       final msg = raw as Map<String, dynamic>;
       switch (msg['type'] as String) {
         case 'progress':
-          onProgress(ScanProgress(
-            stageTotal: msg['stageTotal'] as int,
-            stageProcessed: msg['stageProcessed'] as int,
-            stage: msg['stage'] as String,
+          onProgress(
+            ScanProgress(
+              stageTotal: msg['stageTotal'] as int,
+              stageProcessed: msg['stageProcessed'] as int,
+              stage: msg['stage'] as String,
               currentPath: msg['currentPath'] as String,
-          ));
+            ),
+          );
         case 'group':
           final paths = List<String>.from(msg['paths'] as List);
           final sizes = List<int>.from(msg['sizes'] as List);
@@ -487,9 +507,7 @@ class DuplicateFinderRepositoryImpl implements DuplicateFinderRepository {
           final groups = (msg['groups'] as List<dynamic>)
               .map(
                 (g) => DuplicateGroup(
-                  paths: List.unmodifiable(
-                    (g as List<dynamic>).cast<String>(),
-                  ),
+                  paths: List.unmodifiable((g as List<dynamic>).cast<String>()),
                 ),
               )
               .toList();
@@ -539,12 +557,12 @@ Future<void> _workerEntrypoint(Map<String, dynamic> message) async {
   final progressPort = message['progressPort'] as SendPort;
 
   void onProgress(ScanProgress p) => progressPort.send({
-        'type': 'progress',
-        'stageTotal': p.stageTotal,
-        'stageProcessed': p.stageProcessed,
-        'stage': p.stage,
+    'type': 'progress',
+    'stageTotal': p.stageTotal,
+    'stageProcessed': p.stageProcessed,
+    'stage': p.stage,
     'currentPath': p.currentPath,
-      });
+  });
 
   // Attach to the main isolate's ObjectBox store (if a path was supplied).
   // A null store means the no-op cache is used instead.
@@ -553,8 +571,8 @@ Future<void> _workerEntrypoint(Map<String, dynamic> message) async {
       : null;
 
   try {
-    final HashCacheRepository hashCache = store != null
-        ? HashCacheRepositoryImpl(store.box<FileHashEntity>())
+    final HashCacheRepositoryBase hashCache = store != null
+        ? HashCacheRepository(store.box<FileHashEntity>())
         : _NoOpHashCacheRepository();
 
     final service = DuplicateFinderService(

@@ -14,7 +14,7 @@ import 'modules/loading/loading_screen.dart';
 import 'modules/results/results_screen.dart';
 import 'modules/settings/settings_screen.dart';
 import 'objectbox.g.dart';
-import 'repository/scan_session_repository_impl.dart';
+import 'repository/scan_session/scan_session_repository.dart';
 import 'values/app_routes.dart';
 import 'values/app_theme.dart';
 
@@ -41,7 +41,7 @@ Future<void> main() async {
 
 /// Instantiate the repository once at startup and pass it down explicitly —
 /// no BuildContext / BlocProvider lookup needed at this level.
-final _repo = ScanSessionRepositoryImpl();
+final _repo = ScanSessionRepository();
 
 /// The ObjectBox store opened once by [main] and kept alive for the app
 /// lifetime.  Worker isolates attach via `Store.attach`.

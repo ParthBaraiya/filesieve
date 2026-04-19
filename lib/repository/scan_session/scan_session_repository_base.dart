@@ -1,5 +1,5 @@
-import '../models/scan_folder_model.dart';
-import '../models/scan_session_model.dart';
+import '../../models/scan_folder_model.dart';
+import '../../models/scan_session_model.dart';
 
 /// ScanSessionRepository — abstract interface for session persistence.
 ///
@@ -8,7 +8,7 @@ import '../models/scan_session_model.dart';
 ///   1. [hasCompletedResults] — checked first; routes to /results if true.
 ///   2. [hasActiveSession]    — checked second; routes to /scanner if true
 ///      and no completed results exist.
-abstract class ScanSessionRepository {
+abstract class ScanSessionRepositoryBase {
   /// Returns true if there is an in-progress or pending scan session.
   /// Used on app launch: routes to `/scanner` if true and no completed
   /// results (checked second).

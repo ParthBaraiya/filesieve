@@ -2,7 +2,7 @@
 
 // import 'package:flutter_bloc/flutter_bloc.dart';
 
-// import '../../repository/duplicate_finder_repository.dart';
+// import '../../repository/duplicate_finder_repository_base.dart';
 // import '../../utils/cancel_token.dart';
 // import 'scanner_screen_state.dart';
 

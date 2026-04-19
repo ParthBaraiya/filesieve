@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../repository/duplicate_finder_repository_impl.dart';
-import '../repository/scan_session_repository_impl.dart';
+import '../repository/duplicate_finder/duplicate_finder_repository.dart';
+import '../repository/scan_session/scan_session_repository.dart';
 import '../values/app_routes.dart';
 import '../values/enums.dart';
 import '../views/app_shell_widget.dart';
@@ -35,8 +35,8 @@ class _DashboardScreenState extends State<DashboardScreenContent> {
         BlocProvider.value(value: _cubit),
         BlocProvider(
           create: (context) => HomeScreenCubit(
-            repository: ScanSessionRepositoryImpl(),
-            scanRepository: DuplicateFinderRepositoryImpl(
+            repository: ScanSessionRepository(),
+            scanRepository: DuplicateFinderRepository(
               storePath:
                   '', // TODO(phase-6): thread actual ObjectBox storePath from app initialization
             ),

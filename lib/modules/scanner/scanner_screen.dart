@@ -7,7 +7,7 @@
 
 // import '../../models/duplicate_group_model.dart';
 // import '../../models/scan_progress_model.dart';
-// import '../../repository/duplicate_finder_repository_impl.dart';
+// import '../../repository/duplicate_finder_repository.dart';
 // import 'scanner_screen_cubit.dart';
 // import 'scanner_screen_state.dart';
 // import 'widgets/scan_progress_widget.dart';

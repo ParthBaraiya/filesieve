@@ -22,116 +22,117 @@ class DropZoneWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<HomeScreenCubit, HomeScreenState>(
-      builder: (context, state) {
-        final isHovering = state is HomeScreenDragHover;
-        final isRejected = state is HomeScreenDropRejected;
-        final colorScheme = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: () => context.read<HomeScreenCubit>().onPickFolder(),
+      child: BlocBuilder<HomeScreenCubit, HomeScreenState>(
+        builder: (context, state) {
+          final isHovering = state is HomeScreenDragHover;
+          final isRejected = state is HomeScreenDropRejected;
+          final colorScheme = Theme.of(context).colorScheme;
 
-        return DropTarget(
-          onDragEntered: (_) =>
-              context.read<HomeScreenCubit>().onDragEnter(),
-          onDragExited: (_) =>
-              context.read<HomeScreenCubit>().onDragExit(),
-          onDragDone: (details) =>
-              context.read<HomeScreenCubit>().onDrop(details.files),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            decoration: BoxDecoration(
-              color: isHovering
-                  ? colorScheme.primary.withAlpha(20)
-                  : colorScheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(
+          return DropTarget(
+            onDragEntered: (_) => context.read<HomeScreenCubit>().onDragEnter(),
+            onDragExited: (_) => context.read<HomeScreenCubit>().onDragExit(),
+            onDragDone: (details) =>
+                context.read<HomeScreenCubit>().onDrop(details.files),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              decoration: BoxDecoration(
                 color: isHovering
-                    ? colorScheme.primary
-                    : isRejected
-                        ? colorScheme.error
-                        : colorScheme.outlineVariant,
-                width: 1.5,
+                    ? colorScheme.primary.withAlpha(20)
+                    : colorScheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(
+                  color: isHovering
+                      ? colorScheme.primary
+                      : isRejected
+                      ? colorScheme.error
+                      : colorScheme.outlineVariant,
+                  width: 1.5,
+                ),
               ),
-            ),
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 72.r,
-                    height: 72.r,
-                    decoration: BoxDecoration(
-                      color: isHovering
-                          ? colorScheme.primary
-                          : colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(16.r),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 72.r,
+                      height: 72.r,
+                      decoration: BoxDecoration(
+                        color: isHovering
+                            ? colorScheme.primary
+                            : colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(16.r),
+                      ),
+                      child: Icon(
+                        Icons.folder_open_rounded,
+                        size: 40.r,
+                        color: colorScheme.onPrimary,
+                      ),
                     ),
-                    child: Icon(
-                      Icons.folder_open_rounded,
-                      size: 40.r,
-                      color: colorScheme.onPrimary,
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    child: Builder(
-                      builder: (_) {
-                        if (state case HomeScreenDropRejected(:final reason)) {
-                          return _RejectionMessage(
-                            key: const ValueKey('rejected'),
-                            reason: reason,
+                    SizedBox(height: 12.h),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      child: Builder(
+                        builder: (_) {
+                          if (state case HomeScreenDropRejected(
+                            :final reason,
+                          )) {
+                            return _RejectionMessage(
+                              key: const ValueKey('rejected'),
+                              reason: reason,
+                            );
+                          }
+                          return Text(
+                            key: const ValueKey('prompt'),
+                            AppStrings.dropZonePrompt,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: isHovering
+                                      ? colorScheme.primary
+                                      : colorScheme.onSurface,
+                                ),
                           );
-                        }
-                        return Text(
-                          key: const ValueKey('prompt'),
-                          AppStrings.dropZonePrompt,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: isHovering
-                                    ? colorScheme.primary
-                                    : colorScheme.onSurface,
-                              ),
-                        );
-                      },
-                    ),
-                  ),
-                  SizedBox(height: 8.h),
-                  if (state is! HomeScreenDropRejected)
-                    Text(
-                      AppStrings.dropZoneSecondary,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
+                        },
                       ),
                     ),
-                  SizedBox(height: 16.h),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 12.w,
-                      vertical: 6.h,
-                    ),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: colorScheme.outlineVariant,
-                        width: 1,
+                    SizedBox(height: 8.h),
+                    if (state is! HomeScreenDropRejected)
+                      Text(
+                        AppStrings.dropZoneSecondary,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                      borderRadius: BorderRadius.circular(4.r),
-                    ),
-                    child: Text(
-                      AppStrings.dropZoneFormats,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                        letterSpacing: 0.5,
+                    SizedBox(height: 16.h),
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12.w,
+                        vertical: 6.h,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: colorScheme.outlineVariant,
+                          width: 1,
+                        ),
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                      child: Text(
+                        AppStrings.dropZoneFormats,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                          letterSpacing: 0.5,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

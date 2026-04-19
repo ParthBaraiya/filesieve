@@ -255,7 +255,11 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
       return;
     }
 
-    emit(HomeScreenState.foldersAdded(folders: List.unmodifiable(folder)));
+    emit(
+      HomeScreenState.foldersAdded(
+        folders: List.unmodifiable(<dynamic>{...state.allFolders, ...folder}),
+      ),
+    );
   }
 
   // -------------------------------------------------------------------------

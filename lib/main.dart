@@ -9,7 +9,7 @@ import 'package:go_router/go_router.dart';
 
 import 'modules/dashboard_screen.dart';
 import 'modules/history/history_screen.dart';
-import 'modules/home/widgets/home_content_section_widget.dart';
+import 'modules/home/home_screen.dart';
 import 'modules/loading/loading_screen.dart';
 import 'modules/results/results_screen.dart';
 import 'modules/settings/settings_screen.dart';

@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:file_selector/file_selector.dart';
+import 'package:filesieve/utils/extensions.dart';
+import 'package:filesieve/utils/file_picker/fs_picker.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:path/path.dart' as p;
 
@@ -26,14 +28,12 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
     required DuplicateFinderRepository scanRepository,
   }) : _repository = repository,
        _scanRepository = scanRepository,
-        super(const HomeScreenState.initial());
+       super(const HomeScreenState.initial());
 
   // ignore: unused_field
   final ScanSessionRepository _repository;
   final DuplicateFinderRepository _scanRepository;
   CancelToken _cancelToken = CancelToken();
-
-  final List<ScanFolderModel> _folders = [];
 
   @override
   Future<void> close() {
@@ -152,12 +152,17 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
   // Drag-and-drop events
   // -------------------------------------------------------------------------
 
-  void onDragEnter() =>
-      emit(HomeScreenState.dragHover(folders: List.unmodifiable(_folders)));
+  void onDragEnter() => emit(
+    HomeScreenState.dragHover(folders: List.unmodifiable(state.allFolders)),
+  );
 
   void onDragExit() {
-    if (_folders.isNotEmpty) {
-      emit(HomeScreenState.foldersAdded(folders: List.unmodifiable(_folders)));
+    if (state.allFolders.isNotEmpty) {
+      emit(
+        HomeScreenState.foldersAdded(
+          folders: List.unmodifiable(state.allFolders),
+        ),
+      );
     } else {
       emit(const HomeScreenState.initial());
     }
@@ -181,8 +186,8 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
         continue;
       }
 
-      final accessible = await _checkReadAccess(path);
-      if (!accessible) {
+      final accessible = await _checkScanValidity(path);
+      if (!accessible.isValid) {
         lastRejectionReason = AppStrings.dropRejectionNoAccess;
         continue;
       }
@@ -197,13 +202,14 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
     }
 
     if (validFolders.isNotEmpty) {
-      _folders.addAll(validFolders);
-      emit(HomeScreenState.foldersAdded(folders: List.unmodifiable(_folders)));
+      emit(
+        HomeScreenState.foldersAdded(folders: List.unmodifiable(validFolders)),
+      );
     } else if (lastRejectionReason != null) {
       emit(
         HomeScreenState.dropRejected(
           reason: lastRejectionReason,
-          folders: List.unmodifiable(_folders),
+          folders: List.unmodifiable(validFolders),
         ),
       );
     }
@@ -219,38 +225,37 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
   /// Validates the selected path before emitting. Returns immediately if
   /// the user cancels the dialog (null result).
   Future<void> onPickFolder() async {
-    final path = await getDirectoryPath();
-    if (path == null) return;
+    final path = await serviceLocator.get<FsPicker>().getDirectoryPaths();
+    if (path.isEmpty) return;
 
-    if (!Directory(path).existsSync()) {
-      emit(
-        HomeScreenState.dropRejected(
-          reason: AppStrings.dropRejectionNotFolder,
-          folders: List.unmodifiable(_folders),
-        ),
-      );
-      return;
+    final folder = <ScanFolderModel>[];
+
+    for (final p in path) {
+      final accessible = await _checkScanValidity(p);
+
+      if (accessible.isValid) {
+        folder.add(
+          ScanFolderModel(
+            path: p,
+            displayName: _displayNameFor(p),
+            hasReadAccess: true,
+          ),
+        );
+      }
     }
 
-    final accessible = await _checkReadAccess(path);
-    if (!accessible) {
+    if (folder.isEmpty) {
       emit(
         HomeScreenState.dropRejected(
           reason: AppStrings.dropRejectionNoAccess,
-          folders: List.unmodifiable(_folders),
+          folders: const [],
         ),
       );
+
       return;
     }
 
-    _folders.add(
-      ScanFolderModel(
-        path: path,
-        displayName: _displayNameFor(path),
-        hasReadAccess: true,
-      ),
-    );
-    emit(HomeScreenState.foldersAdded(folders: List.unmodifiable(_folders)));
+    emit(HomeScreenState.foldersAdded(folders: List.unmodifiable(folder)));
   }
 
   // -------------------------------------------------------------------------
@@ -261,8 +266,12 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
   /// appropriate resting state — foldersAdded if folders exist, initial
   /// otherwise.
   void dismissTransient() {
-    if (_folders.isNotEmpty) {
-      emit(HomeScreenState.foldersAdded(folders: List.unmodifiable(_folders)));
+    if (state.allFolders.isNotEmpty) {
+      emit(
+        HomeScreenState.foldersAdded(
+          folders: List.unmodifiable(state.allFolders),
+        ),
+      );
     } else {
       emit(const HomeScreenState.initial());
     }
@@ -271,10 +280,11 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
   /// Removes the folder at [index] from the accumulator list.
   /// Emits foldersAdded if folders remain, initial if the list is now empty.
   void removeFolder(int index) {
-    if (index < 0 || index >= _folders.length) return;
-    _folders.removeAt(index);
-    if (_folders.isNotEmpty) {
-      emit(HomeScreenState.foldersAdded(folders: List.unmodifiable(_folders)));
+    final folders = state.allFolders;
+    if (index < 0 || index >= folders.length) return;
+    folders.removeAt(index);
+    if (folders.isNotEmpty) {
+      emit(HomeScreenState.foldersAdded(folders: List.unmodifiable(folders)));
     } else {
       emit(const HomeScreenState.initial());
     }
@@ -284,14 +294,29 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
   ///
   /// - [StateError]: empty directory — still accessible.
   /// - [FileSystemException]: permission denied — not accessible.
-  Future<bool> _checkReadAccess(String path) async {
+  Future<ScanValidityResult> _checkScanValidity(String path) async {
     try {
-      await Directory(path).list().first;
-      return true;
+      final stat = FileStat.statSync(path);
+      if (stat.type == .file) {
+        return ScanValidityResult(
+          isValid: false,
+          message: "${p.basename(path)} is skipped because it's a file.",
+        );
+      }
+
+      final dir = Directory(path);
+      await dir.list().first;
+      return const ScanValidityResult(isValid: true);
     } on StateError {
-      return true; // Empty directory — still readable
+      return ScanValidityResult(
+        isValid: false,
+        message: "${p.basename(path)} is skipped because it's empty.",
+      ); // Empty directory — still readable
     } on FileSystemException {
-      return false;
+      return ScanValidityResult(
+        isValid: false,
+        message: "${p.basename(path)} is skipped because access is denied.",
+      );
     }
   }
 
@@ -300,11 +325,16 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
   /// Uses [Directory.uri] path segments to handle both forward- and
   /// back-slash separators on Windows.
   String _displayNameFor(String folderPath) {
-    final segments = Directory(folderPath)
-        .uri
-        .pathSegments
-        .where((s) => s.isNotEmpty)
-        .toList();
+    final segments = Directory(
+      folderPath,
+    ).uri.pathSegments.where((s) => s.isNotEmpty).toList();
     return segments.isNotEmpty ? segments.last : folderPath;
   }
+}
+
+class ScanValidityResult {
+  final bool isValid;
+  final String? message;
+
+  const ScanValidityResult({required this.isValid, this.message});
 }

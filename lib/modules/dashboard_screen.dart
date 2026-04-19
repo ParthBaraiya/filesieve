@@ -1,6 +1,8 @@
+import 'package:filesieve/utils/extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:objectbox/objectbox.dart';
 
 import '../repository/duplicate_finder/duplicate_finder_repository.dart';
 import '../repository/scan_session/scan_session_repository.dart';
@@ -38,7 +40,7 @@ class _DashboardScreenState extends State<DashboardScreenContent> {
             repository: ScanSessionRepository(),
             scanRepository: DuplicateFinderRepository(
               storePath:
-                  '', // TODO(phase-6): thread actual ObjectBox storePath from app initialization
+                  serviceLocator.get<Store>().directoryPath,
             ),
           ),
         ),

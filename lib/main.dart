@@ -21,11 +21,12 @@ import 'values/app_theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  serviceLocator.registerLazySingleton<FsPickerBase>(FsPicker.new);
-
   // Open the ObjectBox store once on the main isolate.
   // Worker isolates attach to it via Store.attach(getObjectBoxModel(), path).
-  _objectBoxStore = await openStore();
+  final store = await openStore();
+
+  serviceLocator.registerSingleton<Store>(store);
+  serviceLocator.registerLazySingleton<FsPickerBase>(FsPicker.new);
 
   runApp(const FileSieveApp());
 
@@ -42,10 +43,6 @@ Future<void> main() async {
 /// Instantiate the repository once at startup and pass it down explicitly —
 /// no BuildContext / BlocProvider lookup needed at this level.
 final _repo = ScanSessionRepository();
-
-/// The ObjectBox store opened once by [main] and kept alive for the app
-/// lifetime.  Worker isolates attach via `Store.attach`.
-late Store _objectBoxStore;
 
 final router = GoRouter(
   initialLocation: AppRoutes.loading,

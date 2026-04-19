@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:filesieve/utils/extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -33,10 +36,9 @@ class FolderListPanelWidget extends StatelessWidget {
                     children: [
                       Text(
                         AppStrings.activeScanTargets.toUpperCase(),
-                        style: textTheme.labelSmall?.copyWith(
+                        style: textTheme.titleSmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1.2,
+                          letterSpacing: 1.4,
                         ),
                       ),
                       SizedBox(height: 2.h),
@@ -52,7 +54,7 @@ class FolderListPanelWidget extends StatelessWidget {
                 TextButton.icon(
                   onPressed: () =>
                       context.read<HomeScreenCubit>().onPickFolder(),
-                  icon: Icon(Icons.add, size: 18.r),
+                  icon: Icon(Icons.add_circle_outline_outlined, size: 18.r),
                   label: Text(AppStrings.addNewTarget),
                 ),
               ],
@@ -67,15 +69,9 @@ class FolderListPanelWidget extends StatelessWidget {
                 if (folders.isEmpty) {
                   return const SizedBox.shrink();
                 }
-                return ListView.separated(
-                  padding: EdgeInsets.symmetric(vertical: 8.h),
+                return ListView.builder(
+                  padding: EdgeInsets.all(10.r),
                   itemCount: folders.length,
-                  separatorBuilder: (_, _) => Divider(
-                    height: 1,
-                    indent: 16.w,
-                    endIndent: 16.w,
-                    color: colorScheme.outlineVariant,
-                  ),
                   itemBuilder: (context, index) {
                     final folder = folders[index];
                     return _FolderItem(
@@ -152,67 +148,90 @@ class _FolderItemState extends State<_FolderItem> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final stat = FileStat.statSync(widget.path);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-        child: Row(
-          children: [
-            Container(
-              width: 40.r,
-              height: 40.r,
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Icon(
-                Icons.folder_outlined,
-                size: 20.r,
-                color: colorScheme.primary,
-              ),
-            ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.path,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: colorScheme.onSurface,
-                    ),
+        padding: .all(4.h),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: context.theme.colorScheme.surfaceContainer,
+            borderRadius: .circular(10.r),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(16.w),
+            child: Row(
+              children: [
+                Container(
+                  width: 40.r,
+                  height: 40.r,
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(8.r),
                   ),
-                  SizedBox(height: 2.h),
-                  Text(
-                    widget.displayName,
-                    style: textTheme.labelSmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
+                  child: Icon(
+                    Icons.folder_outlined,
+                    size: 20.r,
+                    color: colorScheme.primary,
                   ),
-                ],
-              ),
-            ),
-            AnimatedOpacity(
-              opacity: _isHovered ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 150),
-              child: IconButton(
-                onPressed: () => context
-                    .read<HomeScreenCubit>()
-                    .removeFolder(widget.index),
-                icon: Icon(
-                  Icons.close,
-                  size: 18.r,
-                  color: colorScheme.error,
                 ),
-                tooltip: AppStrings.deleteSelected,
-              ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.displayName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.titleSmall?.copyWith(
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                      SizedBox(height: 2.h),
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              widget.path,
+                              style: textTheme.labelSmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                              overflow: .ellipsis,
+                            ),
+                          ),
+                          SizedBox(width: 10.w),
+                          Text(
+                            "Modified ${stat.modified.timeAgo()}",
+                            style: textTheme.labelSmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                AnimatedOpacity(
+                  opacity: _isHovered ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 150),
+                  child: IconButton(
+                    onPressed: () => context
+                        .read<HomeScreenCubit>()
+                        .removeFolder(widget.index),
+                    icon: Icon(
+                      Icons.close,
+                      size: 18.r,
+                      color: colorScheme.error,
+                    ),
+                    tooltip: AppStrings.deleteSelected,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

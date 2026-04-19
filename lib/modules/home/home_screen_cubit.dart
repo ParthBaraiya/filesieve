@@ -280,13 +280,18 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
   /// Removes the folder at [index] from the accumulator list.
   /// Emits foldersAdded if folders remain, initial if the list is now empty.
   void removeFolder(int index) {
-    final folders = state.allFolders;
+    final folders = [...state.allFolders];
     if (index < 0 || index >= folders.length) return;
-    folders.removeAt(index);
-    if (folders.isNotEmpty) {
-      emit(HomeScreenState.foldersAdded(folders: List.unmodifiable(folders)));
-    } else {
-      emit(const HomeScreenState.initial());
+    try {
+      folders.removeAt(index);
+
+      if (folders.isNotEmpty) {
+        emit(HomeScreenState.foldersAdded(folders: List.unmodifiable(folders)));
+      } else {
+        emit(const HomeScreenState.initial());
+      }
+    } catch (e) {
+      print('$e');
     }
   }
 

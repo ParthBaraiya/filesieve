@@ -1,4 +1,7 @@
 ﻿import 'package:bitsdojo_window/bitsdojo_window.dart';
+import 'package:filesieve/utils/extensions.dart';
+import 'package:filesieve/utils/file_picker/fs_picker.dart';
+import 'package:filesieve/utils/file_picker/fs_picker_base.dart';
 import 'package:filesieve/utils/routes/shared_axis_transition_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -9,7 +12,6 @@ import 'modules/history/history_screen.dart';
 import 'modules/home/widgets/home_content_section_widget.dart';
 import 'modules/loading/loading_screen.dart';
 import 'modules/results/results_screen.dart';
-import 'modules/scanner/scanner_screen.dart';
 import 'modules/settings/settings_screen.dart';
 import 'objectbox.g.dart';
 import 'repository/scan_session_repository_impl.dart';
@@ -18,6 +20,8 @@ import 'values/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  serviceLocator.registerLazySingleton<FsPickerBase>(FsPicker.new);
 
   // Open the ObjectBox store once on the main isolate.
   // Worker isolates attach to it via Store.attach(getObjectBoxModel(), path).

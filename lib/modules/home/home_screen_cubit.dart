@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:filesieve/utils/extensions.dart';
-import 'package:filesieve/utils/file_picker/fs_picker.dart';
+import 'package:filesieve/utils/file_picker/fs_picker_base.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:path/path.dart' as p;
 
@@ -225,7 +225,7 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
   /// Validates the selected path before emitting. Returns immediately if
   /// the user cancels the dialog (null result).
   Future<void> onPickFolder() async {
-    final path = await serviceLocator.get<FsPicker>().getDirectoryPaths();
+    final path = await serviceLocator.get<FsPickerBase>().getDirectoryPaths();
     if (path.isEmpty) return;
 
     final folder = <ScanFolderModel>[];

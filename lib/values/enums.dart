@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 /// NavigationItem — the four persistent sidebar navigation destinations.
 enum NavigationItem {
   home,
-  scanner,
+  // scanner,
   results,
   settings,
   history;
@@ -14,14 +14,14 @@ enum NavigationItem {
     NavigationItem.results => AppRoutes.results,
     NavigationItem.settings => AppRoutes.settings,
     NavigationItem.history => AppRoutes.history,
-    NavigationItem.scanner => AppRoutes.scanner,
+    // NavigationItem.scanner => AppRoutes.scanner,
   };
 
   static NavigationItem fromRoute(String location) => switch (location) {
     AppRoutes.results => NavigationItem.results,
     AppRoutes.settings => NavigationItem.settings,
     AppRoutes.history => NavigationItem.history,
-    AppRoutes.scanner => NavigationItem.scanner,
+    // AppRoutes.scanner => NavigationItem.scanner,
     _ => NavigationItem.home,
   };
 
@@ -30,7 +30,7 @@ enum NavigationItem {
     NavigationItem.results => Icons.list_alt_outlined,
     NavigationItem.settings => Icons.settings_outlined,
     NavigationItem.history => Icons.history,
-    NavigationItem.scanner => Icons.search,
+    // NavigationItem.scanner => Icons.search,
   };
 
   String get label => switch (this) {
@@ -38,7 +38,7 @@ enum NavigationItem {
     NavigationItem.results => 'Results',
     NavigationItem.settings => 'Settings',
     NavigationItem.history => 'History',
-    NavigationItem.scanner => 'Scan',
+    // NavigationItem.scanner => 'Scan',
   };
 }
 

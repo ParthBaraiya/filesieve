@@ -177,31 +177,6 @@ class _ScanSettingsPanelWidgetState extends State<ScanSettingsPanelWidget> {
               textTheme: textTheme,
               onChanged: (v) => setState(() => _includeSubdirectories = v),
             ),
-            SizedBox(height: 24.h),
-
-            // Execute Scan Sequence button
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: () {},
-                style: FilledButton.styleFrom(
-                  backgroundColor: colorScheme.primary,
-                  foregroundColor: colorScheme.onPrimary,
-                  padding: EdgeInsets.symmetric(vertical: 14.h),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                ),
-                child: Text(
-                  AppStrings.executeScanSequence.toUpperCase(),
-                  style: textTheme.labelLarge?.copyWith(
-                    color: colorScheme.onPrimary,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-              ),
-            ),
           ],
         ),
       ),

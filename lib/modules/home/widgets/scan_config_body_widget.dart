@@ -43,11 +43,6 @@ class ScanConfigBodyWidget extends StatelessWidget {
               ),
             ),
             SizedBox(width: 16.w),
-            OutlinedButton(
-              onPressed: () {},
-              child: Text(AppStrings.deleteSelected),
-            ),
-            SizedBox(width: 8.w),
             FilledButton(
               onPressed: () => context.read<HomeScreenCubit>().startScan(),
               child: Text(AppStrings.startScan),

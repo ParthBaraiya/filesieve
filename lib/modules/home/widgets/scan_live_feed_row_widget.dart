@@ -1,21 +1,45 @@
+import 'dart:io';
+
+import 'package:filesieve/models/duplicate_group_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../models/scan_duplicate_entry_model.dart';
 import '../../../utils/format_utils.dart';
 
-class ScanLiveFeedRowWidget extends StatelessWidget {
-  const ScanLiveFeedRowWidget({super.key, required this.entry});
+import 'package:path/path.dart' as p;
 
-  final ScanDuplicateEntryModel entry;
+class ScanLiveFeedRowWidget extends StatelessWidget {
+  const ScanLiveFeedRowWidget({super.key, required this.group});
+
+  final DuplicateGroup group;
 
   IconData _iconForExtension(String fileName) {
     final ext = fileName.contains('.')
         ? fileName.split('.').last.toLowerCase()
         : '';
-    const imageExts = {'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'heic', 'svg'};
+    const imageExts = {
+      'jpg',
+      'jpeg',
+      'png',
+      'gif',
+      'bmp',
+      'webp',
+      'heic',
+      'svg',
+    };
     const videoExts = {'mp4', 'mov', 'avi', 'mkv', 'wmv', 'flv', 'webm'};
-    const docExts = {'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'odt'};
+    const docExts = {
+      'pdf',
+      'doc',
+      'docx',
+      'xls',
+      'xlsx',
+      'ppt',
+      'pptx',
+      'txt',
+      'odt',
+    };
     const archiveExts = {'zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'};
 
     if (imageExts.contains(ext)) return Icons.image;
@@ -29,6 +53,15 @@ class ScanLiveFeedRowWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
+
+    final file = File(group.files.first.path);
+    final entry = ScanDuplicateEntryModel(
+      path: file.path,
+      fileName: p.basename(file.path),
+      parentPath: p.dirname(file.path),
+      sizeBytes: 100,
+      matchPercent: 100,
+    );
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),

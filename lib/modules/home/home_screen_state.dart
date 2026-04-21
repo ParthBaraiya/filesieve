@@ -1,3 +1,4 @@
+import 'package:filesieve/models/duplicate_group_model.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../models/scan_duplicate_entry_model.dart';
@@ -23,8 +24,7 @@ sealed class HomeScreenState with _$HomeScreenState {
     required List<ScanFolderModel> folders,
     @Default(ScanProgress(stageTotal: 0, stageProcessed: 0, stage: 'scanning'))
     ScanProgress progress,
-    @Default(<ScanDuplicateEntryModel>[])
-    List<ScanDuplicateEntryModel> liveEntries,
+    @Default(<DuplicateGroup>[]) List<DuplicateGroup> liveEntries,
     @Default(0) int filesAnalyzed,
     @Default(0.0) double overallPercent,
     @Default('') String currentFilePath,
@@ -33,12 +33,12 @@ sealed class HomeScreenState with _$HomeScreenState {
 
 extension HomeScreenStateX on HomeScreenState {
   List<ScanFolderModel> get allFolders => switch (this) {
-        HomeScreenInitial() => [],
-        HomeScreenDragHover(:final folders) => folders,
-        HomeScreenDropRejected(:final folders) => folders,
-        HomeScreenFoldersAdded(:final folders) => folders,
+    HomeScreenInitial() => [],
+    HomeScreenDragHover(:final folders) => folders,
+    HomeScreenDropRejected(:final folders) => folders,
+    HomeScreenFoldersAdded(:final folders) => folders,
     HomeScreenScanning(:final folders) => folders,
-      };
+  };
 
   bool get hasFolders => allFolders.isNotEmpty;
 }

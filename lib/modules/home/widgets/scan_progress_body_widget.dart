@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../models/duplicate_group_model.dart';
 import '../../../models/scan_duplicate_entry_model.dart';
 import '../../../models/scan_progress_model.dart';
 import 'scan_live_feed_widget.dart';
@@ -22,7 +23,7 @@ class ScanProgressBodyWidget extends StatelessWidget {
   final ScanProgress progress;
   final String currentFilePath;
   final int filesAnalyzed;
-  final List<ScanDuplicateEntryModel> liveEntries;
+  final List<DuplicateGroup> liveEntries;
   final VoidCallback onCancel;
 
   @override
@@ -52,10 +53,12 @@ class ScanProgressBodyWidget extends StatelessWidget {
                     child: ScanStatsCardWidget(
                       filesAnalyzed: filesAnalyzed,
                       duplicatesFound: liveEntries.length,
-                      totalDuplicateSizeBytes: liveEntries.fold(
-                        0,
-                        (s, e) => s + e.sizeBytes,
-                      ),
+                      // TODO(parth): calculate size here...
+                      totalDuplicateSizeBytes: 100,
+                      // totalDuplicateSizeBytes: liveEntries.fold(
+                      //   0,
+                      //   (s, e) => s + e.sizeBytes,
+                      // ),
                     ),
                   ),
                 ],
@@ -73,10 +76,12 @@ class ScanProgressBodyWidget extends StatelessWidget {
                 ScanStatsCardWidget(
                   filesAnalyzed: filesAnalyzed,
                   duplicatesFound: liveEntries.length,
-                  totalDuplicateSizeBytes: liveEntries.fold(
-                    0,
-                    (s, e) => s + e.sizeBytes,
-                  ),
+                  // TODO(parth): calculate size here...
+                  totalDuplicateSizeBytes: 100,
+                  // totalDuplicateSizeBytes: liveEntries.fold(
+                  //   0,
+                  //   (s, e) => s + e.sizeBytes,
+                  // ),
                 ),
               ],
             );

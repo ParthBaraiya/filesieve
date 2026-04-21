@@ -55,7 +55,7 @@ class DuplicateFinderService {
     required void Function(ScanProgress) onProgress,
     required CancelToken cancelToken,
     bool byteByByteCompare = false,
-    void Function(DuplicateGroup, List<int> sizes)? onGroupFound,
+    void Function(DuplicateGroup)? onGroupFound,
   }) async {
     // -----------------------------------------------------------------------
     // Stage 1: Metadata collection
@@ -260,11 +260,13 @@ class DuplicateFinderService {
     final duplicateGroups = <DuplicateGroup>[];
     final fullHashGroups = <DuplicateGroup>[];
     for (final g in fullHashMap.values.where((g) => g.length >= 2)) {
+      final files = g.where((e) => File(e.path).existsSync()).toList();
       final group = DuplicateGroup(
-        paths: List.unmodifiable(g.map((m) => m.path)),
+        files: List.unmodifiable(files),
+        totalGroupSize: files.fold(0, (i1, i2) => i1 + i2.size),
       );
-      final sizes = g.map((m) => m.size).toList();
-      onGroupFound?.call(group, sizes);
+
+      onGroupFound?.call(group);
       duplicateGroups.add(group);
       fullHashGroups.add(group);
     }
@@ -292,7 +294,10 @@ class DuplicateFinderService {
       );
       for (final group in fullHashGroups) {
         cancelToken.throwIfCancelled();
-        final verified = await _byteVerifyGroup(group.paths, cancelToken);
+        final verified = await _byteVerifyGroup(
+          group.files.map((e) => e.path).toList(),
+          cancelToken,
+        );
         duplicateGroups.addAll(verified);
         onProgress(
           ScanProgress(
@@ -352,7 +357,16 @@ class DuplicateFinderService {
 
     final groups = <DuplicateGroup>[];
     if (confirmed.length >= 2) {
-      groups.add(DuplicateGroup(paths: List.unmodifiable(confirmed)));
+      final files = confirmed.where((e) => File(e).existsSync()).toList();
+      final group = DuplicateGroup(
+        files: List.unmodifiable(files),
+        totalGroupSize: files.fold(
+          0,
+          (i1, i2) => i1 + File(i2).statSync().size,
+        ),
+      );
+
+      groups.add(group);
     }
     // Recursively verify excluded files — they may still form duplicate pairs.
     if (excluded.length >= 2) {

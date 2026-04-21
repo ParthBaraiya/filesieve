@@ -55,6 +55,10 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
     emit(HomeScreenState.scanning(folders: List.unmodifiable(currentFolders)));
 
     try {
+      // TODO(copilot): when a scan starts, an entry of the scan should be
+      // stored in the database.
+      //
+      // As scan progresses, the progress should be updated in the database
       await _scanRepository.find(
         folders: currentFolders.map((f) => Directory(f.path)).toList(),
         onProgress: (sp) {
@@ -72,24 +76,12 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
             ),
           );
         },
-        onGroupFound: (group, sizes) {
-          final newEntries = <ScanDuplicateEntryModel>[];
-          for (int i = 1; i < group.paths.length; i++) {
-            newEntries.add(
-              ScanDuplicateEntryModel(
-                path: group.paths[i],
-                fileName: p.basename(group.paths[i]),
-                parentPath: p.dirname(group.paths[i]),
-                sizeBytes: sizes[i],
-                matchPercent: 100,
-              ),
-            );
-          }
+        onGroupFound: (group) {
           emit(
             (state as HomeScreenScanning).copyWith(
               liveEntries: List.unmodifiable([
                 ...(state as HomeScreenScanning).liveEntries,
-                ...newEntries,
+                group
               ]),
             ),
           );

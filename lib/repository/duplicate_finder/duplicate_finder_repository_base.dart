@@ -10,6 +10,6 @@ abstract class DuplicateFinderRepositoryBase {
     required void Function(ScanProgress) onProgress,
     required CancelToken cancelToken,
     bool byteByByteCompare = false,
-    void Function(DuplicateGroup, List<int> sizes)? onGroupFound,
+    void Function(DuplicateGroup)? onGroupFound,
   });
 }

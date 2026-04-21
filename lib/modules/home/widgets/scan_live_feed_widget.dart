@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../models/duplicate_group_model.dart';
 import '../../../models/scan_duplicate_entry_model.dart';
 import '../../../values/app_strings.dart';
 import 'scan_live_feed_row_widget.dart';
@@ -8,7 +9,7 @@ import 'scan_live_feed_row_widget.dart';
 class ScanLiveFeedWidget extends StatelessWidget {
   const ScanLiveFeedWidget({super.key, required this.entries});
 
-  final List<ScanDuplicateEntryModel> entries;
+  final List<DuplicateGroup> entries;
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +79,7 @@ class ScanLiveFeedWidget extends StatelessWidget {
                   color: i.isEven
                       ? colorScheme.surfaceContainerLow.withAlpha(80)
                       : colorScheme.surface,
-                  child: ScanLiveFeedRowWidget(entry: entries[i]),
+                  child: ScanLiveFeedRowWidget(group: entries[i]),
                 ),
               ),
             ),

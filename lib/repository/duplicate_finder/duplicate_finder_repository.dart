@@ -33,17 +33,10 @@ final class _ProgressMessage extends _WorkerMessage {
   final String currentPath;
 }
 
-final class _GroupMessage extends _WorkerMessage {
-  _GroupMessage({required this.paths, required this.sizes});
-
-  final List<String> paths;
-  final List<int> sizes;
-}
-
 final class _ResultMessage extends _WorkerMessage {
   _ResultMessage({required this.groups});
 
-  final List<List<String>> groups;
+  final List<DuplicateGroup> groups;
 }
 
 final class _ErrorMessage extends _WorkerMessage {
@@ -110,7 +103,7 @@ class DuplicateFinderRepository implements DuplicateFinderRepositoryBase {
     required void Function(ScanProgress) onProgress,
     required CancelToken cancelToken,
     bool byteByByteCompare = false,
-    void Function(DuplicateGroup, List<int> sizes)? onGroupFound,
+    void Function(DuplicateGroup)? onGroupFound,
   }) async {
     // All worker→main messages (progress, result, error) arrive on this port.
     final resultRp = ReceivePort();
@@ -141,6 +134,11 @@ class DuplicateFinderRepository implements DuplicateFinderRepositoryBase {
 
     final completer = Completer<List<DuplicateGroup>>();
     resultRp.listen((raw) {
+      if (raw is DuplicateGroup) {
+        onGroupFound?.call(raw);
+        return;
+      }
+
       final msg = raw as _WorkerMessage;
       switch (msg) {
         case _ProgressMessage():
@@ -152,14 +150,8 @@ class DuplicateFinderRepository implements DuplicateFinderRepositoryBase {
               currentPath: msg.currentPath,
             ),
           );
-        case _GroupMessage():
-          final group = DuplicateGroup(paths: List.unmodifiable(msg.paths));
-          onGroupFound?.call(group, msg.sizes);
         case _ResultMessage():
-          final groups = msg.groups
-              .map((g) => DuplicateGroup(paths: List.unmodifiable(g)))
-              .toList();
-          completer.complete(groups);
+          completer.complete(msg.groups);
           resultRp.close(); // no further messages expected after result
         case _ErrorMessage():
           completer.completeError(
@@ -224,7 +216,7 @@ Future<void> _workerEntrypoint(_WorkerSpawnMessage msg) async {
       : null;
 
   try {
-    final HashCacheRepositoryBase hashCache = store != null
+    final hashCache = store != null
         ? HashCacheRepository(store.box<FileHashEntity>())
         : NoOpHashCacheRepository();
 
@@ -239,22 +231,13 @@ Future<void> _workerEntrypoint(_WorkerSpawnMessage msg) async {
         cancelToken: localCancelToken,
         onProgress: onProgress,
         byteByByteCompare: msg.byteByByteCompare,
-        onGroupFound: (group, sizes) => msg.progressPort.send(
-          _GroupMessage(
-            paths: List<String>.from(group.paths),
-            sizes: sizes,
-          ),
-        ),
+        onGroupFound: (paths) {
+          return msg.progressPort.send(paths);
+        },
       );
-      msg.progressPort.send(
-        _ResultMessage(
-          groups: groups.map((g) => List<String>.from(g.paths)).toList(),
-        ),
-      );
+      msg.progressPort.send(_ResultMessage(groups: groups));
     } on ScanCancelledException catch (e) {
-      msg.progressPort.send(
-        _ErrorMessage(cancelled: true, message: e.message),
-      );
+      msg.progressPort.send(_ErrorMessage(cancelled: true, message: e.message));
     } on Exception catch (e) {
       msg.progressPort.send(
         _ErrorMessage(cancelled: false, message: e.toString()),

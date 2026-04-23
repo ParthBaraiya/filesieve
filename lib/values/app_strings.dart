@@ -83,6 +83,15 @@ class AppStrings {
   static const String scanStatsFiles = 'Files Analysed';
   static const String scanStatsDuplicates = 'Duplicates Found';
   static const String scanStatsSavings = 'Potential Savings';
+  
+  // Settings — Storage & Cache (Phase 1 constants)
+  static const String settingsSectionStorageTitle = 'Storage & Cache';
+  static const String settingsCacheEntryObjectBoxLabel = 'ObjectBox Store';
+  static const String settingsCacheEntryNotCreated = 'Not yet created';
+  static const String settingsCacheActionOpenFolder = 'Open Folder';
+  static const String settingsCacheActionCopyPath = 'Copy Path';
+  static const String settingsCacheCopiedConfirmation = 'Path copied';
+  static const String settingsCacheOpenFolderError = 'Unable to open folder';
 }
 
 /// stepFlowData — Dart 3 record list for the three-step workflow guide.

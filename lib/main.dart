@@ -6,6 +6,7 @@ import 'package:filesieve/utils/routes/shared_axis_transition_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'modules/dashboard_screen.dart';
 import 'modules/history/history_screen.dart';
@@ -13,6 +14,8 @@ import 'modules/home/home_screen.dart';
 import 'modules/loading/loading_screen.dart';
 import 'modules/results/results_screen.dart';
 import 'modules/settings/settings_screen.dart';
+import 'modules/settings/settings_screen_cubit.dart';
+import 'repository/cache_paths/cache_paths_repository.dart';
 import 'objectbox.g.dart';
 import 'repository/scan_session/scan_session_repository.dart';
 import 'values/app_routes.dart';
@@ -72,10 +75,16 @@ final router = GoRouter(
         GoRoute(
           name: AppRouteNames.settings,
           path: AppRoutes.settings,
-          pageBuilder: (context, state) => SharedAxisTransitionPage(
-            key: state.pageKey,
-            child: SettingsScreen(),
-          ),
+          pageBuilder: (context, state) {
+            final storePath = serviceLocator.get<Store>().directoryPath;
+            final repo = CachePathsRepository(storePath);
+            final cubit = SettingsScreenCubit(repository: repo);
+
+            return SharedAxisTransitionPage(
+              key: state.pageKey,
+              child: BlocProvider.value(value: cubit, child: SettingsScreen()),
+            );
+          },
         ),
         GoRoute(
           name: AppRouteNames.history,

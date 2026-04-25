@@ -7,7 +7,6 @@ class AppRoutes {
 
   static const String loading = '/loading';
   static const String home = '/';
-  static const String scanner = '/scanner';
   static const String results = '/results';
   static const String settings = '/settings';
   static const String history = '/history';
@@ -21,8 +20,7 @@ class AppRouteNames {
   AppRouteNames._();
 
   static const String loading = 'loading';
-  static const String home = 'home';
-  static const String scanner = 'scanner';
+  static const String home = 'scan';
   static const String results = 'results';
   static const String settings = 'settings';
   static const String history = 'history';

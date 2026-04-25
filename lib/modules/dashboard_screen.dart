@@ -49,7 +49,7 @@ class _DashboardScreenState extends State<DashboardScreenContent> {
         bloc: _cubit,
         listener: (context, state) {
           if (state is DashboardScreenFoldersAdded) {
-            context.go(AppRoutes.scanner);
+            context.go(AppRoutes.results);
           }
         },
         child: AppShellWidget(

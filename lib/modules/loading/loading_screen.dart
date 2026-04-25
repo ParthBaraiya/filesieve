@@ -38,21 +38,12 @@ class _LoadingScreenState extends State<LoadingScreen> {
       if (mounted) context.goNamed(AppRouteNames.results);
       return;
     }
-    // Priority 2: active session → scanner
-    if (await widget.repository.hasActiveSession()) {
-      if (mounted) context.goNamed(AppRouteNames.scanner);
-      return;
-    }
     // Default: onboarding
     if (mounted) context.goNamed(AppRouteNames.home);
   }
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }

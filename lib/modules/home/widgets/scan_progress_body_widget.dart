@@ -53,12 +53,10 @@ class ScanProgressBodyWidget extends StatelessWidget {
                     child: ScanStatsCardWidget(
                       filesAnalyzed: filesAnalyzed,
                       duplicatesFound: liveEntries.length,
-                      // TODO(parth): calculate size here...
-                      totalDuplicateSizeBytes: 100,
-                      // totalDuplicateSizeBytes: liveEntries.fold(
-                      //   0,
-                      //   (s, e) => s + e.sizeBytes,
-                      // ),
+                      totalDuplicateSizeBytes: liveEntries.fold(
+                        0,
+                        (s, e) => s + e.totalGroupSize,
+                      ),
                     ),
                   ),
                 ],
@@ -76,12 +74,10 @@ class ScanProgressBodyWidget extends StatelessWidget {
                 ScanStatsCardWidget(
                   filesAnalyzed: filesAnalyzed,
                   duplicatesFound: liveEntries.length,
-                  // TODO(parth): calculate size here...
-                  totalDuplicateSizeBytes: 100,
-                  // totalDuplicateSizeBytes: liveEntries.fold(
-                  //   0,
-                  //   (s, e) => s + e.sizeBytes,
-                  // ),
+                  totalDuplicateSizeBytes: liveEntries.fold(
+                    0,
+                    (s, e) => s + e.totalGroupSize,
+                  ),
                 ),
               ],
             );

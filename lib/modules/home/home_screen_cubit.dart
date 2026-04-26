@@ -61,16 +61,14 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
       // As scan progresses, the progress should be updated in the database
       await _scanRepository.find(
         folders: currentFolders.map((f) => Directory(f.path)).toList(),
-        onProgress: (sp) {
+        onProgress: (progress) {
           emit(
             (state as HomeScreenScanning).copyWith(
-              progress: sp,
-              currentFilePath: sp.currentPath,
-              filesAnalyzed: sp.stage == 'scanning'
-                  ? sp.stageProcessed
-                  : (state as HomeScreenScanning).filesAnalyzed,
+              progress: progress,
+              currentFilePath: progress.currentPath,
+              filesAnalyzed: progress.stageProcessed,
               overallPercent: _computeOverallPercent(
-                sp,
+                progress,
                 (state as HomeScreenScanning).overallPercent,
               ),
             ),
@@ -81,7 +79,7 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
             (state as HomeScreenScanning).copyWith(
               liveEntries: List.unmodifiable([
                 ...(state as HomeScreenScanning).liveEntries,
-                group
+                group,
               ]),
             ),
           );
@@ -114,18 +112,24 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
         ? 0.0
         : (sp.stageProcessed / sp.stageTotal).clamp(0.0, 1.0);
     switch (sp.stage) {
-      case 'scanning':
-        return ratio * 10.0;
-      case 'partial':
-        return 10.0 + ratio * 40.0;
-      case 'full':
-        return 50.0 + ratio * 40.0;
-      case 'compare':
-        return 90.0 + ratio * 9.0;
-      case 'done':
-        return 100.0;
-      default:
-        return currentOverallPercent;
+      case ScanProgressStage.scanningFile: // 5
+        return ratio * 5;
+      case ScanProgressStage.extractMetadata: // 10
+        return 5 + ratio * 5;
+      case ScanProgressStage.groupingBySize: // 15
+        return 10 + ratio * 5;
+      case ScanProgressStage.calcPartialHash: // 30
+        return 15 + ratio * 15;
+      case ScanProgressStage.groupingByPartialHash: // 35
+        return 30 + ratio * 5;
+      case ScanProgressStage.calcFullHash: // 55
+        return 35 + ratio * 20;
+      case ScanProgressStage.groupingByFullHash: // 70
+        return 55 + ratio * 15;
+      case ScanProgressStage.byteByByteCompare: // 99
+        return 60 + ratio * 39;
+      case ScanProgressStage.completed: // 100
+        return 100;
     }
   }
   //#endregion

@@ -14,61 +14,6 @@ import '../hash_cache/hash_cache_repository_base.dart';
 import '../../utils/cancel_token.dart';
 
 // ---------------------------------------------------------------------------
-// Worker message types (worker→main)
-// ---------------------------------------------------------------------------
-
-sealed class _WorkerMessage {}
-
-final class _ProgressMessage extends _WorkerMessage {
-  _ProgressMessage({
-    required this.stageTotal,
-    required this.stageProcessed,
-    required this.stage,
-    required this.currentPath,
-  });
-
-  final int stageTotal;
-  final int stageProcessed;
-  final String stage;
-  final String currentPath;
-}
-
-final class _ResultMessage extends _WorkerMessage {
-  _ResultMessage({required this.groups});
-
-  final List<DuplicateGroup> groups;
-}
-
-final class _ErrorMessage extends _WorkerMessage {
-  _ErrorMessage({required this.cancelled, required this.message});
-
-  final bool cancelled;
-  final String message;
-}
-
-// ---------------------------------------------------------------------------
-// Worker spawn message (main→worker, one-shot at isolate start)
-// ---------------------------------------------------------------------------
-
-class _WorkerSpawnMessage {
-  const _WorkerSpawnMessage({
-    required this.storePath,
-    required this.folderPaths,
-    required this.concurrencyLimit,
-    required this.byteByByteCompare,
-    required this.progressPort,
-    required this.cancelHandshakePort,
-  });
-
-  final String storePath;
-  final List<String> folderPaths;
-  final int concurrencyLimit;
-  final bool byteByByteCompare;
-  final SendPort progressPort;
-  final SendPort cancelHandshakePort;
-}
-
-// ---------------------------------------------------------------------------
 // DuplicateFinderRepositoryImpl — main-isolate adapter
 // ---------------------------------------------------------------------------
 
@@ -160,6 +105,15 @@ class DuplicateFinderRepository implements DuplicateFinderRepositoryBase {
                 : Exception(msg.message),
           );
           resultRp.close(); // no further messages expected after error
+        case _ScanFiles():
+          onProgress(
+            ScanProgress(
+              stageTotal: msg.fileCount,
+              stageProcessed: msg.fileCount,
+              stage: .scanningFile,
+              currentPath: msg.lastFile,
+            ),
+          );
       }
     });
 
@@ -194,20 +148,17 @@ Future<void> _workerEntrypoint(_WorkerSpawnMessage msg) async {
     try {
       for (final entity in Directory(folderPath).listSync(recursive: true)) {
         if (entity is File) files.add(entity);
+        msg.progressPort.send(
+          _ScanFiles(
+            fileCount: files.length,
+            lastFile: files.lastOrNull?.path ?? '',
+          ),
+        );
       }
     } on FileSystemException {
       // silently skip unreadable directories
     }
   }
-
-  void onProgress(ScanProgress p) => msg.progressPort.send(
-    _ProgressMessage(
-      stageTotal: p.stageTotal,
-      stageProcessed: p.stageProcessed,
-      stage: p.stage,
-      currentPath: p.currentPath,
-    ),
-  );
 
   // Attach to the main isolate's ObjectBox store (if a path was supplied).
   // A null store means the no-op cache is used instead.
@@ -229,7 +180,16 @@ Future<void> _workerEntrypoint(_WorkerSpawnMessage msg) async {
       final groups = await service.find(
         files: files,
         cancelToken: localCancelToken,
-        onProgress: onProgress,
+        onProgress: (progress) {
+          msg.progressPort.send(
+            _ProgressMessage(
+              stageTotal: progress.stageTotal,
+              stageProcessed: progress.stageProcessed,
+              stage: progress.stage,
+              currentPath: progress.currentPath,
+            ),
+          );
+        },
         byteByByteCompare: msg.byteByByteCompare,
         onGroupFound: (paths) {
           return msg.progressPort.send(paths);
@@ -246,4 +206,65 @@ Future<void> _workerEntrypoint(_WorkerSpawnMessage msg) async {
   } finally {
     store?.close(); // always release the ObjectBox file handle (FR-017)
   }
+}
+
+// ---------------------------------------------------------------------------
+// Worker message types (worker→main)
+// ---------------------------------------------------------------------------
+
+sealed class _WorkerMessage {}
+
+final class _ScanFiles extends _WorkerMessage {
+  final int fileCount;
+  final String lastFile;
+  _ScanFiles({required this.fileCount, required this.lastFile});
+}
+
+final class _ProgressMessage extends _WorkerMessage {
+  _ProgressMessage({
+    required this.stageTotal,
+    required this.stageProcessed,
+    required this.stage,
+    required this.currentPath,
+  });
+
+  final int stageTotal;
+  final int stageProcessed;
+  final ScanProgressStage stage;
+  final String currentPath;
+}
+
+final class _ResultMessage extends _WorkerMessage {
+  _ResultMessage({required this.groups});
+
+  final List<DuplicateGroup> groups;
+}
+
+final class _ErrorMessage extends _WorkerMessage {
+  _ErrorMessage({required this.cancelled, required this.message});
+
+  final bool cancelled;
+  final String message;
+}
+
+// ---------------------------------------------------------------------------
+// Worker spawn message (main→worker, one-shot at isolate start)
+// ---------------------------------------------------------------------------
+
+class _WorkerSpawnMessage {
+  const _WorkerSpawnMessage({
+    required this.storePath,
+    required this.folderPaths,
+    required this.concurrencyLimit,
+    required this.byteByByteCompare,
+    required this.progressPort,
+    required this.cancelHandshakePort,
+  });
+
+  final String storePath;
+  final List<String> folderPaths;
+  final int concurrencyLimit;
+  final bool byteByByteCompare;
+  final SendPort progressPort;
+  final SendPort cancelHandshakePort;
 }

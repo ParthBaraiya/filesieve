@@ -18,21 +18,18 @@ class ScanProgressCardWidget extends StatelessWidget {
   final String currentFilePath;
   final VoidCallback onCancel;
 
-  String _stageLabel(String stage) {
-    switch (stage) {
-      case 'scanning':
-        return AppStrings.scanProgressAnalysing;
-      case 'partial':
-        return 'Computing partial hashes…';
-      case 'full':
-        return 'Computing full hashes…';
-      case 'compare':
-        return 'Comparing files…';
-      case 'done':
-        return 'Scan complete';
-      default:
-        return AppStrings.scanProgressAnalysing;
-    }
+  String _stageLabel(ScanProgressStage stage) {
+    return switch (stage) {
+      .scanningFile => AppStrings.scanProgressAnalysing,
+      .calcPartialHash => 'Computing partial hashes…',
+      .calcFullHash => 'Computing full hashes…',
+      .byteByByteCompare => 'Comparing files…',
+      .completed => 'Scan complete',
+      .extractMetadata => 'Extracting files metadata',
+      .groupingBySize => 'Grouping files by size',
+      .groupingByPartialHash => 'Grouping files by partial hash',
+      .groupingByFullHash => 'Grouping files by full hash',
+    };
   }
 
   @override

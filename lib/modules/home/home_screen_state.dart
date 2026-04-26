@@ -22,7 +22,7 @@ sealed class HomeScreenState with _$HomeScreenState {
   }) = HomeScreenFoldersAdded;
   const factory HomeScreenState.scanning({
     required List<ScanFolderModel> folders,
-    @Default(ScanProgress(stageTotal: 0, stageProcessed: 0, stage: 'scanning'))
+    @Default(ScanProgress(stageTotal: 0, stageProcessed: 0, stage: ScanProgressStage.extractMetadata))
     ScanProgress progress,
     @Default(<DuplicateGroup>[]) List<DuplicateGroup> liveEntries,
     @Default(0) int filesAnalyzed,

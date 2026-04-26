@@ -72,6 +72,13 @@ class DuplicateFinderService {
             lastModified: stat.modified.millisecondsSinceEpoch,
           ),
         );
+        onProgress(
+          ScanProgress(
+            stageTotal: files.length,
+            stageProcessed: metaList.length,
+            stage: .extractMetadata,
+          ),
+        );
       } on FileSystemException {
         continue; // skip inaccessible / permission-denied files
       }
@@ -79,7 +86,7 @@ class DuplicateFinderService {
 
     onProgress(
       ScanProgress(
-        stage: 'scanning',
+        stage: .groupingBySize,
         stageTotal: metaList.length,
         stageProcessed: metaList.length,
       ),
@@ -102,7 +109,9 @@ class DuplicateFinderService {
         .toList();
 
     if (sizeGroups.isEmpty) {
-      onProgress(ScanProgress(stage: 'done', stageTotal: 0, stageProcessed: 0));
+      onProgress(
+        ScanProgress(stage: .completed, stageTotal: 0, stageProcessed: 0),
+      );
       return [];
     }
 
@@ -117,7 +126,7 @@ class DuplicateFinderService {
       int partialProcessed = 0;
       onProgress(
         ScanProgress(
-          stage: 'partial',
+          stage: .calcPartialHash,
           stageTotal: partialTotal,
           stageProcessed: 0,
         ),
@@ -133,7 +142,7 @@ class DuplicateFinderService {
             cached.partialHash != null) {
           onProgress(
             ScanProgress(
-              stage: 'partial',
+              stage: .calcPartialHash,
               stageTotal: partialTotal,
               stageProcessed: ++partialProcessed,
               currentPath: meta.path,
@@ -148,7 +157,7 @@ class DuplicateFinderService {
           _hashCache.savePartialHash(meta, hash);
           onProgress(
             ScanProgress(
-              stage: 'partial',
+              stage: .calcPartialHash,
               stageTotal: partialTotal,
               stageProcessed: ++partialProcessed,
               currentPath: meta.path,
@@ -170,8 +179,18 @@ class DuplicateFinderService {
     // Stage 4: Group by partial hash — drop singletons
     // -----------------------------------------------------------------------
     final partialHashMap = <String, List<FileMeta>>{};
-    for (final entry in metaToPartialHash.entries) {
+    final items = metaToPartialHash.entries.toList(growable: false);
+    var progress = 0;
+    for (final entry in items) {
       partialHashMap.putIfAbsent(entry.value, () => []).add(entry.key);
+      progress++;
+      onProgress(
+        ScanProgress(
+          stage: .groupingByPartialHash,
+          stageTotal: items.length,
+          stageProcessed: progress,
+        ),
+      );
     }
 
     final partialCandidates = partialHashMap.values
@@ -180,7 +199,9 @@ class DuplicateFinderService {
         .toList();
 
     if (partialCandidates.isEmpty) {
-      onProgress(ScanProgress(stage: 'done', stageTotal: 0, stageProcessed: 0));
+      onProgress(
+        ScanProgress(stage: .completed, stageTotal: 0, stageProcessed: 0),
+      );
       return [];
     }
 
@@ -192,66 +213,68 @@ class DuplicateFinderService {
     // Files > chunkSize: compute full hash (concurrent, semaphore-guarded).
     // -----------------------------------------------------------------------
     final fullHashMap = <String, List<FileMeta>>{};
-    {
-      final fullTotal = partialCandidates.length;
-      int fullProcessed = 0;
-      onProgress(
-        ScanProgress(stage: 'full', stageTotal: fullTotal, stageProcessed: 0),
-      );
+    final fullTotal = partialCandidates.length;
+    int fullProcessed = 0;
+    onProgress(
+      ScanProgress(
+        stage: .calcFullHash,
+        stageTotal: fullTotal,
+        stageProcessed: 0,
+      ),
+    );
 
-      final hashFutures = partialCandidates.map((meta) async {
-        if (meta.size <= HashUtils.chunkSize) {
-          // Partial hash covers the complete file for small files.
-          onProgress(
-            ScanProgress(
-              stage: 'full',
-              stageTotal: fullTotal,
-              stageProcessed: ++fullProcessed,
-              currentPath: meta.path,
-            ),
-          );
-          return MapEntry(meta, metaToPartialHash[meta]!);
-        }
-        cancelToken.throwIfCancelled();
-        // Cache hit: entity non-null AND size+lastModified match AND full hash present.
-        final cached = _hashCache.getEntity(meta.path);
-        if (cached != null &&
-            cached.size == meta.size &&
-            cached.lastModified == meta.lastModified &&
-            cached.fullHash != null) {
-          onProgress(
-            ScanProgress(
-              stage: 'full',
-              stageTotal: fullTotal,
-              stageProcessed: ++fullProcessed,
-              currentPath: meta.path,
-            ),
-          );
-          return MapEntry(meta, cached.fullHash!);
-        }
-        await _semaphore.acquire();
-        try {
-          cancelToken.throwIfCancelled();
-          final hash = HashUtils.fullHash(meta.path);
-          _hashCache.saveFullHash(meta, hash);
-          onProgress(
-            ScanProgress(
-              stage: 'full',
-              stageTotal: fullTotal,
-              stageProcessed: ++fullProcessed,
-              currentPath: meta.path,
-            ),
-          );
-          return MapEntry(meta, hash);
-        } finally {
-          _semaphore.release();
-        }
-      }).toList();
-
-      final results = await Future.wait(hashFutures);
-      for (final entry in results) {
-        fullHashMap.putIfAbsent(entry.value, () => []).add(entry.key);
+    final hashFutures = partialCandidates.map((meta) async {
+      if (meta.size <= HashUtils.chunkSize) {
+        // Partial hash covers the complete file for small files.
+        onProgress(
+          ScanProgress(
+            stage: .calcFullHash,
+            stageTotal: fullTotal,
+            stageProcessed: ++fullProcessed,
+            currentPath: meta.path,
+          ),
+        );
+        return MapEntry(meta, metaToPartialHash[meta]!);
       }
+      cancelToken.throwIfCancelled();
+      // Cache hit: entity non-null AND size+lastModified match AND full hash present.
+      final cached = _hashCache.getEntity(meta.path);
+      if (cached != null &&
+          cached.size == meta.size &&
+          cached.lastModified == meta.lastModified &&
+          cached.fullHash != null) {
+        onProgress(
+          ScanProgress(
+            stage: .calcFullHash,
+            stageTotal: fullTotal,
+            stageProcessed: ++fullProcessed,
+            currentPath: meta.path,
+          ),
+        );
+        return MapEntry(meta, cached.fullHash!);
+      }
+      await _semaphore.acquire();
+      try {
+        cancelToken.throwIfCancelled();
+        final hash = HashUtils.fullHash(meta.path);
+        _hashCache.saveFullHash(meta, hash);
+        onProgress(
+          ScanProgress(
+            stage: .calcFullHash,
+            stageTotal: fullTotal,
+            stageProcessed: ++fullProcessed,
+            currentPath: meta.path,
+          ),
+        );
+        return MapEntry(meta, hash);
+      } finally {
+        _semaphore.release();
+      }
+    }).toList();
+
+    final results = await Future.wait(hashFutures);
+    for (final entry in results) {
+      fullHashMap.putIfAbsent(entry.value, () => []).add(entry.key);
     }
 
     // -----------------------------------------------------------------------
@@ -259,16 +282,28 @@ class DuplicateFinderService {
     // -----------------------------------------------------------------------
     final duplicateGroups = <DuplicateGroup>[];
     final fullHashGroups = <DuplicateGroup>[];
-    for (final g in fullHashMap.values.where((g) => g.length >= 2)) {
+    final fullHashItems = fullHashMap.values.where((g) => g.length >= 2);
+    var fullHashPassedItems = 0;
+    for (final g in fullHashItems) {
       final files = g.where((e) => File(e.path).existsSync()).toList();
       final group = DuplicateGroup(
         files: List.unmodifiable(files),
         totalGroupSize: files.fold(0, (i1, i2) => i1 + i2.size),
       );
 
+      fullHashPassedItems++;
+
       onGroupFound?.call(group);
       duplicateGroups.add(group);
       fullHashGroups.add(group);
+      onProgress(
+        ScanProgress(
+          stage: .groupingByFullHash,
+          stageTotal: fullHashItems.length,
+          stageProcessed: fullHashPassedItems,
+          currentPath: files.firstOrNull?.path ?? '',
+        ),
+      );
     }
 
     // -----------------------------------------------------------------------
@@ -287,7 +322,7 @@ class DuplicateFinderService {
       int compareProcessed = 0;
       onProgress(
         ScanProgress(
-          stage: 'compare',
+          stage: .byteByByteCompare,
           stageTotal: compareTotal,
           stageProcessed: 0,
         ),
@@ -301,7 +336,7 @@ class DuplicateFinderService {
         duplicateGroups.addAll(verified);
         onProgress(
           ScanProgress(
-            stage: 'compare',
+            stage: .byteByByteCompare,
             stageTotal: compareTotal,
             stageProcessed: ++compareProcessed,
           ),
@@ -312,7 +347,9 @@ class DuplicateFinderService {
     // -----------------------------------------------------------------------
     // Stage 8: Emit done and return
     // -----------------------------------------------------------------------
-    onProgress(ScanProgress(stage: 'done', stageTotal: 0, stageProcessed: 0));
+    onProgress(
+      ScanProgress(stage: .completed, stageTotal: files.length, stageProcessed: files.length),
+    );
     return duplicateGroups;
   }
 

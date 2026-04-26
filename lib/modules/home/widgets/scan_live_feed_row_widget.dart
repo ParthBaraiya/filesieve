@@ -59,7 +59,7 @@ class ScanLiveFeedRowWidget extends StatelessWidget {
       path: file.path,
       fileName: p.basename(file.path),
       parentPath: p.dirname(file.path),
-      sizeBytes: 100,
+      sizeBytes: group.totalGroupSize,
       matchPercent: 100,
     );
 

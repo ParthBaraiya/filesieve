@@ -7,8 +7,8 @@ import '../home_screen_cubit.dart';
 import 'folder_list_panel_widget.dart';
 import 'scan_settings_panel_widget.dart';
 
-class ScanConfigBodyWidget extends StatelessWidget {
-  const ScanConfigBodyWidget({super.key});
+class ScanConfigBody extends StatelessWidget {
+  const ScanConfigBody({super.key});
 
   @override
   Widget build(BuildContext context) {

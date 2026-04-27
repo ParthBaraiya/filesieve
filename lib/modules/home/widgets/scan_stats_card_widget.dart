@@ -1,4 +1,8 @@
+import 'package:filesieve/modules/home/file_scanner_cubit.dart';
+import 'package:filesieve/modules/home/file_scanner_state.dart';
+import 'package:filesieve/modules/home/home_screen_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../utils/format_utils.dart';
@@ -7,50 +11,69 @@ import '../../../values/app_strings.dart';
 class ScanStatsCardWidget extends StatelessWidget {
   const ScanStatsCardWidget({
     super.key,
-    required this.filesAnalyzed,
-    required this.duplicatesFound,
-    required this.totalDuplicateSizeBytes,
   });
-
-  final int filesAnalyzed;
-  final int duplicatesFound;
-  final int totalDuplicateSizeBytes;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.all(24.r),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _StatRow(
-              label: AppStrings.scanStatsFiles,
-              value: '$filesAnalyzed',
-              textTheme: textTheme,
-              colorScheme: colorScheme,
+    return BlocBuilder<FileScannerCubit, FileScannerState>(
+      bloc: context.read<HomeScreenCubit>().scanner,
+      builder: (_, state) {
+        final filesAnalyzed = switch(state) {
+          FileScannerStateInitial() => 0,
+          FileScannerStateScanningStarted() => state.progress.stageProcessed,
+          FileScannerStateError() => 0,
+          FileScannerStateSuccess() => 0,
+        };
+
+        final duplicatesFound = switch(state) {
+          FileScannerStateInitial() => 0,
+          FileScannerStateScanningStarted() => state.groups.length,
+          FileScannerStateError() => 0,
+          FileScannerStateSuccess() => 0,
+        };
+        
+        final totalDuplicateSizeBytes = switch(state) {
+          FileScannerStateInitial() => 0,
+          FileScannerStateScanningStarted() => state.totalGroupBytes ?? 0,
+          FileScannerStateError() => 0,
+          FileScannerStateSuccess() => 0,
+        };
+
+        return Card(
+          child: Padding(
+            padding: EdgeInsets.all(24.r),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _StatRow(
+                  label: AppStrings.scanStatsFiles,
+                  value: '$filesAnalyzed',
+                  textTheme: textTheme,
+                  colorScheme: colorScheme,
+                ),
+                SizedBox(height: 16.h),
+                _StatRow(
+                  label: AppStrings.scanStatsDuplicates,
+                  value: '$duplicatesFound',
+                  textTheme: textTheme,
+                  colorScheme: colorScheme,
+                ),
+                SizedBox(height: 16.h),
+                _StatRow(
+                  label: AppStrings.scanStatsSavings,
+                  value: formatBytes(totalDuplicateSizeBytes),
+                  textTheme: textTheme,
+                  colorScheme: colorScheme,
+                ),
+              ],
             ),
-            SizedBox(height: 16.h),
-            _StatRow(
-              label: AppStrings.scanStatsDuplicates,
-              value: '$duplicatesFound',
-              textTheme: textTheme,
-              colorScheme: colorScheme,
-            ),
-            SizedBox(height: 16.h),
-            _StatRow(
-              label: AppStrings.scanStatsSavings,
-              value: formatBytes(totalDuplicateSizeBytes),
-              textTheme: textTheme,
-              colorScheme: colorScheme,
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      }
     );
   }
 }

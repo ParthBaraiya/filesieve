@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../models/duplicate_group_model.dart';
-import '../../../models/scan_duplicate_entry_model.dart';
 import '../../../values/app_strings.dart';
 import 'scan_live_feed_row_widget.dart';
 

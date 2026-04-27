@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../models/duplicate_group_model.dart';
-import '../../../models/scan_duplicate_entry_model.dart';
 import '../../../models/scan_progress_model.dart';
 import 'scan_live_feed_widget.dart';
 import 'scan_progress_card_widget.dart';
 import 'scan_stats_card_widget.dart';
 
-class ScanProgressBodyWidget extends StatelessWidget {
-  const ScanProgressBodyWidget({
+class ScanProgressBody extends StatelessWidget {
+  const ScanProgressBody({
     super.key,
     required this.overallPercent,
     required this.progress,
@@ -40,51 +39,24 @@ class ScanProgressBodyWidget extends StatelessWidget {
                 children: [
                   Expanded(
                     flex: 8,
-                    child: ScanProgressCardWidget(
-                      overallPercent: overallPercent,
-                      progress: progress,
-                      currentFilePath: currentFilePath,
-                      onCancel: onCancel,
-                    ),
+                    child: ScanProgressCardWidget(onCancel: onCancel),
                   ),
                   SizedBox(width: 16.w),
-                  Expanded(
-                    flex: 4,
-                    child: ScanStatsCardWidget(
-                      filesAnalyzed: filesAnalyzed,
-                      duplicatesFound: liveEntries.length,
-                      totalDuplicateSizeBytes: liveEntries.fold(
-                        0,
-                        (s, e) => s + e.totalGroupSize,
-                      ),
-                    ),
-                  ),
+                  Expanded(flex: 4, child: const ScanStatsCardWidget()),
                 ],
               );
             }
             return Column(
               children: [
-                ScanProgressCardWidget(
-                  overallPercent: overallPercent,
-                  progress: progress,
-                  currentFilePath: currentFilePath,
-                  onCancel: onCancel,
-                ),
+                ScanProgressCardWidget(onCancel: onCancel),
                 SizedBox(height: 16.h),
-                ScanStatsCardWidget(
-                  filesAnalyzed: filesAnalyzed,
-                  duplicatesFound: liveEntries.length,
-                  totalDuplicateSizeBytes: liveEntries.fold(
-                    0,
-                    (s, e) => s + e.totalGroupSize,
-                  ),
-                ),
+                const ScanStatsCardWidget(),
               ],
             );
           },
         ),
         SizedBox(height: 16.h),
-        ScanLiveFeedWidget(entries: liveEntries),
+        Expanded(child: ScanLiveFeedWidget(entries: liveEntries)),
       ],
     );
   }

@@ -99,7 +99,9 @@ class HashUtils {
 
   static bool _dartByteCompare(String pathA, String pathB) {
     // Quick size check avoids opening files that are obviously different.
-    if (File(pathA).statSync().size != File(pathB).statSync().size) return false;
+    if (File(pathA).statSync().size != File(pathB).statSync().size) {
+      return false;
+    }
 
     final rafA = File(pathA).openSync();
     final rafB = File(pathB).openSync();

@@ -1,17 +1,16 @@
 import 'dart:io';
 
 import 'package:file_selector/file_selector.dart';
+import 'package:filesieve/modules/home/file_scanner_cubit.dart';
 import 'package:filesieve/utils/extensions.dart';
 import 'package:filesieve/utils/file_picker/fs_picker_base.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:path/path.dart' as p;
 
-import '../../models/scan_duplicate_entry_model.dart';
 import '../../models/scan_folder_model.dart';
 import '../../models/scan_progress_model.dart';
 import '../../repository/duplicate_finder/duplicate_finder_repository_base.dart';
 import '../../repository/scan_session/scan_session_repository_base.dart';
-import '../../utils/cancel_token.dart';
 import '../../values/app_strings.dart';
 import 'home_screen_state.dart';
 
@@ -30,16 +29,10 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
        _scanRepository = scanRepository,
        super(const HomeScreenState.initial());
 
-  // ignore: unused_field
   final ScanSessionRepositoryBase _repository;
   final DuplicateFinderRepositoryBase _scanRepository;
-  CancelToken _cancelToken = CancelToken();
 
-  @override
-  Future<void> close() {
-    _cancelToken.cancel();
-    return super.close();
-  }
+  late final scanner = FileScannerCubit(repo: _scanRepository);
 
   //#region Scan
   // -------------------------------------------------------------------------
@@ -50,88 +43,11 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
     if (state is! HomeScreenFoldersAdded) return;
 
     final currentFolders = state.allFolders;
-
-    _cancelToken = CancelToken();
     emit(HomeScreenState.scanning(folders: List.unmodifiable(currentFolders)));
 
-    try {
-      // TODO(copilot): when a scan starts, an entry of the scan should be
-      // stored in the database.
-      //
-      // As scan progresses, the progress should be updated in the database
-      await _scanRepository.find(
-        folders: currentFolders.map((f) => Directory(f.path)).toList(),
-        onProgress: (progress) {
-          emit(
-            (state as HomeScreenScanning).copyWith(
-              progress: progress,
-              currentFilePath: progress.currentPath,
-              filesAnalyzed: progress.stageProcessed,
-              overallPercent: _computeOverallPercent(
-                progress,
-                (state as HomeScreenScanning).overallPercent,
-              ),
-            ),
-          );
-        },
-        onGroupFound: (group) {
-          emit(
-            (state as HomeScreenScanning).copyWith(
-              liveEntries: List.unmodifiable([
-                ...(state as HomeScreenScanning).liveEntries,
-                group,
-              ]),
-            ),
-          );
-        },
-        cancelToken: _cancelToken,
-      );
-      // TODO(future): navigate to results screen
-    } on ScanCancelledException {
-      emit(
-        HomeScreenState.foldersAdded(
-          folders: List.unmodifiable(state.allFolders),
-        ),
-      );
-    } catch (e) {
-      emit(
-        HomeScreenState.foldersAdded(
-          folders: List.unmodifiable(state.allFolders),
-        ),
-      );
-    }
+    await scanner.startScan(currentFolders.map((e) => e.path));
   }
 
-  void cancelScan() {
-    if (state is! HomeScreenScanning) return;
-    _cancelToken.cancel();
-  }
-
-  double _computeOverallPercent(ScanProgress sp, double currentOverallPercent) {
-    final ratio = sp.stageTotal == 0
-        ? 0.0
-        : (sp.stageProcessed / sp.stageTotal).clamp(0.0, 1.0);
-    switch (sp.stage) {
-      case ScanProgressStage.scanningFile: // 5
-        return ratio * 5;
-      case ScanProgressStage.extractMetadata: // 10
-        return 5 + ratio * 5;
-      case ScanProgressStage.groupingBySize: // 15
-        return 10 + ratio * 5;
-      case ScanProgressStage.calcPartialHash: // 30
-        return 15 + ratio * 15;
-      case ScanProgressStage.groupingByPartialHash: // 35
-        return 30 + ratio * 5;
-      case ScanProgressStage.calcFullHash: // 55
-        return 35 + ratio * 20;
-      case ScanProgressStage.groupingByFullHash: // 70
-        return 55 + ratio * 15;
-      case ScanProgressStage.byteByByteCompare: // 99
-        return 60 + ratio * 39;
-      case ScanProgressStage.completed: // 100
-        return 100;
-    }
-  }
   //#endregion
 
   //#region Drag-and-drop events

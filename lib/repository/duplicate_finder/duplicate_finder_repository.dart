@@ -10,7 +10,6 @@ import '../../utils/duplicate_finder/duplicate_finder_service.dart';
 import '../hash_cache/hash_cache_repository.dart';
 import '../hash_cache/no_op_hash_cache_repository.dart';
 import 'duplicate_finder_repository_base.dart';
-import '../hash_cache/hash_cache_repository_base.dart';
 import '../../utils/cancel_token.dart';
 
 // ---------------------------------------------------------------------------

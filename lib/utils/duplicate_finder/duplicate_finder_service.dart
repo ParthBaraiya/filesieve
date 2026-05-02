@@ -5,9 +5,9 @@
 import 'dart:io';
 
 import 'package:filesieve/utils/classes/fs_semaphore.dart';
+import 'package:filesieve/utils/fs_file/fs_file.dart';
 
 import '../../models/duplicate_group_model.dart';
-import '../../models/file_meta_model.dart';
 import '../../models/scan_progress_model.dart';
 import '../../repository/hash_cache/hash_cache_repository_base.dart';
 import '../cancel_token.dart';
@@ -60,16 +60,17 @@ class DuplicateFinderService {
     // -----------------------------------------------------------------------
     // Stage 1: Metadata collection
     // -----------------------------------------------------------------------
-    final metaList = <FileMeta>[];
+    final metaList = <FsFile>[];
     for (final file in files) {
       try {
         final stat = file.statSync();
         if (stat.size == 0) continue; // zero-byte files cannot be duplicates
         metaList.add(
-          FileMeta(
+          FsFile(
+            source: .local,
             path: file.path,
             size: stat.size,
-            lastModified: stat.modified.millisecondsSinceEpoch,
+            lastModified: stat.modified,
           ),
         );
         onProgress(
@@ -95,9 +96,9 @@ class DuplicateFinderService {
     // -----------------------------------------------------------------------
     // Stage 2: Group by size — drop singletons, sort descending
     // -----------------------------------------------------------------------
-    final sizeMap = <int, List<FileMeta>>{};
+    final sizeMap = <int, List<FsFile>>{};
     for (final meta in metaList) {
-      sizeMap.putIfAbsent(meta.size, () => []).add(meta);
+      sizeMap.putIfAbsent((await meta.size)!, () => []).add(meta);
     }
 
     final sortedSizes = sizeMap.keys.toList()
@@ -120,7 +121,7 @@ class DuplicateFinderService {
     // -----------------------------------------------------------------------
     // Stage 3: Partial hash pass (concurrent, semaphore-guarded)
     // -----------------------------------------------------------------------
-    final metaToPartialHash = <FileMeta, String>{};
+    final metaToPartialHash = <FsFile, String>{};
     {
       final partialTotal = sizeCandidates.length;
       int partialProcessed = 0;
@@ -137,8 +138,8 @@ class DuplicateFinderService {
         // Cache hit: entity non-null AND size+lastModified match AND hash present.
         final cached = _hashCache.getEntity(meta.path);
         if (cached != null &&
-            cached.size == meta.size &&
-            cached.lastModified == meta.lastModified &&
+            cached.size == (await meta.size) &&
+            cached.lastModified == meta.lastModified?.millisecondsSinceEpoch &&
             cached.partialHash != null) {
           onProgress(
             ScanProgress(
@@ -153,7 +154,7 @@ class DuplicateFinderService {
         await _semaphore.acquire();
         try {
           cancelToken.throwIfCancelled();
-          final hash = HashUtils.partialHash(meta.path);
+          final hash = HashUtils.partialHash(meta.path!);
           _hashCache.savePartialHash(meta, hash);
           onProgress(
             ScanProgress(
@@ -178,7 +179,7 @@ class DuplicateFinderService {
     // -----------------------------------------------------------------------
     // Stage 4: Group by partial hash — drop singletons
     // -----------------------------------------------------------------------
-    final partialHashMap = <String, List<FileMeta>>{};
+    final partialHashMap = <String, List<FsFile>>{};
     final items = metaToPartialHash.entries.toList(growable: false);
     var progress = 0;
     for (final entry in items) {
@@ -212,7 +213,7 @@ class DuplicateFinderService {
     //   → reuse the already-computed partial hash; no second file read.
     // Files > chunkSize: compute full hash (concurrent, semaphore-guarded).
     // -----------------------------------------------------------------------
-    final fullHashMap = <String, List<FileMeta>>{};
+    final fullHashMap = <String, List<FsFile>>{};
     final fullTotal = partialCandidates.length;
     int fullProcessed = 0;
     onProgress(
@@ -224,7 +225,7 @@ class DuplicateFinderService {
     );
 
     final hashFutures = partialCandidates.map((meta) async {
-      if (meta.size <= HashUtils.chunkSize) {
+      if ((await meta.size)! <= HashUtils.chunkSize) {
         // Partial hash covers the complete file for small files.
         onProgress(
           ScanProgress(
@@ -240,8 +241,8 @@ class DuplicateFinderService {
       // Cache hit: entity non-null AND size+lastModified match AND full hash present.
       final cached = _hashCache.getEntity(meta.path);
       if (cached != null &&
-          cached.size == meta.size &&
-          cached.lastModified == meta.lastModified &&
+          cached.size == (await meta.size) &&
+          cached.lastModified == meta.lastModified?.millisecondsSinceEpoch &&
           cached.fullHash != null) {
         onProgress(
           ScanProgress(
@@ -256,7 +257,7 @@ class DuplicateFinderService {
       await _semaphore.acquire();
       try {
         cancelToken.throwIfCancelled();
-        final hash = HashUtils.fullHash(meta.path);
+        final hash = HashUtils.fullHash(meta.path!);
         _hashCache.saveFullHash(meta, hash);
         onProgress(
           ScanProgress(
@@ -285,10 +286,12 @@ class DuplicateFinderService {
     final fullHashItems = fullHashMap.values.where((g) => g.length >= 2);
     var fullHashPassedItems = 0;
     for (final g in fullHashItems) {
-      final files = g.where((e) => File(e.path).existsSync()).toList();
+      final files = g.where((e) => File(e.path!).existsSync()).toList();
       final group = DuplicateGroup(
         files: List.unmodifiable(files),
-        totalGroupSize: files.fold(0, (i1, i2) => i1 + i2.size),
+        totalGroupSize: (await Future.wait(
+          files.map((e) => e.size),
+        )).fold(0, (i1, i2) => i1 + (i2 ?? 0)),
       );
 
       fullHashPassedItems++;
@@ -330,7 +333,7 @@ class DuplicateFinderService {
       for (final group in fullHashGroups) {
         cancelToken.throwIfCancelled();
         final verified = await _byteVerifyGroup(
-          group.files.map((e) => e.path).toList(),
+          group.files.map((e) => e.path ?? '').toList(),
           cancelToken,
         );
         duplicateGroups.addAll(verified);
@@ -348,7 +351,11 @@ class DuplicateFinderService {
     // Stage 8: Emit done and return
     // -----------------------------------------------------------------------
     onProgress(
-      ScanProgress(stage: .completed, stageTotal: files.length, stageProcessed: files.length),
+      ScanProgress(
+        stage: .completed,
+        stageTotal: files.length,
+        stageProcessed: files.length,
+      ),
     );
     return duplicateGroups;
   }

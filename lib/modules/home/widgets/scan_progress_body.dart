@@ -1,40 +1,37 @@
+import 'package:filesieve/modules/home/file_scanner_cubit.dart';
+import 'package:filesieve/modules/home/file_scanner_state.dart';
+import 'package:filesieve/modules/home/home_screen_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../models/duplicate_group_model.dart';
-import '../../../models/scan_progress_model.dart';
 import 'scan_live_feed_widget.dart';
 import 'scan_progress_card_widget.dart';
 import 'scan_stats_card_widget.dart';
 
 class ScanProgressBody extends StatelessWidget {
-  const ScanProgressBody({
-    super.key,
-    required this.overallPercent,
-    required this.progress,
-    required this.currentFilePath,
-    required this.filesAnalyzed,
-    required this.liveEntries,
-    required this.onCancel,
-  });
+  const ScanProgressBody({super.key, required this.onCancel});
 
-  final double overallPercent;
-  final ScanProgress progress;
-  final String currentFilePath;
-  final int filesAnalyzed;
-  final List<DuplicateGroup> liveEntries;
   final VoidCallback onCancel;
 
   @override
   Widget build(BuildContext context) {
+    final scanner = context.read<HomeScreenCubit>().scanner;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final isWide = constraints.maxWidth > 900;
-            if (isWide) {
-              return Row(
+        BlocBuilder<FileScannerCubit, FileScannerState>(
+          bloc: scanner,
+          builder: (_, state) {
+            if (!(state is! FileScannerStateScanningStarted ||
+                state.progress.stage != .completed)) {
+              return SizedBox.shrink();
+            }
+
+            return Padding(
+              padding: .only(bottom: 16.sp),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
@@ -44,19 +41,41 @@ class ScanProgressBody extends StatelessWidget {
                   SizedBox(width: 16.w),
                   Expanded(flex: 4, child: const ScanStatsCardWidget()),
                 ],
-              );
-            }
-            return Column(
-              children: [
-                ScanProgressCardWidget(onCancel: onCancel),
-                SizedBox(height: 16.h),
-                const ScanStatsCardWidget(),
-              ],
+              ),
             );
           },
         ),
-        SizedBox(height: 16.h),
-        Expanded(child: ScanLiveFeedWidget(entries: liveEntries)),
+        Expanded(child: const ScanLiveFeedWidget()),
+        BlocBuilder<FileScannerCubit, FileScannerState>(
+          bloc: scanner,
+          builder: (_, state) {
+            if (state is! FileScannerStateScanningStarted ||
+                state.progress.stage != .completed) {
+              return SizedBox.shrink();
+            }
+
+            final filesAnalyzed = switch (state) {
+              FileScannerStateInitial() => 0,
+              FileScannerStateScanningStarted() =>
+                state.progress.stageProcessed,
+            };
+
+            final duplicatesFound = switch (state) {
+              FileScannerStateInitial() => 0,
+              FileScannerStateScanningStarted() => state.groups.length,
+            };
+
+            return Padding(
+              padding: .only(top: 16.sp),
+              child: Row(
+                children: [
+                  Text('Files Scanned: $filesAnalyzed'),
+                  Text('Duplicate files found: $duplicatesFound'),
+                ],
+              ),
+            );
+          },
+        ),
       ],
     );
   }

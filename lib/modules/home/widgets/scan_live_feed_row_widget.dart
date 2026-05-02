@@ -1,124 +1,234 @@
-import 'dart:io';
-
 import 'package:filesieve/models/duplicate_group_model.dart';
+import 'package:filesieve/utils/extensions.dart';
+import 'package:filesieve/utils/fs_file/fs_file.dart';
+import 'package:filesieve/utils/fs_file/fs_file_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../models/scan_duplicate_entry_model.dart';
-import '../../../utils/format_utils.dart';
-
-import 'package:path/path.dart' as p;
-
-class ScanLiveFeedRowWidget extends StatelessWidget {
-  const ScanLiveFeedRowWidget({super.key, required this.group});
+class ScanLiveFeedGridWidget extends StatefulWidget {
+  const ScanLiveFeedGridWidget({
+    super.key,
+    required this.group,
+    required this.onPreview,
+  });
 
   final DuplicateGroup group;
+  final VoidCallback onPreview;
 
-  IconData _iconForExtension(String fileName) {
-    final ext = fileName.contains('.')
-        ? fileName.split('.').last.toLowerCase()
-        : '';
-    const imageExts = {
-      'jpg',
-      'jpeg',
-      'png',
-      'gif',
-      'bmp',
-      'webp',
-      'heic',
-      'svg',
-    };
-    const videoExts = {'mp4', 'mov', 'avi', 'mkv', 'wmv', 'flv', 'webm'};
-    const docExts = {
-      'pdf',
-      'doc',
-      'docx',
-      'xls',
-      'xlsx',
-      'ppt',
-      'pptx',
-      'txt',
-      'odt',
-    };
-    const archiveExts = {'zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'};
+  @override
+  State<ScanLiveFeedGridWidget> createState() => _ScanLiveFeedGridWidgetState();
+}
 
-    if (imageExts.contains(ext)) return Icons.image;
-    if (videoExts.contains(ext)) return Icons.video_file;
-    if (docExts.contains(ext)) return Icons.description;
-    if (archiveExts.contains(ext)) return Icons.folder_zip;
-    return Icons.insert_drive_file;
-  }
+class _ScanLiveFeedGridWidgetState extends State<ScanLiveFeedGridWidget> {
+  final hover = ValueNotifier(false);
+  final isChecked = ValueNotifier(false);
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
+    final file = widget.group.files.first;
+    final hasMoreThanOneDuplicate = widget.group.files.length > 2;
+    return MouseRegion(
+      onHover: (event) => hover.value = true,
 
-    final file = File(group.files.first.path);
-    final entry = ScanDuplicateEntryModel(
-      path: file.path,
-      fileName: p.basename(file.path),
-      parentPath: p.dirname(file.path),
-      sizeBytes: group.totalGroupSize,
-      matchPercent: 100,
-    );
+      onExit: (_) => hover.value = false,
+      child: GestureDetector(
+        onTap: () => isChecked.value = !isChecked.value,
+        child: Padding(
+          padding: .all(10.sp),
+          child: ValueListenableBuilder(
+            valueListenable: isChecked,
+            builder: (_, value, child) {
+              return AnimatedScale(
+                scale: value ? 0.95 : 1,
+                duration: Duration(microseconds: 300),
+                curve: Curves.easeOut,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    border: value
+                        ? Border.all(
+                            color: context.theme.colorScheme.primaryContainer,
+                            width: 4.sp,
+                          )
+                        : null,
+                    borderRadius: .circular(10.r),
+                  ),
+                  position: .foreground,
+                  child: child,
+                ),
+              );
+            },
+            child: ClipRRect(
+              borderRadius: .circular(10.r),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: context.theme.colorScheme.surfaceBright,
+                  border: Border.all(
+                    color: context.theme.colorScheme.outlineVariant.withAlpha(
+                      80,
+                    ),
+                  ),
+                  borderRadius: .circular(10.r),
+                ),
+                child: Column(
+                  children: [
+                    AspectRatio(
+                      aspectRatio: 1.4,
+                      child: ClipRect(
+                        child: ValueListenableBuilder(
+                          valueListenable: hover,
+                          builder: (_, value, child) {
+                            return AnimatedScale(
+                              duration: Duration(milliseconds: 300),
+                              curve: Curves.easeOut,
+                              scale: value ? 1.1 : 1,
+                              child: child,
+                            );
+                          },
+                          child: Center(
+                            child: _widgetForExtension(file, context),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: .all(10.sp),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: .end,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    mainAxisSize: .min,
+                                    crossAxisAlignment: .start,
+                                    children: [
+                                      Text(
+                                        file.name ?? 'unknown',
+                                        maxLines: 1,
+                                        style: context
+                                            .theme
+                                            .textTheme
+                                            .titleSmall
+                                            ?.copyWith(
+                                              color: context
+                                                  .theme
+                                                  .colorScheme
+                                                  .onSurface,
+                                            ),
+                                      ),
+                                      SizedBox(height: 4.sp),
+                                      Row(
+                                        children: [
+                                          FutureBuilder(
+                                            future: file.formattedSize,
+                                            builder: (_, snapshot) {
+                                              if (!snapshot.hasData &&
+                                                  !snapshot.hasError) {
+                                                return SizedBox.shrink();
+                                              }
 
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
-      child: Row(
-        children: [
-          Icon(
-            _iconForExtension(entry.fileName),
-            color: colorScheme.onSurfaceVariant,
-            size: 20.r,
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  entry.fileName,
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurface,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+                                              final size =
+                                                  snapshot.hasData &&
+                                                      snapshot.data != null
+                                                  ? snapshot.data!
+                                                  : 'N/A';
+
+                                              return Padding(
+                                                padding: .only(right: 8.sp),
+                                                child: Text(
+                                                  size,
+                                                  maxLines: 1,
+                                                  style: context
+                                                      .theme
+                                                      .textTheme
+                                                      .bodySmall
+                                                      ?.copyWith(
+                                                        color: context
+                                                            .theme
+                                                            .colorScheme
+                                                            .onSurface,
+                                                      ),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                          Text(
+                                            "${widget.group.files.length - 1} "
+                                            "duplicate${hasMoreThanOneDuplicate ? 's' : ''}",
+                                            maxLines: 1,
+                                            style: context
+                                                .theme
+                                                .textTheme
+                                                .bodySmall
+                                                ?.copyWith(
+                                                  color: context
+                                                      .theme
+                                                      .colorScheme
+                                                      .primary,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                _previewIconWidget(Icons.visibility_outlined),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(height: 2.h),
-                Text(
-                  entry.parentPath,
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          SizedBox(width: 12.w),
-          Text(
-            formatBytes(entry.sizeBytes),
-            style: textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          SizedBox(width: 8.w),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(4.r),
-            ),
-            child: Text(
-              'MATCH: ${entry.matchPercent}%',
-              style: textTheme.labelSmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
               ),
             ),
           ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _previewIconWidget(IconData icon) {
+    return IconButton(
+      onPressed: widget.onPreview,
+      padding: .all(12.sp),
+      icon: Icon(icon, color: context.theme.colorScheme.onSurface),
+    );
+  }
+
+  Widget _widgetForExtension(FsFile file, BuildContext context) {
+    if (FsFileUtils.isImage(file.extension) && file.imageProvider != null) {
+      return Image(
+        image: file.imageProvider!,
+        fit: .cover,
+        height: .maxFinite,
+        width: .maxFinite,
+      );
+    }
+
+    IconData icon;
+
+    if (FsFileUtils.isPlayableVideo(file.extension)) {
+      icon = Icons.video_file;
+    } else if (FsFileUtils.isArchive(file.extension)) {
+      icon = Icons.folder_zip;
+    } else {
+      icon = Icons.description;
+    }
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: context.theme.colorScheme.secondaryContainer,
+        borderRadius: .vertical(top: .circular(10.r)),
+      ),
+      child: SizedBox.expand(
+        child: Icon(
+          icon,
+          size: 70,
+          color: context.theme.colorScheme.onSecondaryContainer,
+        ),
       ),
     );
   }

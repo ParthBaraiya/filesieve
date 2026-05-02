@@ -1,14 +1,15 @@
+import 'package:filesieve/modules/home/file_scanner_cubit.dart';
+import 'package:filesieve/modules/home/file_scanner_state.dart';
+import 'package:filesieve/modules/home/home_screen_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../../models/duplicate_group_model.dart';
 import '../../../values/app_strings.dart';
 import 'scan_live_feed_row_widget.dart';
 
 class ScanLiveFeedWidget extends StatelessWidget {
-  const ScanLiveFeedWidget({super.key, required this.entries});
-
-  final List<DuplicateGroup> entries;
+  const ScanLiveFeedWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -56,32 +57,49 @@ class ScanLiveFeedWidget extends StatelessWidget {
             ),
           ),
           const Divider(height: 1),
-          if (entries.isEmpty)
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 24.h),
-              child: Center(
-                child: Text(
-                  AppStrings.scanLiveFeedEmpty,
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            )
-          else
-            ConstrainedBox(
-              constraints: BoxConstraints(maxHeight: 300.h),
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: entries.length,
-                itemBuilder: (_, i) => ColoredBox(
-                  color: i.isEven
-                      ? colorScheme.surfaceContainerLow.withAlpha(80)
-                      : colorScheme.surface,
-                  child: ScanLiveFeedRowWidget(group: entries[i]),
-                ),
-              ),
+          Expanded(
+            child: BlocBuilder<FileScannerCubit, FileScannerState>(
+              bloc: context.read<HomeScreenCubit>().scanner,
+              builder: (_, state) {
+                if (state is! FileScannerStateScanningStarted) {
+                  return Center(child: Text('Scanning has not started yet!!!'));
+                }
+
+                final entries = state.groups;
+
+                return entries.isEmpty
+                    ? Padding(
+                        padding: EdgeInsets.symmetric(vertical: 24.h),
+                        child: Center(
+                          child: Text(
+                            AppStrings.scanLiveFeedEmpty,
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      )
+                    : GridView.builder(
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          mainAxisSpacing: 0,
+                          crossAxisSpacing: 0,
+                        ),
+                        padding: .all(10.sp),
+                        itemCount: entries.length,
+                        itemBuilder: (_, index) {
+                          final entry = entries[index];
+                          return ScanLiveFeedGridWidget(
+                            group: entry,
+                            onPreview: () => context
+                                .read<HomeScreenCubit>()
+                                .setPreviewGroup(entry),
+                          );
+                        },
+                      );
+              },
             ),
+          ),
         ],
       ),
     );

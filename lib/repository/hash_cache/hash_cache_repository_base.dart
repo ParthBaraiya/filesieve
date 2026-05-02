@@ -1,8 +1,8 @@
 import '../../models/file_hash_entity.dart';
-import '../../models/file_meta_model.dart';
+import '../../utils/fs_file/fs_file.dart';
 
 abstract class HashCacheRepositoryBase {
-  FileHashEntity? getEntity(String path);
-  void savePartialHash(FileMeta meta, String hash);
-  void saveFullHash(FileMeta meta, String hash);
+  FileHashEntity? getEntity(String? path);
+  Future<void> savePartialHash(FsFile meta, String hash);
+  Future<void> saveFullHash(FsFile meta, String hash);
 }

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:file_selector/file_selector.dart';
+import 'package:filesieve/models/duplicate_group_model.dart';
 import 'package:filesieve/modules/home/file_scanner_cubit.dart';
 import 'package:filesieve/utils/extensions.dart';
 import 'package:filesieve/utils/file_picker/fs_picker_base.dart';
@@ -8,7 +9,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:path/path.dart' as p;
 
 import '../../models/scan_folder_model.dart';
-import '../../models/scan_progress_model.dart';
 import '../../repository/duplicate_finder/duplicate_finder_repository_base.dart';
 import '../../repository/scan_session/scan_session_repository_base.dart';
 import '../../values/app_strings.dart';
@@ -44,10 +44,38 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
 
     final currentFolders = state.allFolders;
     emit(HomeScreenState.scanning(folders: List.unmodifiable(currentFolders)));
-
+    await _repository.createSession(currentFolders);
     await scanner.startScan(currentFolders.map((e) => e.path));
   }
 
+  //#endregion
+
+  //#region Preview Events
+  void setPreviewGroup(DuplicateGroup group) {
+    HomeScreenScanning? scannedState;
+
+    if (state is HomeScreenScanning) {
+      scannedState = state as HomeScreenScanning;
+    } else if (state is HomeScreenFilePreview) {
+      scannedState = (state as HomeScreenFilePreview).scannedState;
+    }
+
+    emit(
+      HomeScreenState.filePreview(
+        currentFile: group,
+        scannedState: scannedState,
+      ),
+    );
+  }
+
+  void backToPreview() {
+    if (state is HomeScreenFilePreview) {
+      final scanner = (state as HomeScreenFilePreview).scannedState;
+      if (scanner != null) {
+        emit(scanner);
+      }
+    }
+  }
   //#endregion
 
   //#region Drag-and-drop events

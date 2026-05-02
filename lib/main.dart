@@ -94,14 +94,6 @@ final router = GoRouter(
             child: HistoryScreen(),
           ),
         ),
-        // GoRoute(
-        //   name: AppRouteNames.scanner,
-        //   path: AppRoutes.scanner,
-        //   pageBuilder: (context, state) => SharedAxisTransitionPage(
-        //     key: state.pageKey,
-        //     child: ScannerScreen(storePath: _objectBoxStore.directoryPath),
-        //   ),
-        // ),
       ],
     ),
   ],

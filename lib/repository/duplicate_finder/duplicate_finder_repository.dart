@@ -185,7 +185,7 @@ Future<void> _workerEntrypoint(_WorkerSpawnMessage msg) async {
               stageTotal: progress.stageTotal,
               stageProcessed: progress.stageProcessed,
               stage: progress.stage,
-              currentPath: progress.currentPath,
+              currentPath: progress.currentPath ?? '',
             ),
           );
         },

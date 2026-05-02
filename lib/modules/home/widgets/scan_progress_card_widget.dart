@@ -83,7 +83,7 @@ class ScanProgressCardWidget extends StatelessWidget {
                   ),
                 ],
                 SizedBox(height: 16.h),
-                if (state is FileScannerStateScanningStarted)
+                if (state is FileScannerStateScanningStarted && state.progress.stage != .completed)
                   OutlinedButton(
                     onPressed: onCancel,
                     style: OutlinedButton.styleFrom(

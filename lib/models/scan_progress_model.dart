@@ -12,7 +12,7 @@ abstract class ScanProgress with _$ScanProgress {
     required int stageTotal,
     required int stageProcessed,
     required ScanProgressStage stage,
-    @Default('') String currentPath,
+    String? currentPath,
   }) = _ScanProgress;
 
   double get progress =>

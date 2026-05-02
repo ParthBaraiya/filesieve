@@ -1,5 +1,6 @@
+import 'package:filesieve/utils/fs_file/fs_file.dart';
+
 import '../../models/file_hash_entity.dart';
-import '../../models/file_meta_model.dart';
 import 'hash_cache_repository_base.dart';
 
 // ---------------------------------------------------------------------------
@@ -13,11 +14,11 @@ import 'hash_cache_repository_base.dart';
 /// The pipeline still works correctly — it simply recomputes hashes every run.
 class NoOpHashCacheRepository implements HashCacheRepositoryBase {
   @override
-  FileHashEntity? getEntity(String path) => null;
+  FileHashEntity? getEntity(String? path) => null;
 
   @override
-  void savePartialHash(FileMeta meta, String hash) {}
+  Future<void> savePartialHash(FsFile meta, String hash) => Future.value();
 
   @override
-  void saveFullHash(FileMeta meta, String hash) {}
+  Future<void> saveFullHash(FsFile meta, String hash) => Future.value();
 }

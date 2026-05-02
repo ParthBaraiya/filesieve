@@ -1,5 +1,6 @@
+import 'package:filesieve/utils/fs_file/fs_file.dart';
+
 import '../../models/file_hash_entity.dart';
-import '../../models/file_meta_model.dart';
 import '../../objectbox.g.dart';
 import 'hash_cache_repository_base.dart';
 
@@ -25,22 +26,24 @@ class HashCacheRepository implements HashCacheRepositoryBase {
   /// Uses the indexed [FileHashEntity_.path] property so the query is served
   /// by the ObjectBox B-tree index without a full table scan (FR-012).
   @override
-  FileHashEntity? getEntity(String path) =>
-      _box.query(FileHashEntity_.path.equals(path)).build().findFirst();
+  FileHashEntity? getEntity(String? path) => path == null
+      ? null
+      : _box.query(FileHashEntity_.path.equals(path)).build().findFirst();
 
   /// Saves (or updates) the partial hash for [meta.path].
   ///
   /// Reads the existing entity first so that any already-stored [FileHashEntity.fullHash]
   /// is preserved.
   @override
-  void savePartialHash(FileMeta meta, String hash) {
+  Future<void> savePartialHash(FsFile meta, String hash) async {
     final existing = getEntity(meta.path);
+
     _box.put(
       FileHashEntity(
         id: existing?.id ?? 0,
-        path: meta.path,
-        size: meta.size,
-        lastModified: meta.lastModified,
+        path: meta.path ?? '',
+        size: (await meta.size) ?? 0,
+        lastModified: meta.lastModified?.millisecondsSinceEpoch ?? 0,
         partialHash: hash,
         fullHash: existing?.fullHash, // preserve existing full hash
       ),
@@ -52,14 +55,14 @@ class HashCacheRepository implements HashCacheRepositoryBase {
   /// Reads the existing entity first so that any already-stored [FileHashEntity.partialHash]
   /// is preserved.
   @override
-  void saveFullHash(FileMeta meta, String hash) {
+  Future<void> saveFullHash(FsFile meta, String hash) async {
     final existing = getEntity(meta.path);
     _box.put(
       FileHashEntity(
         id: existing?.id ?? 0,
-        path: meta.path,
-        size: meta.size,
-        lastModified: meta.lastModified,
+        path: meta.path ?? '',
+        size: (await meta.size) ?? 0,
+        lastModified: meta.lastModified?.millisecondsSinceEpoch ?? 0,
         partialHash: existing?.partialHash, // preserve existing partial hash
         fullHash: hash,
       ),

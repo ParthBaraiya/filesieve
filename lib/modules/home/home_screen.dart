@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'home_screen_cubit.dart';
 import 'home_screen_state.dart';
+import 'widgets/duplicate_file_preview_widget.dart';
 import 'widgets/scan_config_body.dart';
 import 'widgets/scan_onboarding_body.dart';
 import 'widgets/scan_progress_body.dart';
@@ -24,15 +25,14 @@ class HomeScreen extends StatelessWidget {
           return Padding(
             padding: .symmetric(horizontal: 32.w, vertical: 24.h),
             child: ScanProgressBody(
-              overallPercent: state.overallPercent,
-              progress: state.progress,
-              currentFilePath: state.currentFilePath,
-              filesAnalyzed: state.filesAnalyzed,
-              liveEntries: state.liveEntries,
               onCancel: () =>
                   context.read<HomeScreenCubit>().scanner.cancelScan(),
             ),
           );
+        }
+
+        if (state is HomeScreenFilePreview) {
+          return DuplicateFilePreviewWidget(state: state);
         }
 
         if (state.hasFolders) {

@@ -1,4 +1,4 @@
-import 'package:filesieve/models/duplicate_group_model.dart';
+import 'package:filesieve/modules/home/duplicate_group_cubit.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../models/scan_folder_model.dart';
@@ -33,7 +33,7 @@ sealed class HomeScreenState with _$HomeScreenState {
       ),
     )
     ScanProgress progress,
-    @Default(<DuplicateGroup>[]) List<DuplicateGroup> liveEntries,
+    @Default(<DuplicateGroupCubit>[]) List<DuplicateGroupCubit> liveEntries,
     @Default(0) int filesAnalyzed,
     @Default(0.0) double overallPercent,
     @Default('') String currentFilePath,
@@ -41,7 +41,7 @@ sealed class HomeScreenState with _$HomeScreenState {
 
   const factory HomeScreenState.filePreview({
     HomeScreenScanning? scannedState,
-    required DuplicateGroup currentFile,
+    required DuplicateGroupCubit currentGroup,
   }) = HomeScreenFilePreview;
 }
 

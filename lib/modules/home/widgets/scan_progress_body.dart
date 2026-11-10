@@ -70,6 +70,7 @@ class ScanProgressBody extends StatelessWidget {
               child: Row(
                 children: [
                   Text('Files Scanned: $filesAnalyzed'),
+                  SizedBox(width: 20),
                   Text('Duplicate files found: $duplicatesFound'),
                 ],
               ),

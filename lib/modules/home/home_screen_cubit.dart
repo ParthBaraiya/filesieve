@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:filesieve/models/duplicate_group_model.dart';
+import 'package:filesieve/modules/home/duplicate_group_cubit.dart';
 import 'package:filesieve/modules/home/file_scanner_cubit.dart';
 import 'package:filesieve/utils/extensions.dart';
 import 'package:filesieve/utils/file_picker/fs_picker_base.dart';
@@ -51,7 +52,7 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
   //#endregion
 
   //#region Preview Events
-  void setPreviewGroup(DuplicateGroup group) {
+  void setPreviewGroup(DuplicateGroupCubit group) {
     HomeScreenScanning? scannedState;
 
     if (state is HomeScreenScanning) {
@@ -62,7 +63,7 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
 
     emit(
       HomeScreenState.filePreview(
-        currentFile: group,
+        currentGroup: group,
         scannedState: scannedState,
       ),
     );

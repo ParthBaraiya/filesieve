@@ -12,6 +12,8 @@ abstract class DuplicateGroup with _$DuplicateGroup {
 }
 
 extension DuplicateGroupModelExtension on DuplicateGroup {
+  bool get hasFiles => files.isNotEmpty;
+
   Future<FsFile?> get largestFile async {
     if (files.isEmpty) return null;
 

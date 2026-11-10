@@ -90,7 +90,7 @@ class ScanLiveFeedWidget extends StatelessWidget {
                         itemBuilder: (_, index) {
                           final entry = entries[index];
                           return ScanLiveFeedGridWidget(
-                            group: entry,
+                            group: entry.state.group,
                             onPreview: () => context
                                 .read<HomeScreenCubit>()
                                 .setPreviewGroup(entry),

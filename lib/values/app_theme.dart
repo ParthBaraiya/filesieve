@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import 'app_palette.dart';
 import 'app_shape_tokens.dart';
 
 /// AppTheme — maps Stitch "Precision Core" design system tokens to Flutter
@@ -10,52 +11,14 @@ class AppTheme {
   AppTheme._();
 
   static ThemeData light() {
-    const colorScheme = ColorScheme(
-      brightness: Brightness.light,
-      // --- Primary ---
-      primary: Color(0xFF003EC7),
-      onPrimary: Color(0xFFFFFFFF),
-      primaryContainer: Color(0xFF0052FF),
-      onPrimaryContainer: Color(0xFFDFE3FF),
-      // --- Secondary ---
-      secondary: Color(0xFF4459A8),
-      onSecondary: Color(0xFFFFFFFF),
-      secondaryContainer: Color(0xFF95AAFE),
-      onSecondaryContainer: Color(0xFF253B89),
-      // --- Tertiary ---
-      tertiary: Color(0xFF952200),
-      onTertiary: Color(0xFFFFFFFF),
-      tertiaryContainer: Color(0xFFBF3003),
-      onTertiaryContainer: Color(0xFFFFDDD5),
-      // --- Error ---
-      error: Color(0xFFBA1A1A),
-      onError: Color(0xFFFFFFFF),
-      errorContainer: Color(0xFFFFDAD6),
-      onErrorContainer: Color(0xFF93000A),
-      // --- Surface / Background ---
-      surface: Color(0xFFF9F9FC),
-      onSurface: Color(0xFF1A1C1E),
-      surfaceContainerLowest: Color(0xFFFFFFFF),
-      surfaceContainerLow: Color(0xFFF3F3F6),
-      surfaceContainer: Color(0xFFEEEEF0),
-      surfaceContainerHigh: Color(0xFFE8E8EA),
-      surfaceContainerHighest: Color(0xFFE2E2E5),
-      surfaceDim: Color(0xFFDADADC),
-      surfaceBright: Color(0xFFF9F9FC),
-      surfaceTint: Color(0xFF004CED),
-      onSurfaceVariant: Color(0xFF434656),
-      // --- Outline ---
-      outline: Color(0xFF737688),
-      outlineVariant: Color(0xFFC3C5D9),
-      // --- Inverse ---
-      inverseSurface: Color(0xFF2F3133),
-      onInverseSurface: Color(0xFFF0F0F3),
-      inversePrimary: Color(0xFFB7C4FF),
-      // --- Scrim / Shadow ---
-      scrim: Color(0xFF000000),
-      shadow: Color(0xFF000000),
-    );
+    return _build(_lightScheme, AppPalette.light);
+  }
 
+  static ThemeData dark() {
+    return _build(_darkScheme, AppPalette.dark);
+  }
+
+  static ThemeData _build(ColorScheme colorScheme, AppPalette palette) {
     final textTheme = _buildTextTheme();
 
     return ThemeData(
@@ -63,7 +26,7 @@ class AppTheme {
       colorScheme: colorScheme,
       fontFamily: 'Inter',
       textTheme: textTheme,
-      scaffoldBackgroundColor: colorScheme.surface,
+      scaffoldBackgroundColor: Colors.transparent,
 
       // --- Button themes ---
       textButtonTheme: TextButtonThemeData(
@@ -309,9 +272,93 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: .circular(8.r)),
       ),
 
-      extensions: [AppShapeTokens()],
+      extensions: [AppShapeTokens(), palette],
     );
   }
+
+      static const _lightScheme = ColorScheme(
+      brightness: Brightness.light,
+      // --- Primary ---
+      primary: Color(0xFF3D5AFE),
+      onPrimary: Color(0xFFFFFFFF),
+      primaryContainer: Color(0xFF0052FF),
+      onPrimaryContainer: Color(0xFFDFE3FF),
+      // --- Secondary ---
+      secondary: Color(0xFF4459A8),
+      onSecondary: Color(0xFFFFFFFF),
+      secondaryContainer: Color(0xFF95AAFE),
+      onSecondaryContainer: Color(0xFF253B89),
+      // --- Tertiary ---
+      tertiary: Color(0xFF952200),
+      onTertiary: Color(0xFFFFFFFF),
+      tertiaryContainer: Color(0xFFBF3003),
+      onTertiaryContainer: Color(0xFFFFDDD5),
+      // --- Error ---
+      error: Color(0xFFBA1A1A),
+      onError: Color(0xFFFFFFFF),
+      errorContainer: Color(0xFFFFDAD6),
+      onErrorContainer: Color(0xFF93000A),
+      // --- Surface / Background ---
+      surface: Color(0xFFF9F9FC),
+      onSurface: Color(0xFF1A1C1E),
+      surfaceContainerLowest: Color(0xFFFFFFFF),
+      surfaceContainerLow: Color(0xFFF3F3F6),
+      surfaceContainer: Color(0xFFEEEEF0),
+      surfaceContainerHigh: Color(0xFFE8E8EA),
+      surfaceContainerHighest: Color(0xFFE2E2E5),
+      surfaceDim: Color(0xFFDADADC),
+      surfaceBright: Color(0xFFF9F9FC),
+      surfaceTint: Color(0xFF004CED),
+      onSurfaceVariant: Color(0xFF434656),
+      // --- Outline ---
+      outline: Color(0xFF737688),
+      outlineVariant: Color(0xFFC3C5D9),
+      // --- Inverse ---
+      inverseSurface: Color(0xFF2F3133),
+      onInverseSurface: Color(0xFFF0F0F3),
+      inversePrimary: Color(0xFFB7C4FF),
+      // --- Scrim / Shadow ---
+      scrim: Color(0xFF000000),
+      shadow: Color(0xFF000000),
+    );
+
+  static const _darkScheme = ColorScheme(
+    brightness: Brightness.dark,
+    primary: Color(0xFF3D5AFE),
+    onPrimary: Color(0xFFFFFFFF),
+    primaryContainer: Color(0xFF2B45D6),
+    onPrimaryContainer: Color(0xFFDFE3FF),
+    secondary: Color(0xFFA9B8FF),
+    onSecondary: Color(0xFF0B1A5C),
+    secondaryContainer: Color(0xFF253B89),
+    onSecondaryContainer: Color(0xFFDFE3FF),
+    tertiary: Color(0xFFFFB4A1),
+    onTertiary: Color(0xFF5F1500),
+    tertiaryContainer: Color(0xFF952200),
+    onTertiaryContainer: Color(0xFFFFDDD5),
+    error: Color(0xFFFF968E),
+    onError: Color(0xFF3B0A06),
+    errorContainer: Color(0xFF93000A),
+    onErrorContainer: Color(0xFFFFDAD6),
+    surface: Color(0xFF0E1220),
+    onSurface: Color(0xFFF3F5FA),
+    surfaceContainerLowest: Color(0xFF0A0D18),
+    surfaceContainerLow: Color(0xFF131827),
+    surfaceContainer: Color(0xFF181D2D),
+    surfaceContainerHigh: Color(0xFF1F2536),
+    surfaceContainerHighest: Color(0xFF2A3043),
+    surfaceDim: Color(0xFF0A0D18),
+    surfaceBright: Color(0xFF2A3043),
+    surfaceTint: Color(0xFF3D5AFE),
+    onSurfaceVariant: Color(0xFFAEB5C6),
+    outline: Color(0xFF7C8398),
+    outlineVariant: Color(0x2EFFFFFF),
+    inverseSurface: Color(0xFFF3F5FA),
+    onInverseSurface: Color(0xFF121521),
+    inversePrimary: Color(0xFF2B45D6),
+    scrim: Color(0xFF000000),
+    shadow: Color(0xFF000000),
+  );
 
   static TextTheme _buildTextTheme() {
     // Typography derived from Stitch design-md:
@@ -322,7 +369,7 @@ class AppTheme {
     //   body-sm      → 0.75rem  = 12sp, Regular (w400)
     //   label-sm     → 0.6875rem = 11sp, Regular (w400)
     //   label-md     → 0.875rem  = 14sp, Medium (w500) — nav items
-    return TextTheme(
+    final base = TextTheme(
       // Display
       displayLarge: TextStyle(
         fontSize: 57.sp,
@@ -403,6 +450,16 @@ class AppTheme {
         fontWeight: .w400,
         letterSpacing: 0,
       ),
+    );
+    const heading = 'Space Grotesk';
+    return base.copyWith(
+      displayLarge: base.displayLarge?.copyWith(fontFamily: heading),
+      displayMedium: base.displayMedium?.copyWith(fontFamily: heading),
+      displaySmall: base.displaySmall?.copyWith(fontFamily: heading),
+      headlineLarge: base.headlineLarge?.copyWith(fontFamily: heading),
+      headlineMedium: base.headlineMedium?.copyWith(fontFamily: heading),
+      headlineSmall: base.headlineSmall?.copyWith(fontFamily: heading),
+      titleLarge: base.titleLarge?.copyWith(fontFamily: heading),
     );
   }
 }

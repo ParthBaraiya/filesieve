@@ -106,6 +106,12 @@ flutter:
         - asset: assets/fonts/inter/inter_italic_variable_opsz_wght.ttf
           style: italic
         - asset: assets/fonts/inter/inter_variable_opsz_wght.ttf
+    - family: Space Grotesk
+      fonts:
+        - asset: assets/fonts/space_grotesk/SpaceGrotesk-Variable.ttf
+    - family: JetBrains Mono
+      fonts:
+        - asset: assets/fonts/jetbrains_mono/JetBrainsMono-Variable.ttf
   #         style: italic
   #   - family: Trajan Pro
   #     fonts:

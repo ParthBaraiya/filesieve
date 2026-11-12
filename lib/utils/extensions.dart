@@ -1,3 +1,4 @@
+import '../values/app_palette.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:intl/intl.dart';
@@ -57,4 +58,9 @@ extension DateTimeExtension on DateTime {
     final phrase = '$value $unit${value == 1 ? '' : 's'}';
     return isPast ? '$phrase ago' : 'in $phrase';
   }
+}
+
+extension AppPaletteExtension on BuildContext {
+  /// Dedupe design tokens (glass panels, tints, status colours).
+  AppPalette get palette => Theme.of(this).extension<AppPalette>()!;
 }

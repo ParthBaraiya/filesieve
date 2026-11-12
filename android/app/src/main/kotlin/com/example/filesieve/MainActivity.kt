@@ -1,4 +1,4 @@
-package com.example.filesieve
+package com.binatesolutions.filesieve
 
 import io.flutter.embedding.android.FlutterActivity
 

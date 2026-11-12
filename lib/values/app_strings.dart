@@ -84,6 +84,29 @@ class AppStrings {
   static const String scanStatsDuplicates = 'Duplicates Found';
   static const String scanStatsSavings = 'Potential Savings';
   
+  // Scan setup (onboarding)
+  static const String setupStepAddFolders = 'Add folders';
+  static const String setupStepScan = 'Scan';
+  static const String setupStepReview = 'Review';
+  static const String setupHeadline = 'Where should we look for duplicates?';
+  static const String setupSubtitle =
+      'Add every folder you want checked. Files are compared byte for byte, '
+      'so only 100% identical copies are reported.';
+  static const String setupDropTitle = 'Drop folders here';
+  static const String setupDropSubtitle =
+      'or pick them from your computer. External drives work too.';
+  static const String setupChooseFolders = 'Choose folders…';
+  static const String setupSuggested = 'Suggested';
+  static const String setupFoldersToScan = 'Folders to scan';
+  static const String setupNoFolders =
+      'No folders yet. Add at least one to start scanning.';
+  static const String setupIncludeSubfolders = 'Include subfolders';
+  static const String setupSkipHidden = 'Skip hidden and system files';
+  static const String setupSettingsHint =
+      'You can change this list any time in Settings.';
+  static const String setupStartScan = 'Start scan';
+  static const String setupRemoveFolder = 'Remove folder';
+
   // Settings — Storage & Cache (Phase 1 constants)
   static const String settingsSectionStorageTitle = 'Storage & Cache';
   static const String settingsCacheEntryObjectBoxLabel = 'ObjectBox Store';

@@ -5,8 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'home_screen_cubit.dart';
 import 'home_screen_state.dart';
 import 'widgets/duplicate_file_preview_widget.dart';
-import 'widgets/scan_config_body.dart';
-import 'widgets/scan_onboarding_body.dart';
+import 'widgets/scan_setup_body.dart';
 import 'widgets/scan_progress_body.dart';
 
 /// HomeScreen — the main body content for the home / onboarding
@@ -35,14 +34,7 @@ class HomeScreen extends StatelessWidget {
           return DuplicateFilePreviewWidget(state: state);
         }
 
-        if (state.hasFolders) {
-          return Padding(
-            padding: .symmetric(horizontal: 32.w, vertical: 24.h),
-            child: const ScanConfigBody(),
-          );
-        }
-
-        return const ScanOnboardingBody();
+        return const ScanSetupBody();
       },
     );
   }

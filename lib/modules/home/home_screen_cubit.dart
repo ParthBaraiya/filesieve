@@ -142,7 +142,12 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
 
     if (validFolders.isNotEmpty) {
       emit(
-        HomeScreenState.foldersAdded(folders: List.unmodifiable(validFolders)),
+        HomeScreenState.foldersAdded(
+          folders: List.unmodifiable(<ScanFolderModel>{
+            ...state.allFolders,
+            ...validFolders,
+          }),
+        ),
       );
     } else if (lastRejectionReason != null) {
       emit(
@@ -167,6 +172,11 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
   /// the user cancels the dialog (null result).
   Future<void> onPickFolder() async {
     final path = await serviceLocator.get<FsPickerBase>().getDirectoryPaths();
+    await addFolderPaths(path);
+  }
+
+  /// Validates each of [path] and adds the readable ones to the folder list.
+  Future<void> addFolderPaths(Iterable<String> path) async {
     if (path.isEmpty) return;
 
     final folder = <ScanFolderModel>[];

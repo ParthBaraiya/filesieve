@@ -43,6 +43,12 @@ class ResultsScreenCubit extends Cubit<ResultsScreenState> {
 
   //#region Scanner sync
   void _onScannerState(FileScannerState scan) {
+    if (scan is FileScannerStateInitial) {
+      _seenGroupCount = 0;
+      _toastTimer?.cancel();
+      emit(const ResultsScreenState());
+      return;
+    }
     final isFreshScan =
         scan is FileScannerStateScanningStarted &&
         scan.groups.isEmpty &&

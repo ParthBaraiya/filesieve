@@ -176,6 +176,28 @@ class AppStrings {
   static const String dlgDeletePermanently = 'Delete permanently';
   static const String toastUndo = 'Undo';
 
+  // Settings
+  static const String settingsTitle = 'Settings';
+  static const String settingsRemovalTitle = 'When removing files';
+  static const String settingsTrashLabel = 'Move to Trash';
+  static const String settingsTrashSub =
+      'Recommended. You can restore files until the Trash is emptied.';
+  static const String settingsPermanentLabel = 'Delete permanently';
+  static const String settingsPermanentSub =
+      'Frees space right away. Files can’t be recovered.';
+  static const String settingsConfirmTitle = 'Confirm before every removal';
+  static const String settingsConfirmSub = 'Permanent deletes always ask first.';
+  static const String settingsFoldersTitle = 'Watched folders';
+  static const String settingsFoldersSub = 'The folders that are scanned.';
+  static const String settingsAddFolder = 'Add folder';
+  static const String settingsStopWatching = 'Stop watching folder';
+  static const String settingsNoFolders = 'No folders yet.';
+  static const String settingsAppearanceTitle = 'Appearance';
+  static const String settingsResetTitle = 'Start over';
+  static const String settingsResetSub =
+      'Clear the folder list and results, and restore default settings.';
+  static const String settingsResetButton = 'Reset app';
+
   // Settings — Storage & Cache (Phase 1 constants)
   static const String settingsSectionStorageTitle = 'Storage & Cache';
   static const String settingsCacheEntryObjectBoxLabel = 'ObjectBox Store';

@@ -90,6 +90,15 @@ class FileScannerCubit extends Cubit<FileScannerState> {
     }
   }
 
+  /// Stops any running scan and forgets every result.
+  Future<void> reset() async {
+    cancelScan();
+    await Future.wait(_subscriptions.values.map((s) => s.cancel()));
+    await Future.wait(_subscriptions.keys.map((c) => c.close()));
+    _subscriptions.clear();
+    emit(const FileScannerState.initial());
+  }
+
   void cancelScan() {
     if (state is! FileScannerStateScanningStarted) return;
     (state as FileScannerStateScanningStarted).cancelToken?.cancel();

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../models/cache_path_entry_model.dart';
-import '../../../values/app_strings.dart';
 import 'cache_path_entry_widget.dart';
 
 class StorageCacheSectionWidget extends StatelessWidget {
@@ -20,14 +19,9 @@ class StorageCacheSectionWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(AppStrings.settingsSectionStorageTitle,
-            style: theme.textTheme.headlineSmall),
-        const SizedBox(height: 12),
         ...entries.map((entry) {
           return CachePathEntryWidget(
             entry: entry,

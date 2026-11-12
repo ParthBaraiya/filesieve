@@ -57,6 +57,12 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
 
   //#endregion
 
+  /// Forgets the folder list and every scan result (Settings → Reset app).
+  Future<void> reset() async {
+    await scanner.reset();
+    emit(const HomeScreenState.initial());
+  }
+
   //#region Drag-and-drop events
   // -------------------------------------------------------------------------
   // Drag-and-drop events

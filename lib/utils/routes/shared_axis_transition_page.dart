@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:animations/animations.dart';
 import 'package:go_router/go_router.dart';
 
@@ -16,6 +17,7 @@ class SharedAxisTransitionPage<T> extends CustomTransitionPage<T> {
              animation: animation,
              secondaryAnimation: secondary,
              transitionType: transitionType,
+             fillColor: Colors.transparent,
              child: child,
            );
          },

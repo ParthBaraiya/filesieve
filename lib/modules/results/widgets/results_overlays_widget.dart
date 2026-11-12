@@ -94,7 +94,10 @@ class _ConfirmDialog extends StatelessWidget {
         ),
         Center(
           child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: 480.w.clamp(420, 560)),
+            constraints: BoxConstraints(
+              maxWidth: 480.w.clamp(420, 560),
+              maxHeight: MediaQuery.sizeOf(context).height - 48,
+            ),
             child: Semantics(
               scopesRoute: true,
               explicitChildNodes: true,
@@ -113,9 +116,9 @@ class _ConfirmDialog extends StatelessWidget {
                     ),
                     child: Material(
                       type: MaterialType.transparency,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                      child: ListView(
+                        shrinkWrap: true,
+                        padding: EdgeInsets.zero,
                         children: [
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,8 +168,10 @@ class _ConfirmDialog extends StatelessWidget {
                           SizedBox(height: 18.h),
                           _Note(trash: trash),
                           SizedBox(height: 18.h),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
+                          Wrap(
+                            alignment: WrapAlignment.end,
+                            spacing: 8.w,
+                            runSpacing: 8.h,
                             children: [
                               OutlinedButton(
                                 key: const ValueKey('results.dialog.cancel'),
@@ -183,7 +188,6 @@ class _ConfirmDialog extends StatelessWidget {
                                 ),
                                 child: const Text(AppStrings.dlgCancel),
                               ),
-                              SizedBox(width: 8.w),
                               FilledButton(
                                 key: const ValueKey('results.dialog.confirm'),
                                 onPressed: state.busy ? null : cubit.confirmDialog,
@@ -267,9 +271,11 @@ class _KeepRules extends StatelessWidget {
                             color: rule == selected ? AppPalette.brand : palette.muted,
                           ),
                           SizedBox(width: 10.w),
-                          Text(
-                            rule.label,
-                            style: TextStyle(fontSize: 14.sp, color: palette.text),
+                          Expanded(
+                            child: Text(
+                              rule.label,
+                              style: TextStyle(fontSize: 14.sp, color: palette.text),
+                            ),
                           ),
                         ],
                       ),

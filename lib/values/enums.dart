@@ -44,3 +44,19 @@ enum NavigationItem {
 
 /// ScanSessionStatus — lifecycle state of a scan session.
 enum ScanSessionStatus { pending, scanning, done, cancelled }
+
+/// AppThemeMode — the Appearance choice in Settings.
+enum AppThemeMode {
+  system,
+  light,
+  dark;
+
+  String get label => switch (this) {
+    AppThemeMode.system => 'System',
+    AppThemeMode.light => 'Light',
+    AppThemeMode.dark => 'Dark',
+  };
+}
+
+/// RemovalMode — what "Remove" does to a duplicate file.
+enum RemovalMode { trash, permanent }

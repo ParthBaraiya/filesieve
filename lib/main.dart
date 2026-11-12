@@ -1,4 +1,4 @@
-﻿import 'package:bitsdojo_window/bitsdojo_window.dart';
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:filesieve/utils/extensions.dart';
 import 'package:filesieve/utils/file_picker/fs_picker.dart';
 import 'package:filesieve/utils/file_picker/fs_picker_base.dart';
@@ -15,11 +15,14 @@ import 'modules/loading/loading_screen.dart';
 import 'modules/results/results_screen.dart';
 import 'modules/settings/settings_screen.dart';
 import 'modules/settings/settings_screen_cubit.dart';
+import 'modules/app_settings/app_settings_cubit.dart';
+import 'repository/app_settings/app_settings_repository.dart';
 import 'repository/cache_paths/cache_paths_repository.dart';
 import 'objectbox.g.dart';
 import 'repository/scan_session/scan_session_repository.dart';
 import 'values/app_routes.dart';
 import 'values/app_theme.dart';
+import 'values/enums.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,7 +34,18 @@ Future<void> main() async {
   serviceLocator.registerSingleton<Store>(store);
   serviceLocator.registerLazySingleton<FsPickerBase>(FsPicker.new);
 
-  runApp(const FileSieveApp());
+  final settingsRepository = AppSettingsRepository(store.directoryPath);
+  final settings = await settingsRepository.load();
+
+  runApp(
+    BlocProvider(
+      create: (_) => AppSettingsCubit(
+        repository: settingsRepository,
+        initial: settings,
+      ),
+      child: const FileSieveApp(),
+    ),
+  );
 
   doWhenWindowReady(() {
     const initialSize = Size(1600, 1000);
@@ -109,9 +123,22 @@ class FileSieveApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: false,
       builder: (context, child) {
+        final themeMode = context.select<AppSettingsCubit, AppThemeMode>(
+          (cubit) => cubit.state.themeMode,
+        );
         return MaterialApp.router(
           title: 'FileSieve',
           theme: AppTheme.light(),
+          darkTheme: AppTheme.dark(),
+          themeMode: switch (themeMode) {
+            AppThemeMode.system => ThemeMode.system,
+            AppThemeMode.light => ThemeMode.light,
+            AppThemeMode.dark => ThemeMode.dark,
+          },
+          builder: (context, child) => DecoratedBox(
+            decoration: BoxDecoration(gradient: context.palette.wall),
+            child: child,
+          ),
           routerConfig: router,
           debugShowCheckedModeBanner: false,
         );

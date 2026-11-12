@@ -1,102 +1,40 @@
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:filesieve/utils/extensions.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+import '../modules/app_settings/app_settings_cubit.dart';
+import '../values/app_palette.dart';
+import '../values/app_strings.dart';
 
 /// AppShellWidget — the top-level layout shell for all main screens.
 ///
-/// Composes a fixed sidebar on the left and an [Expanded] body column on the
-/// right. The body column is further divided into three vertical slots:
-/// [header] (static height), [body] (fills remaining space), and [footer]
-/// (static height).
+/// A custom title bar (drag area, theme toggle, window buttons) on top, then
+/// the [sidebar] on the left and the [body] filling the rest.
 ///
 /// Route-level transitions are handled by [SharedAxisTransitionPage] in
 /// GoRouter's child `pageBuilder`, so this widget renders [body] directly.
 class AppShellWidget extends StatelessWidget {
-  const AppShellWidget({
-    super.key,
-    required this.sidebar,
-    required this.body,
-    this.footer,
-  });
+  const AppShellWidget({super.key, required this.sidebar, required this.body});
 
   /// Fixed-width sidebar column (typically [SidebarSectionWidget]).
   final Widget sidebar;
 
-  /// Main content area — receives all remaining vertical space.
+  /// Main content area — receives all remaining space.
   final Widget body;
-
-  /// Bottom of the body area (typically [FooterSectionWidget]).
-  final Widget? footer;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
         children: [
-          SizedBox(
-            height: 32,
-            child: MoveWindow(
-              child: Row(
-                children: [
-                  WindowTitleBarBox(
-                    child: Padding(
-                      padding: const .symmetric(horizontal: 20),
-                      child: Center(
-                        child: Text(
-                          'FileSieve',
-                          style: context.theme.textTheme.titleMedium?.copyWith(
-                            color: context.theme.colorScheme.onSurface,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Spacer(),
-                  IconButton(
-                    onPressed: null,
-                    icon: const Icon(Icons.notifications_outlined),
-                    color: context.theme.colorScheme.onSurfaceVariant,
-                    tooltip: 'Notifications',
-                    iconSize: 18.sp,
-                  ),
-                  SizedBox(width: 4.w),
-                  IconButton(
-                    onPressed: null,
-                    icon: const Icon(Icons.help_outline),
-                    color: context.theme.colorScheme.onSurfaceVariant,
-                    tooltip: 'Help',
-                    iconSize: 18.sp,
-                  ),
-                  _AppBarIcon(
-                    child: Icons.minimize,
-                    iconColor: context.theme.colorScheme.primary,
-                    tooltip: 'Minimize',
-                    onTap: () => appWindow.minimize(),
-                  ),
-                  _AppBarIcon(
-                    child: Icons.close,
-                    iconColor: context.theme.colorScheme.error,
-                    backgroundColor: context.theme.colorScheme.errorContainer,
-                    tooltip: 'Close',
-                    onTap: () => appWindow.close(),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          const _TitleBar(),
           Expanded(
             child: Row(
               children: [
                 sidebar,
-                Expanded(
-                  child: Column(
-                    children: [
-                      Expanded(child: body),
-                      ?footer,
-                    ],
-                  ),
-                ),
+                Expanded(child: body),
               ],
             ),
           ),
@@ -106,43 +44,119 @@ class AppShellWidget extends StatelessWidget {
   }
 }
 
-class _AppBarIcon extends StatelessWidget {
-  const _AppBarIcon({
+class _TitleBar extends StatelessWidget {
+  const _TitleBar();
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    final isDark = context.theme.brightness == Brightness.dark;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: palette.bar,
+        border: Border(bottom: BorderSide(color: palette.line)),
+      ),
+      child: SizedBox(
+        height: 44,
+        child: Row(
+          children: [
+            Expanded(
+              child: MoveWindow(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 16),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 22,
+                        height: 22,
+                        decoration: BoxDecoration(
+                          color: AppPalette.brand,
+                          borderRadius: BorderRadius.circular(7),
+                        ),
+                        child: const Icon(
+                          Icons.filter_alt_outlined,
+                          size: 14,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        AppStrings.appName,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: palette.text,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            _TitleBarButton(
+              key: const ValueKey('titleBar.themeToggle'),
+              icon: isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+              tooltip: 'Switch light or dark theme',
+              onTap: () => context.read<AppSettingsCubit>().toggleTheme(
+                currentlyDark: isDark,
+              ),
+            ),
+            Container(
+              width: 1,
+              height: 18,
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              color: palette.line,
+            ),
+            _TitleBarButton(
+              key: const ValueKey('titleBar.minimize'),
+              icon: Icons.remove,
+              tooltip: 'Minimize',
+              onTap: () => appWindow.minimize(),
+            ),
+            _TitleBarButton(
+              key: const ValueKey('titleBar.maximize'),
+              icon: Icons.crop_square,
+              tooltip: 'Maximize',
+              onTap: () => appWindow.maximizeOrRestore(),
+            ),
+            _TitleBarButton(
+              key: const ValueKey('titleBar.close'),
+              icon: Icons.close,
+              tooltip: 'Close',
+              onTap: () => appWindow.close(),
+            ),
+            const SizedBox(width: 4),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TitleBarButton extends StatelessWidget {
+  const _TitleBarButton({
     super.key,
-    required this.child,
-    this.tooltip,
-    required this.iconColor,
-    this.backgroundColor,
+    required this.icon,
+    required this.tooltip,
     required this.onTap,
   });
 
-  final IconData child;
-  final String? tooltip;
-  final Color iconColor;
-  final Color? backgroundColor;
+  final IconData icon;
+  final String tooltip;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Tooltip(
       message: tooltip,
-      child: SizedBox(
-        width: 50,
-        height: 32,
-        child: InkWell(
-          onTap: onTap,
-          child: ColoredBox(
-            color: backgroundColor ?? Colors.transparent,
-            child: Padding(
-              padding: .symmetric(vertical: 8, horizontal: 12),
-              child: Icon(
-                child,
-                color: iconColor,
-                size: 16.sp,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: SizedBox(
+          width: 44,
+          height: 36,
+          child: Icon(icon, size: 16.sp.clamp(14, 18), color: context.palette.muted),
         ),
       ),
     );

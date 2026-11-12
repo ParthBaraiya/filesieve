@@ -1,0 +1,928 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dedupe — prototype</title>
+<script src="./vendor/react.js"></script>
+<script src="./vendor/react-dom.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#9DAEFF}a:hover{color:#C3CDFF}
+</style>
+</helmet>
+<div style="min-height: 820px; box-sizing: border-box; padding: 40px 16px; background: {{t.wall}}; font-family: Inter, system-ui, sans-serif; color: {{t.text}}">
+
+  <sc-if value="{{closed}}" hint-placeholder-val="{{ false }}">
+    <div style="min-height: 740px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px">
+      <button onClick="{{openApp}}" aria-label="Open Dedupe" style="width: 112px; padding: 14px 8px; border-radius: 18px; border: 1px solid {{t.glassBorder}}; background: {{t.glass}}; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; color: {{t.text}}; box-shadow: {{t.shadow}}">
+        <span aria-hidden="true" style="width: 56px; height: 56px; border-radius: 16px; background: #3D5AFE; display: flex; align-items: center; justify-content: center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg></span>
+        <span style="font: 600 13px Inter, sans-serif">Dedupe</span>
+      </button>
+      <span style="font-size: 13px; color: {{t.text}}; padding: 6px 12px; border-radius: 999px; background: {{t.panel}}">{{closedHint}}</span>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{open}}" hint-placeholder-val="{{ true }}">
+  <div style="max-width: 1200px; margin: 0 auto; min-height: 740px; display: flex; flex-direction: column; border-radius: 16px; overflow: clip; position: relative; background: {{t.glass}}; backdrop-filter: blur(32px) saturate(170%); -webkit-backdrop-filter: blur(32px) saturate(170%); border: 1px solid {{t.glassBorder}}; box-shadow: {{t.shadow}}">
+
+    <div style="height: 44px; display: flex; align-items: center; gap: 4px; padding: 0 4px 0 16px; border-bottom: 1px solid {{t.line}}; background: {{t.bar}}; flex-shrink: 0">
+      <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0">
+        <div aria-hidden="true" style="width: 22px; height: 22px; border-radius: 7px; background: #3D5AFE; display: flex; align-items: center; justify-content: center">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg>
+        </div>
+        <span style="font-weight: 600; font-size: 13px; color: {{t.text}}">Dedupe</span>
+      </div>
+      <button aria-label="Switch light or dark theme" onClick="{{toggleTheme}}" style="width: 40px; height: 36px; border: 0; border-radius: 8px; background: transparent; color: {{t.muted}}; display: flex; align-items: center; justify-content: center; cursor: pointer">
+        <sc-if value="{{isDark}}" hint-placeholder-val="{{ true }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg></sc-if>
+        <sc-if value="{{isLight}}" hint-placeholder-val="{{ false }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></sc-if>
+      </button>
+      <div aria-hidden="true" style="width: 1px; height: 18px; background: {{t.line}}; margin: 0 4px"></div>
+      <button aria-label="Minimize" onClick="{{closeApp}}" style="width: 44px; height: 36px; border: 0; border-radius: 8px; background: transparent; color: {{t.muted}}; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"></path></svg></button>
+      <button aria-label="Maximize" style="width: 44px; height: 36px; border: 0; border-radius: 8px; background: transparent; color: {{t.muted}}; display: flex; align-items: center; justify-content: center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"></rect></svg></button>
+      <button aria-label="Close" onClick="{{closeApp}}" style="width: 44px; height: 36px; border: 0; border-radius: 8px; background: transparent; color: {{t.muted}}; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+    </div>
+
+    <!-- ============ ONBOARDING ============ -->
+    <sc-if value="{{scr.onboard}}" hint-placeholder-val="{{ true }}">
+    <div style="flex: 1; display: flex; justify-content: center; padding: 40px 24px">
+      <div style="width: 100%; max-width: 720px; display: flex; flex-direction: column; gap: 22px">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; font-weight: 600">
+          <span style="display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 999px; background: {{t.accentSoft}}; color: {{t.accentText}}"><span style="width: 20px; height: 20px; border-radius: 999px; background: #3D5AFE; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 11px">1</span>Add folders</span>
+          <span aria-hidden="true" style="width: 24px; height: 1px; background: {{t.line}}"></span>
+          <span style="display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 999px; color: {{t.muted}}; border: 1px solid {{t.line}}"><span style="width: 20px; height: 20px; border-radius: 999px; background: {{t.panelStrong}}; display: flex; align-items: center; justify-content: center; font-size: 11px">2</span>Scan</span>
+          <span aria-hidden="true" style="width: 24px; height: 1px; background: {{t.line}}"></span>
+          <span style="display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 999px; color: {{t.muted}}; border: 1px solid {{t.line}}"><span style="width: 20px; height: 20px; border-radius: 999px; background: {{t.panelStrong}}; display: flex; align-items: center; justify-content: center; font-size: 11px">3</span>Review</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 36px; line-height: 1.15; font-weight: 600; letter-spacing: -0.02em; color: {{t.text}}">Where should we look for duplicates?</h1>
+          <p style="margin: 0; font-size: 15px; line-height: 1.6; color: {{t.muted}}; max-width: 600px">Add every folder you want checked. Files are compared byte for byte, so only 100% identical copies are reported. Your folder list is saved and reused each time you open the app.</p>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 20px; border-radius: 14px; border: 1.5px dashed {{t.dash}}; background: {{t.panel}}">
+          <div aria-hidden="true" style="width: 48px; height: 48px; border-radius: 12px; background: {{t.accentSoft}}; color: {{t.accentText}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><path d="M12 11v5M9.5 13.5h5"></path></svg>
+          </div>
+          <div style="flex: 1 1 240px; display: flex; flex-direction: column; gap: 2px">
+            <span style="font-size: 14px; font-weight: 600; color: {{t.text}}">Drop folders here</span>
+            <span style="font-size: 13px; color: {{t.muted}}">or pick them from your computer. External drives work too.</span>
+          </div>
+          <button onClick="{{openPicker}}" style="height: 40px; padding: 0 18px; border-radius: 10px; border: 0; background: #3D5AFE; color: #FFFFFF; font: 600 14px Inter, sans-serif; cursor: pointer; display: flex; align-items: center; gap: 8px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Choose folders…
+          </button>
+        </div>
+
+        <sc-if value="{{hasSuggestions}}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+            <span style="font-size: 13px; color: {{t.muted}}; margin-right: 4px">Suggested</span>
+            <sc-for list="{{suggestions}}" as="s" hint-placeholder-count="4">
+              <button onClick="{{s.add}}" style="height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid {{t.line}}; background: {{t.panel}}; color: {{t.text}}; font: 500 13px Inter, sans-serif; cursor: pointer; display: flex; align-items: center; gap: 6px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>{{s.name}}</button>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <div style="display: flex; flex-direction: column; border-radius: 14px; background: {{t.panel}}; border: 1px solid {{t.line}}; overflow: hidden">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-bottom: 1px solid {{t.line}}">
+            <span style="font-size: 13px; font-weight: 600; color: {{t.text}}">{{folderCount}}</span>
+            <span style="font-size: 12px; color: {{t.muted}}">Saved when you start the scan</span>
+          </div>
+          <sc-for list="{{folderRows}}" as="f" hint-placeholder-count="3">
+            <div style="display: flex; align-items: center; gap: 14px; padding: 8px 8px 8px 16px; border-bottom: 1px solid {{t.line}}">
+              <div aria-hidden="true" style="width: 34px; height: 34px; border-radius: 9px; background: {{t.panelStrong}}; color: {{t.accentText}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+              </div>
+              <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+                <span style="font-size: 14px; font-weight: 600; color: {{t.text}}">{{f.name}}</span>
+                <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: {{t.muted}}">{{f.path}}</span>
+              </div>
+              <button aria-label="Remove folder" onClick="{{f.remove}}" style="width: 44px; height: 44px; border: 0; border-radius: 10px; background: transparent; color: {{t.muted}}; display: flex; align-items: center; justify-content: center; cursor: pointer">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+              </button>
+            </div>
+          </sc-for>
+          <sc-if value="{{noFolders}}" hint-placeholder-val="{{ false }}">
+            <div style="padding: 26px 16px; text-align: center; font-size: 13px; color: {{t.muted}}; border-bottom: 1px solid {{t.line}}">No folders yet. Add at least one to start scanning.</div>
+          </sc-if>
+          <div style="display: flex; gap: 24px; flex-wrap: wrap; padding: 10px 16px">
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: {{t.text}}; min-height: 32px; cursor: pointer"><input type="checkbox" checked="{{subfolders}}" onChange="{{toggleSub}}" style="width: 16px; height: 16px; accent-color: #3D5AFE; margin: 0">Include subfolders</label>
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: {{t.text}}; min-height: 32px; cursor: pointer"><input type="checkbox" checked="{{skipHidden}}" onChange="{{toggleHidden}}" style="width: 16px; height: 16px; accent-color: #3D5AFE; margin: 0">Skip hidden and system files</label>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap">
+          <span style="font-size: 13px; color: {{t.muted}}">You can change this list any time in Settings.</span>
+          <button onClick="{{startFirstScan}}" disabled="{{noFolders}}" style="height: 44px; padding: 0 22px; border-radius: 11px; border: 0; background: #3D5AFE; color: #FFFFFF; font: 600 15px Inter, sans-serif; display: flex; align-items: center; gap: 10px; cursor: pointer; opacity: {{startOpacity}}; box-shadow: 0 8px 24px rgba(61,90,254,0.35)">Start scan<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ============ APP SHELL ============ -->
+    <sc-if value="{{showShell}}" hint-placeholder-val="{{ false }}">
+    <div style="flex: 1; display: flex; flex-wrap: wrap; align-items: stretch">
+      <nav aria-label="Main" style="flex: 1 1 220px; max-width: 240px; box-sizing: border-box; padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; background: {{t.side}}; border-right: 1px solid {{t.line}}">
+        <button onClick="{{goDups}}" style="height: 40px; padding: 0 12px; border: 0; border-radius: 10px; display: flex; align-items: center; gap: 10px; font: 500 14px Inter, sans-serif; text-align: left; cursor: pointer; background: {{n.dup.bg}}; color: {{n.dup.color}}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg>
+          <span style="flex: 1">Duplicates</span><span style="font-size: 12px; font-weight: 600; color: {{t.muted}}">{{activeCount}}</span>
+        </button>
+        <button onClick="{{rescan}}" style="height: 40px; padding: 0 12px; border: 0; border-radius: 10px; display: flex; align-items: center; gap: 10px; font: 500 14px Inter, sans-serif; text-align: left; cursor: pointer; background: {{n.scan.bg}}; color: {{n.scan.color}}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+          <span style="flex: 1">Scan</span>
+        </button>
+        <button onClick="{{goSettings}}" style="height: 40px; padding: 0 12px; border: 0; border-radius: 10px; display: flex; align-items: center; gap: 10px; font: 500 14px Inter, sans-serif; text-align: left; cursor: pointer; background: {{n.set.bg}}; color: {{n.set.color}}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg>
+          <span style="flex: 1">Settings</span>
+        </button>
+        <div style="margin: 20px 12px 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.muted}}">Watched folders</div>
+        <sc-for list="{{folderRows}}" as="f" hint-placeholder-count="4">
+          <div style="height: 30px; padding: 0 12px; display: flex; align-items: center; gap: 10px; font-size: 13px; color: {{t.muted}}">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+            <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{f.name}}</span>
+          </div>
+        </sc-for>
+        <div style="flex: 1; min-height: 16px"></div>
+        <div style="padding: 14px; border-radius: 12px; background: {{t.panel}}; border: 1px solid {{t.line}}; display: flex; flex-direction: column; gap: 4px">
+          <span style="font-size: 12px; color: {{t.muted}}">Reclaimable</span>
+          <span style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 22px; font-weight: 600; color: {{t.text}}">{{reclaimLabel}}</span>
+          <span style="font-size: 12px; color: {{t.muted}}">{{freedSide}}</span>
+        </div>
+      </nav>
+
+      <div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+
+        <!-- ============ SCAN ============ -->
+        <sc-if value="{{scr.scan}}" hint-placeholder-val="{{ false }}">
+        <div style="padding: 32px; display: flex; flex-direction: column; gap: 20px">
+          <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap">
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 28px; font-weight: 600; letter-spacing: -0.02em; color: {{t.text}}">{{scanTitle}}</h1>
+              <span style="font-size: 14px; color: {{t.muted}}">{{scanSub}}</span>
+            </div>
+            <sc-if value="{{scanRunning}}" hint-placeholder-val="{{ true }}">
+              <div style="display: flex; gap: 8px">
+                <button onClick="{{togglePause}}" style="height: 40px; padding: 0 16px; border-radius: 10px; border: 1px solid {{t.line}}; background: {{t.panelStrong}}; color: {{t.text}}; font: 600 14px Inter, sans-serif; cursor: pointer">{{pauseLabel}}</button>
+                <button onClick="{{cancelScan}}" style="height: 40px; padding: 0 16px; border-radius: 10px; border: 1px solid {{t.line}}; background: transparent; color: {{t.danger}}; font: 600 14px Inter, sans-serif; cursor: pointer">Cancel</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{scanDone}}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{goDups}}" style="height: 44px; padding: 0 20px; border-radius: 11px; border: 0; background: #3D5AFE; color: #FFFFFF; font: 600 15px Inter, sans-serif; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 24px rgba(61,90,254,0.35)">Review duplicates<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+            </sc-if>
+          </div>
+
+          <section style="padding: 24px; border-radius: 16px; background: {{t.panel}}; border: 1px solid {{t.line}}; display: flex; flex-direction: column; gap: 18px">
+            <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap">
+              <div style="display: flex; align-items: baseline; gap: 14px">
+                <span style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 56px; font-weight: 600; line-height: 1; letter-spacing: -0.03em; color: {{t.text}}">{{pctLabel}}</span>
+                <span style="font-size: 14px; color: {{t.muted}}">{{stageLine}}</span>
+              </div>
+              <span style="font-size: 13px; color: {{t.muted}}">{{filesLine}}</span>
+            </div>
+            <div role="progressbar" aria-label="Scan progress" aria-valuenow="{{pct}}" aria-valuemin="0" aria-valuemax="100" style="height: 10px; border-radius: 999px; background: {{t.track}}; overflow: hidden">
+              <div style="width: {{pctWidth}}; height: 100%; border-radius: 999px; background: {{barColor}}; box-shadow: 0 0 18px rgba(61,90,254,0.5)"></div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: {{t.input}}; min-width: 0">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="{{t.muted}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5"></path></svg>
+              <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: {{t.muted}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{currentFile}}</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px">
+              <sc-for list="{{stages}}" as="s" hint-placeholder-count="3">
+                <div style="display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 12px; background: {{s.bg}}; border: 1px solid {{s.border}}">
+                  <sc-if value="{{s.isDone}}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="width: 26px; height: 26px; border-radius: 999px; background: {{t.ok}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="{{t.onOk}}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"></path></svg></span></sc-if>
+                  <sc-if value="{{s.isActive}}" hint-placeholder-val="{{ false }}"><span aria-hidden="true" style="width: 26px; height: 26px; border-radius: 999px; border: 2.5px solid #3D5AFE; border-right-color: transparent; box-sizing: border-box; flex-shrink: 0"></span></sc-if>
+                  <sc-if value="{{s.isPending}}" hint-placeholder-val="{{ true }}"><span aria-hidden="true" style="width: 26px; height: 26px; border-radius: 999px; border: 2px solid {{t.line}}; box-sizing: border-box; flex-shrink: 0"></span></sc-if>
+                  <div style="display: flex; flex-direction: column; min-width: 0"><span style="font-size: 13px; font-weight: 600; color: {{t.text}}">{{s.label}}</span><span style="font-size: 12px; color: {{t.muted}}">{{s.sub}}</span></div>
+                </div>
+              </sc-for>
+            </div>
+          </section>
+
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px">
+            <div style="padding: 16px 18px; border-radius: 14px; background: {{t.panel}}; border: 1px solid {{t.line}}; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 12px; color: {{t.muted}}">Duplicate groups</span><span style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 26px; font-weight: 600; color: {{t.text}}">{{foundGroups}}</span></div>
+            <div style="padding: 16px 18px; border-radius: 14px; background: {{t.panel}}; border: 1px solid {{t.line}}; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 12px; color: {{t.muted}}">Extra copies</span><span style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 26px; font-weight: 600; color: {{t.text}}">{{foundCopies}}</span></div>
+            <div style="padding: 16px 18px; border-radius: 14px; background: {{t.panel}}; border: 1px solid {{t.line}}; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 12px; color: {{t.muted}}">Space to reclaim</span><span style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 26px; font-weight: 600; color: {{t.accentText}}">{{foundSpace}}</span></div>
+          </div>
+
+          <section style="border-radius: 14px; background: {{t.panel}}; border: 1px solid {{t.line}}; overflow: hidden">
+            <h2 style="margin: 0; padding: 12px 16px; border-bottom: 1px solid {{t.line}}; font-size: 13px; font-weight: 600; color: {{t.text}}">By folder</h2>
+            <sc-for list="{{scanRows}}" as="p" hint-placeholder-count="4">
+              <div style="display: grid; grid-template-columns: minmax(110px, 1.2fr) minmax(0, 3fr) 72px; align-items: center; gap: 16px; padding: 10px 16px; border-bottom: 1px solid {{t.line}}">
+                <span style="font-size: 13px; font-weight: 500; color: {{t.text}}">{{p.name}}</span>
+                <div style="height: 6px; border-radius: 999px; background: {{t.track}}; overflow: hidden"><div style="height: 100%; width: {{p.pct}}; border-radius: 999px; background: {{p.color}}"></div></div>
+                <span style="font-size: 12px; text-align: right; color: {{t.muted}}">{{p.label}}</span>
+              </div>
+            </sc-for>
+          </section>
+        </div>
+        </sc-if>
+
+        <!-- ============ DUPLICATES ============ -->
+        <sc-if value="{{scr.dups}}" hint-placeholder-val="{{ false }}">
+        <div style="padding: 28px 32px; display: flex; flex-direction: column; gap: 18px">
+          <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap">
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 28px; font-weight: 600; letter-spacing: -0.02em; color: {{t.text}}">Duplicates</h1>
+              <span style="font-size: 14px; color: {{t.muted}}">{{dupSummary}}</span>
+            </div>
+            <sc-if value="{{hasGroups}}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{openRemoveAll}}" style="height: 44px; padding: 0 18px; border-radius: 11px; border: 0; background: #D93025; color: #FFFFFF; font: 600 14px Inter, sans-serif; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 24px rgba(217,48,37,0.30)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"></path></svg>
+                {{removeAllLabel}}
+              </button>
+            </sc-if>
+          </div>
+
+          <sc-if value="{{hasGroups}}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; flex-direction: column; gap: 18px">
+            <div role="group" aria-label="Filter by type" style="display: flex; gap: 6px; flex-wrap: wrap">
+              <sc-for list="{{chips}}" as="c" hint-placeholder-count="6">
+                <button onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid {{c.border}}; background: {{c.bg}}; color: {{c.color}}; font: 500 13px Inter, sans-serif; cursor: pointer">{{c.label}}</button>
+              </sc-for>
+            </div>
+            <div style="border-radius: 14px; background: {{t.panel}}; border: 1px solid {{t.line}}; overflow-x: auto">
+              <div style="min-width: 660px">
+                <div style="display: grid; grid-template-columns: minmax(0, 2.6fr) 80px 100px 120px 36px; gap: 16px; align-items: center; padding: 10px 16px; border-bottom: 1px solid {{t.line}}; font-size: 12px; font-weight: 600; color: {{t.muted}}">
+                  <span>File</span><span>Copies</span><span>Size each</span><span style="text-align: right">Reclaimable</span><span></span>
+                </div>
+                <sc-for list="{{groupRows}}" as="g" hint-placeholder-count="8">
+                  <button onClick="{{g.open}}" style="width: 100%; display: grid; grid-template-columns: minmax(0, 2.6fr) 80px 100px 120px 36px; gap: 16px; align-items: center; padding: 10px 16px; border: 0; border-bottom: 1px solid {{t.line}}; background: transparent; text-align: left; cursor: pointer; color: {{t.text}}; font-family: Inter, sans-serif">
+                    <span style="display: flex; align-items: center; gap: 12px; min-width: 0">
+                      <span aria-hidden="true" style="width: 40px; height: 40px; border-radius: 10px; background: {{t.tile}}; color: {{g.tint}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+                        <sc-if value="{{g.isImg}}" hint-placeholder-val="{{ false }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><path d="M21 16l-5-5-9 9"></path></svg></sc-if>
+                        <sc-if value="{{g.isDoc}}" hint-placeholder-val="{{ true }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5M9 13h6M9 17h4"></path></svg></sc-if>
+                        <sc-if value="{{g.isVid}}" hint-placeholder-val="{{ false }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="13" height="14" rx="2"></rect><path d="M16 10l5-3v10l-5-3z"></path></svg></sc-if>
+                        <sc-if value="{{g.isAud}}" hint-placeholder-val="{{ false }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="17" cy="16" r="3"></circle></svg></sc-if>
+                        <sc-if value="{{g.isZip}}" hint-placeholder-val="{{ false }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M12 3v2M12 7v2M12 11v2M10 15h4v3h-4z"></path></svg></sc-if>
+                      </span>
+                      <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+                        <span style="font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{g.name}}</span>
+                        <span style="font-size: 12px; color: {{t.muted}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{g.where}}</span>
+                      </span>
+                    </span>
+                    <span><span style="display: inline-flex; align-items: center; height: 24px; padding: 0 9px; border-radius: 999px; background: {{t.panelStrong}}; font-size: 13px; font-weight: 600">{{g.copies}}</span></span>
+                    <span style="font-size: 13px; color: {{t.muted}}">{{g.size}}</span>
+                    <span style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 15px; font-weight: 600; text-align: right; color: {{t.accentText}}">{{g.waste}}</span>
+                    <span aria-hidden="true" style="display: flex; justify-content: center; color: {{t.muted}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></span>
+                  </button>
+                </sc-for>
+                <sc-if value="{{filterEmpty}}" hint-placeholder-val="{{ false }}">
+                  <div style="padding: 28px 16px; text-align: center; font-size: 13px; color: {{t.muted}}">No duplicates of this type left.</div>
+                </sc-if>
+              </div>
+            </div>
+          </div>
+          </sc-if>
+
+          <sc-if value="{{allClean}}" hint-placeholder-val="{{ false }}">
+            <div style="padding: 56px 24px; border-radius: 16px; background: {{t.panel}}; border: 1px solid {{t.line}}; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center">
+              <span aria-hidden="true" style="width: 64px; height: 64px; border-radius: 999px; background: {{t.okSoft}}; color: {{t.ok}}; display: flex; align-items: center; justify-content: center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"></path></svg></span>
+              <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 24px; font-weight: 600; color: {{t.text}}">No duplicates left</h2>
+              <p style="margin: 0; font-size: 14px; color: {{t.muted}}">{{cleanLine}}</p>
+              <button onClick="{{rescan}}" style="margin-top: 8px; height: 42px; padding: 0 18px; border-radius: 10px; border: 1px solid {{t.line}}; background: {{t.panelStrong}}; color: {{t.text}}; font: 600 14px Inter, sans-serif; cursor: pointer">Scan again</button>
+            </div>
+          </sc-if>
+        </div>
+        </sc-if>
+
+        <!-- ============ COMPARE ============ -->
+        <sc-if value="{{scr.compare}}" hint-placeholder-val="{{ false }}">
+        <div style="flex: 1; display: flex; flex-direction: column">
+          <div style="padding: 20px 32px 24px; display: flex; flex-direction: column; gap: 18px; flex: 1">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap">
+              <button onClick="{{goDups}}" style="height: 36px; padding: 0 12px 0 8px; border: 0; border-radius: 9px; background: transparent; color: {{t.muted}}; font: 500 14px Inter, sans-serif; cursor: pointer; display: flex; align-items: center; gap: 6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>All duplicates</button>
+              <div style="display: flex; align-items: center; gap: 6px">
+                <span style="font-size: 13px; color: {{t.muted}}; margin-right: 6px">{{cmpPos}}</span>
+                <button aria-label="Previous group" onClick="{{prevGroup}}" style="width: 36px; height: 36px; border-radius: 9px; border: 1px solid {{t.line}}; background: {{t.panel}}; color: {{t.text}}; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button>
+                <button aria-label="Next group" onClick="{{nextGroup}}" style="width: 36px; height: 36px; border-radius: 9px; border: 1px solid {{t.line}}; background: {{t.panel}}; color: {{t.text}}; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap">
+              <div style="display: flex; flex-direction: column; gap: 6px; flex: 1 1 300px; min-width: 0">
+                <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 26px; font-weight: 600; letter-spacing: -0.01em; color: {{t.text}}; overflow-wrap: anywhere">{{cg.name}}</h1>
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; color: {{t.muted}}">
+                  <span style="display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 999px; background: {{t.okSoft}}; color: {{t.ok}}; font-weight: 600; font-size: 12px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>100% identical</span>
+                  <span>{{cg.meta}}</span>
+                </div>
+              </div>
+            </div>
+
+            <sc-if value="{{cg.resolved}}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 16px; border-radius: 12px; background: {{t.okSoft}}; border: 1px solid {{t.okLine}}">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{t.ok}}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>
+                <span style="flex: 1 1 200px; font-size: 14px; color: {{t.text}}">Sorted. One copy kept, the duplicates are gone.</span>
+                <button onClick="{{nextOrBack}}" style="height: 38px; padding: 0 16px; border-radius: 10px; border: 0; background: #3D5AFE; color: #FFFFFF; font: 600 14px Inter, sans-serif; cursor: pointer">{{nextOrBackLabel}}</button>
+              </div>
+            </sc-if>
+
+            <div style="display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-start">
+              <div style="flex: 1 1 260px; max-width: 320px; display: flex; flex-direction: column; gap: 10px">
+                <div role="img" aria-label="File preview" style="aspect-ratio: 4 / 3; border-radius: 14px; background: {{t.panelStrong}}; border: 1px solid {{t.line}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: {{cg.tint}}">
+                  <sc-if value="{{cg.isImg}}" hint-placeholder-val="{{ true }}"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><path d="M21 16l-5-5-9 9"></path></svg></sc-if>
+                  <sc-if value="{{cg.isDoc}}" hint-placeholder-val="{{ false }}"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5M9 13h6M9 17h4"></path></svg></sc-if>
+                  <sc-if value="{{cg.isVid}}" hint-placeholder-val="{{ false }}"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="13" height="14" rx="2"></rect><path d="M16 10l5-3v10l-5-3z"></path></svg></sc-if>
+                  <sc-if value="{{cg.isAud}}" hint-placeholder-val="{{ false }}"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="17" cy="16" r="3"></circle></svg></sc-if>
+                  <sc-if value="{{cg.isZip}}" hint-placeholder-val="{{ false }}"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M12 3v2M12 7v2M12 11v2M10 15h4v3h-4z"></path></svg></sc-if>
+                  <span style="font-size: 12px; color: {{t.muted}}">[File preview]</span>
+                </div>
+                <div style="padding: 12px 14px; border-radius: 12px; background: {{t.panel}}; border: 1px solid {{t.line}}; display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: {{t.muted}}">
+                  <span style="display: flex; justify-content: space-between; gap: 8px"><span>Type</span><span style="color: {{t.text}}">{{cg.kind}}</span></span>
+                  <span style="display: flex; justify-content: space-between; gap: 8px"><span>Size</span><span style="color: {{t.text}}">{{cg.size}}</span></span>
+                  <span style="display: flex; justify-content: space-between; gap: 8px"><span>Match</span><span style="color: {{t.text}}">Byte for byte</span></span>
+                </div>
+              </div>
+
+              <div style="flex: 999 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 10px">
+                <sc-for list="{{versions}}" as="v" hint-placeholder-count="3">
+                  <div style="border-radius: 14px; border: 1.5px solid {{v.border}}; background: {{v.bg}}; padding: 14px 14px 14px 16px; display: flex; flex-direction: column; gap: 10px; opacity: {{v.opacity}}">
+                    <div style="display: flex; align-items: flex-start; gap: 12px">
+                      <div aria-hidden="true" style="width: 34px; height: 34px; border-radius: 9px; background: {{t.panelStrong}}; color: {{t.accentText}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+                      </div>
+                      <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+                        <span style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+                          <span style="font-size: 14px; font-weight: 600; color: {{t.text}}; text-decoration: {{v.strike}}">{{v.folder}}</span>
+                          <sc-if value="{{v.isOldest}}" hint-placeholder-val="{{ false }}"><span style="height: 20px; padding: 0 8px; border-radius: 999px; background: {{t.panelStrong}}; font-size: 11px; font-weight: 600; color: {{t.muted}}; display: inline-flex; align-items: center">Oldest</span></sc-if>
+                          <sc-if value="{{v.isKeep}}" hint-placeholder-val="{{ false }}"><span style="height: 20px; padding: 0 8px; border-radius: 999px; background: #3D5AFE; font-size: 11px; font-weight: 600; color: #FFFFFF; display: inline-flex; align-items: center">Keeping</span></sc-if>
+                        </span>
+                        <span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: {{t.muted}}; overflow-wrap: anywhere">{{v.path}}</span>
+                        <span style="font-size: 12px; color: {{t.muted}}">{{v.dates}}</span>
+                      </div>
+                    </div>
+                    <sc-if value="{{v.isLive}}" hint-placeholder-val="{{ true }}">
+                      <div style="display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap">
+                        <sc-if value="{{v.notKeep}}" hint-placeholder-val="{{ true }}">
+                          <button onClick="{{v.keep}}" style="height: 36px; padding: 0 14px; border-radius: 9px; border: 1px solid {{t.line}}; background: {{t.panelStrong}}; color: {{t.text}}; font: 600 13px Inter, sans-serif; cursor: pointer">Keep this one</button>
+                          <button onClick="{{v.remove}}" style="height: 36px; padding: 0 14px; border-radius: 9px; border: 1px solid {{t.dangerLine}}; background: {{t.dangerSoft}}; color: {{t.danger}}; font: 600 13px Inter, sans-serif; cursor: pointer; display: flex; align-items: center; gap: 6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"></path></svg>Remove</button>
+                        </sc-if>
+                        <sc-if value="{{v.isKeep}}" hint-placeholder-val="{{ false }}">
+                          <button onClick="{{v.reveal}}" style="height: 36px; padding: 0 14px; border-radius: 9px; border: 1px solid {{t.line}}; background: transparent; color: {{t.muted}}; font: 600 13px Inter, sans-serif; cursor: pointer">Show in folder</button>
+                        </sc-if>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{v.isGone}}" hint-placeholder-val="{{ false }}">
+                      <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; color: {{t.muted}}">
+                        <span>{{v.goneLabel}}</span>
+                        <sc-if value="{{v.canUndo}}" hint-placeholder-val="{{ true }}"><button onClick="{{v.undo}}" style="height: 32px; padding: 0 12px; border-radius: 8px; border: 0; background: transparent; color: {{t.accentText}}; font: 600 13px Inter, sans-serif; cursor: pointer">Restore</button></sc-if>
+                      </div>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+
+          <sc-if value="{{cg.open}}" hint-placeholder-val="{{ true }}">
+            <div style="position: sticky; bottom: 0; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 32px; border-top: 1px solid {{t.line}}; background: {{t.footer}}; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px)">
+              <span style="flex: 1 1 240px; font-size: 13px; color: {{t.muted}}">{{cg.footerLine}}</span>
+              <button onClick="{{nextGroup}}" style="height: 42px; padding: 0 16px; border-radius: 10px; border: 1px solid {{t.line}}; background: {{t.panelStrong}}; color: {{t.text}}; font: 600 14px Inter, sans-serif; cursor: pointer">Skip</button>
+              <button onClick="{{keepOthers}}" style="height: 42px; padding: 0 18px; border-radius: 10px; border: 0; background: #3D5AFE; color: #FFFFFF; font: 600 14px Inter, sans-serif; cursor: pointer; box-shadow: 0 8px 24px rgba(61,90,254,0.35)">{{cg.keepLabel}}</button>
+            </div>
+          </sc-if>
+        </div>
+        </sc-if>
+
+        <!-- ============ SETTINGS ============ -->
+        <sc-if value="{{scr.settings}}" hint-placeholder-val="{{ false }}">
+        <div style="padding: 28px 32px; display: flex; flex-direction: column; gap: 18px; max-width: 760px">
+          <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 28px; font-weight: 600; letter-spacing: -0.02em; color: {{t.text}}">Settings</h1>
+
+          <section style="padding: 18px; border-radius: 14px; background: {{t.panel}}; border: 1px solid {{t.line}}; display: flex; flex-direction: column; gap: 12px">
+            <h2 style="margin: 0; font-size: 15px; font-weight: 600; color: {{t.text}}">When removing files</h2>
+            <div role="radiogroup" aria-label="Removal method" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+              <sc-for list="{{modes}}" as="m" hint-placeholder-count="2">
+                <button role="radio" aria-checked="{{m.on}}" onClick="{{m.pick}}" style="padding: 14px; border-radius: 12px; border: 1.5px solid {{m.border}}; background: {{m.bg}}; text-align: left; cursor: pointer; display: flex; gap: 12px; align-items: flex-start; font-family: Inter, sans-serif">
+                  <span aria-hidden="true" style="width: 18px; height: 18px; border-radius: 999px; border: 2px solid {{m.ring}}; box-sizing: border-box; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px"><span style="width: 8px; height: 8px; border-radius: 999px; background: {{m.dot}}"></span></span>
+                  <span style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 14px; font-weight: 600; color: {{t.text}}">{{m.label}}</span><span style="font-size: 12px; line-height: 1.5; color: {{t.muted}}">{{m.sub}}</span></span>
+                </button>
+              </sc-for>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 4px">
+              <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; color: {{t.text}}">Confirm before every removal</span><span style="font-size: 12px; color: {{t.muted}}">Permanent deletes always ask first.</span></span>
+              <button role="switch" aria-checked="{{confirmAlways}}" aria-label="Confirm before every removal" onClick="{{toggleConfirm}}" style="width: 44px; height: 26px; border-radius: 999px; border: 0; padding: 3px; background: {{sw.bg}}; display: flex; justify-content: {{sw.justify}}; cursor: pointer; flex-shrink: 0"><span style="width: 20px; height: 20px; border-radius: 999px; background: #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,0.3)"></span></button>
+            </div>
+          </section>
+
+          <section style="padding: 18px; border-radius: 14px; background: {{t.panel}}; border: 1px solid {{t.line}}; display: flex; flex-direction: column; gap: 12px">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+              <span style="display: flex; flex-direction: column; gap: 2px"><h2 style="margin: 0; font-size: 15px; font-weight: 600; color: {{t.text}}">Watched folders</h2><span style="font-size: 12px; color: {{t.muted}}">Saved and used every time the app opens.</span></span>
+              <button onClick="{{openPicker}}" style="height: 36px; padding: 0 14px; border-radius: 9px; border: 1px solid {{t.line}}; background: {{t.panelStrong}}; color: {{t.text}}; font: 600 13px Inter, sans-serif; cursor: pointer; display: flex; align-items: center; gap: 6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Add folder</button>
+            </div>
+            <div style="border-radius: 10px; border: 1px solid {{t.line}}; overflow: hidden">
+              <sc-for list="{{folderRows}}" as="f" hint-placeholder-count="4">
+                <div style="display: flex; align-items: center; gap: 12px; padding: 4px 4px 4px 14px; border-bottom: 1px solid {{t.line}}">
+                  <span style="font-size: 14px; font-weight: 500; color: {{t.text}}; min-width: 96px">{{f.name}}</span>
+                  <span style="flex: 1; min-width: 0; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: {{t.muted}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{f.path}}</span>
+                  <button aria-label="Stop watching folder" onClick="{{f.remove}}" style="width: 40px; height: 40px; border: 0; border-radius: 9px; background: transparent; color: {{t.muted}}; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+                </div>
+              </sc-for>
+            </div>
+          </section>
+
+          <section style="padding: 18px; border-radius: 14px; background: {{t.panel}}; border: 1px solid {{t.line}}; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap">
+            <h2 style="margin: 0; font-size: 15px; font-weight: 600; color: {{t.text}}">Appearance</h2>
+            <div role="radiogroup" aria-label="Theme" style="display: flex; padding: 3px; border-radius: 11px; background: {{t.input}}; border: 1px solid {{t.line}}">
+              <sc-for list="{{themes}}" as="th" hint-placeholder-count="3">
+                <button role="radio" aria-checked="{{th.on}}" onClick="{{th.pick}}" style="height: 34px; padding: 0 16px; border: 0; border-radius: 8px; background: {{th.bg}}; color: {{th.color}}; font: 600 13px Inter, sans-serif; cursor: pointer">{{th.label}}</button>
+              </sc-for>
+            </div>
+          </section>
+
+          <section style="padding: 18px; border-radius: 14px; background: {{t.panel}}; border: 1px solid {{t.line}}; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap">
+            <span style="display: flex; flex-direction: column; gap: 2px"><h2 style="margin: 0; font-size: 15px; font-weight: 600; color: {{t.text}}">Start over</h2><span style="font-size: 12px; color: {{t.muted}}">Forget saved folders and show the first-launch setup again.</span></span>
+            <button onClick="{{resetApp}}" style="height: 38px; padding: 0 14px; border-radius: 9px; border: 1px solid {{t.dangerLine}}; background: transparent; color: {{t.danger}}; font: 600 13px Inter, sans-serif; cursor: pointer">Reset app</button>
+          </section>
+        </div>
+        </sc-if>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ============ FOLDER PICKER ============ -->
+    <sc-if value="{{picker}}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 0; background: {{t.overlay}}; display: flex; align-items: center; justify-content: center; padding: 24px; z-index: 5">
+        <div role="dialog" aria-modal="true" aria-labelledby="pk-title" style="width: 100%; max-width: 440px; border-radius: 18px; background: {{t.dialog}}; backdrop-filter: blur(28px) saturate(170%); -webkit-backdrop-filter: blur(28px) saturate(170%); border: 1px solid {{t.glassBorder}}; box-shadow: {{t.shadow}}; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+          <h2 id="pk-title" style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 20px; font-weight: 600; color: {{t.text}}">Choose folders</h2>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <sc-for list="{{pickItems}}" as="p" hint-placeholder-count="4">
+              <label style="display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 12px; border-radius: 10px; border: 1px solid {{p.border}}; background: {{p.bg}}; cursor: pointer">
+                <input type="checkbox" checked="{{p.on}}" onChange="{{p.toggle}}" style="width: 16px; height: 16px; margin: 0; accent-color: #3D5AFE">
+                <span style="display: flex; flex-direction: column; gap: 1px; min-width: 0"><span style="font-size: 14px; font-weight: 600; color: {{t.text}}">{{p.name}}</span><span style="font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; color: {{t.muted}}">{{p.path}}</span></span>
+              </label>
+            </sc-for>
+            <sc-if value="{{pickEmpty}}" hint-placeholder-val="{{ false }}"><span style="font-size: 13px; color: {{t.muted}}; padding: 8px 0">Every folder is already on your list.</span></sc-if>
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 8px">
+            <button onClick="{{closePicker}}" style="height: 40px; padding: 0 16px; border-radius: 10px; border: 1px solid {{t.line}}; background: {{t.panelStrong}}; color: {{t.text}}; font: 600 14px Inter, sans-serif; cursor: pointer">Cancel</button>
+            <button onClick="{{addPicked}}" style="height: 40px; padding: 0 16px; border-radius: 10px; border: 0; background: #3D5AFE; color: #FFFFFF; font: 600 14px Inter, sans-serif; cursor: pointer">{{addPickedLabel}}</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ REMOVE ALL / CONFIRM DIALOG ============ -->
+    <sc-if value="{{dlg.on}}" hint-placeholder-val="{{ false }}">
+      <div style="position: absolute; inset: 0; background: {{t.overlay}}; display: flex; align-items: center; justify-content: center; padding: 24px; z-index: 6">
+        <div role="dialog" aria-modal="true" aria-labelledby="dlg-title" style="width: 100%; max-width: 480px; border-radius: 18px; background: {{t.dialog}}; backdrop-filter: blur(28px) saturate(170%); -webkit-backdrop-filter: blur(28px) saturate(170%); border: 1px solid {{t.glassBorder}}; box-shadow: {{t.shadow}}; padding: 24px; display: flex; flex-direction: column; gap: 18px">
+          <div style="display: flex; gap: 14px; align-items: flex-start">
+            <div aria-hidden="true" style="width: 40px; height: 40px; border-radius: 11px; background: {{t.dangerSoft}}; color: {{t.danger}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"></path></svg></div>
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <h2 id="dlg-title" style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 20px; font-weight: 600; color: {{t.text}}">{{dlg.title}}</h2>
+              <p style="margin: 0; font-size: 14px; line-height: 1.55; color: {{t.muted}}">{{dlg.body}}</p>
+            </div>
+          </div>
+          <sc-if value="{{dlg.isAll}}" hint-placeholder-val="{{ true }}">
+            <fieldset style="margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: 6px">
+              <legend style="font-size: 12px; font-weight: 600; color: {{t.muted}}; margin-bottom: 8px">In each group, keep the copy that is</legend>
+              <sc-for list="{{rules}}" as="r" hint-placeholder-count="4">
+                <label style="display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid {{r.border}}; background: {{r.bg}}; font-size: 14px; color: {{t.text}}; cursor: pointer">
+                  <input type="radio" name="keep-rule" checked="{{r.on}}" onChange="{{r.pick}}" style="width: 16px; height: 16px; margin: 0; accent-color: #3D5AFE">{{r.label}}
+                </label>
+              </sc-for>
+            </fieldset>
+          </sc-if>
+          <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: {{dlg.noteBg}}; font-size: 13px; color: {{dlg.noteColor}}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8h0M11 12h1v5h1"></path></svg>
+            <span style="flex: 1">{{dlg.note}}</span>
+            <button onClick="{{dlgSettings}}" style="height: 30px; padding: 0 6px; border: 0; background: transparent; color: {{t.accentText}}; font: 600 13px Inter, sans-serif; cursor: pointer">Change</button>
+          </div>
+          <div style="display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap">
+            <button onClick="{{dlgCancel}}" style="height: 42px; padding: 0 18px; border-radius: 10px; border: 1px solid {{t.line}}; background: {{t.panelStrong}}; color: {{t.text}}; font: 600 14px Inter, sans-serif; cursor: pointer">Cancel</button>
+            <button onClick="{{dlgConfirm}}" style="height: 42px; padding: 0 18px; border-radius: 10px; border: 0; background: #D93025; color: #FFFFFF; font: 600 14px Inter, sans-serif; cursor: pointer">{{dlg.cta}}</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ TOAST ============ -->
+    <sc-if value="{{toast.on}}" hint-placeholder-val="{{ false }}">
+      <div role="status" style="position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 7; display: flex; align-items: center; gap: 14px; max-width: calc(100% - 48px); padding: 10px 10px 10px 16px; border-radius: 12px; background: {{t.toast}}; color: {{t.toastText}}; box-shadow: 0 16px 40px rgba(0,0,0,0.35); font-size: 14px">
+        <span>{{toast.text}}</span>
+        <sc-if value="{{toast.canUndo}}" hint-placeholder-val="{{ false }}"><button onClick="{{toast.undo}}" style="height: 32px; padding: 0 12px; border-radius: 8px; border: 0; background: rgba(127,140,255,0.22); color: {{t.toastText}}; font: 600 13px Inter, sans-serif; cursor: pointer">Undo</button></sc-if>
+      </div>
+    </sc-if>
+  </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":true},"$preview":{"width":1280,"height":820}}'>
+const THEMES = {
+  dark: {
+    wall: 'radial-gradient(900px 640px at 10% 15%, rgba(61,90,254,0.55), transparent 62%), radial-gradient(820px 620px at 92% 25%, rgba(147,51,234,0.42), transparent 62%), radial-gradient(900px 700px at 55% 105%, rgba(13,148,136,0.45), transparent 62%), #070A14',
+    glass: 'rgba(16,20,32,0.60)', glassBorder: 'rgba(255,255,255,0.12)', bar: 'rgba(255,255,255,0.03)', side: 'rgba(255,255,255,0.03)',
+    panel: 'rgba(255,255,255,0.05)', panelStrong: 'rgba(255,255,255,0.10)', line: 'rgba(255,255,255,0.09)', dash: 'rgba(157,174,255,0.45)', track: 'rgba(255,255,255,0.10)',
+    text: '#F3F5FA', muted: '#AEB5C6', accentText: '#A9B8FF', accentSoft: 'rgba(61,90,254,0.22)', accentLine: 'rgba(110,135,255,0.75)',
+    danger: '#FF968E', dangerSoft: 'rgba(255,99,88,0.12)', dangerLine: 'rgba(255,120,110,0.35)',
+    ok: '#5EE0B4', onOk: '#06281C', okSoft: 'rgba(52,211,153,0.14)', okLine: 'rgba(52,211,153,0.35)',
+    shadow: '0 30px 80px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.08)', input: 'rgba(0,0,0,0.25)', overlay: 'rgba(4,6,12,0.55)', dialog: 'rgba(24,28,42,0.85)',
+    footer: 'rgba(16,20,32,0.75)', toast: '#F3F5FA', toastText: '#121521', tile: 'rgba(255,255,255,0.08)',
+    tints: { img: '#7DD3FC', doc: '#A9B8FF', vid: '#F0ABFC', aud: '#FCD34D', zip: '#5EEAD4' }
+  },
+  light: {
+    wall: 'radial-gradient(900px 640px at 10% 15%, rgba(99,130,255,0.50), transparent 62%), radial-gradient(820px 620px at 92% 25%, rgba(192,132,252,0.42), transparent 62%), radial-gradient(900px 700px at 55% 105%, rgba(45,212,191,0.40), transparent 62%), #EDF0F8',
+    glass: 'rgba(255,255,255,0.56)', glassBorder: 'rgba(255,255,255,0.85)', bar: 'rgba(255,255,255,0.35)', side: 'rgba(255,255,255,0.28)',
+    panel: 'rgba(255,255,255,0.55)', panelStrong: 'rgba(255,255,255,0.88)', line: 'rgba(20,24,40,0.10)', dash: 'rgba(61,90,254,0.45)', track: 'rgba(20,24,40,0.08)',
+    text: '#121521', muted: '#4A5368', accentText: '#2B45D6', accentSoft: 'rgba(61,90,254,0.12)', accentLine: 'rgba(61,90,254,0.65)',
+    danger: '#B42318', dangerSoft: 'rgba(217,48,37,0.08)', dangerLine: 'rgba(180,35,24,0.30)',
+    ok: '#0E7352', onOk: '#FFFFFF', okSoft: 'rgba(16,163,116,0.12)', okLine: 'rgba(16,163,116,0.35)',
+    shadow: '0 30px 80px rgba(40,50,90,0.22), inset 0 1px 0 rgba(255,255,255,0.9)', input: 'rgba(255,255,255,0.65)', overlay: 'rgba(30,36,60,0.28)', dialog: 'rgba(255,255,255,0.88)',
+    footer: 'rgba(255,255,255,0.75)', toast: '#151A2B', toastText: '#F3F5FA', tile: 'rgba(255,255,255,0.9)',
+    tints: { img: '#0369A1', doc: '#2B45D6', vid: '#A21CAF', aud: '#92400E', zip: '#0F766E' }
+  }
+};
+const KEY = 'dedupe.folders';
+const ROOTS = [
+  { id: 'docs', name: 'Documents', path: '~/Documents' },
+  { id: 'dl', name: 'Downloads', path: '~/Downloads' },
+  { id: 'pics', name: 'Pictures', path: '~/Pictures' },
+  { id: 'desk', name: 'Desktop', path: '~/Desktop' },
+  { id: 'music', name: 'Music', path: '~/Music' },
+  { id: 'vids', name: 'Videos', path: '~/Videos' },
+  { id: 'proj', name: 'Projects', path: '~/Work/Projects' },
+  { id: 'backup', name: 'Backup drive', path: '/media/backup' }
+];
+const SUGGESTED = ['docs', 'dl', 'pics', 'desk'];
+const KIND = { img: 'Image', doc: 'Document', vid: 'Video', aud: 'Audio', zip: 'Archive' };
+const GROUPS = [
+  { id: 'g1', name: 'onboarding-walkthrough.mp4', type: 'vid', mb: 1270, versions: [
+    { id: 'g1a', path: '~/Downloads/onboarding-walkthrough.mp4', mod: '2026-03-02', add: '2026-03-02' },
+    { id: 'g1b', path: '~/Desktop/onboarding-walkthrough.mp4', mod: '2026-03-05', add: '2026-03-05' } ] },
+  { id: 'g2', name: 'flutter_sdk_3.27.zip', type: 'zip', mb: 1126, versions: [
+    { id: 'g2a', path: '~/Downloads/flutter_sdk_3.27.zip', mod: '2025-12-11', add: '2025-12-11' },
+    { id: 'g2b', path: '~/Work/Projects/archive/flutter_sdk_3.27.zip', mod: '2026-01-20', add: '2026-01-20' } ] },
+  { id: 'g3', name: 'design-assets-backup.zip', type: 'zip', mb: 412, versions: [
+    { id: 'g3a', path: '~/Documents/Backups/design-assets-backup.zip', mod: '2025-09-14', add: '2025-09-14' },
+    { id: 'g3b', path: '~/Desktop/design-assets-backup.zip', mod: '2025-10-02', add: '2025-10-02' },
+    { id: 'g3c', path: '~/Downloads/design-assets-backup.zip', mod: '2026-02-18', add: '2026-02-18' } ] },
+  { id: 'g4', name: 'Brand-Guidelines-2026.pdf', type: 'doc', mb: 22.1, versions: [
+    { id: 'g4a', path: '~/Documents/Brand/Brand-Guidelines-2026.pdf', mod: '2026-01-08', add: '2026-01-08' },
+    { id: 'g4b', path: '~/Downloads/Brand-Guidelines-2026.pdf', mod: '2026-01-09', add: '2026-01-09' },
+    { id: 'g4c', path: '~/Downloads/Brand-Guidelines-2026 (1).pdf', mod: '2026-02-11', add: '2026-02-11' },
+    { id: 'g4d', path: '~/Desktop/Brand-Guidelines-2026.pdf', mod: '2026-03-21', add: '2026-03-21' },
+    { id: 'g4e', path: '~/Work/Projects/website/docs/Brand-Guidelines-2026.pdf', mod: '2026-04-02', add: '2026-04-02' } ] },
+  { id: 'g5', name: 'podcast-episode-12.mp3', type: 'aud', mb: 58.3, versions: [
+    { id: 'g5a', path: '~/Downloads/podcast-episode-12.mp3', mod: '2026-05-30', add: '2026-05-30' },
+    { id: 'g5b', path: '~/Documents/Audio/podcast-episode-12.mp3', mod: '2026-06-01', add: '2026-06-01' } ] },
+  { id: 'g6', name: 'Q3-Report-final.pdf', type: 'doc', mb: 18.4, versions: [
+    { id: 'g6a', path: '~/Documents/Reports/Q3-Report-final.pdf', mod: '2025-10-06', add: '2025-10-06' },
+    { id: 'g6b', path: '~/Desktop/Q3-Report-final.pdf', mod: '2025-10-07', add: '2025-10-07' },
+    { id: 'g6c', path: '~/Downloads/Q3-Report-final (2).pdf', mod: '2025-11-19', add: '2025-11-19' } ] },
+  { id: 'g7', name: 'Goa-trip-042.jpg', type: 'img', mb: 6.8, versions: [
+    { id: 'g7a', path: '~/Pictures/2025/Goa trip/Goa-trip-042.jpg', mod: '2025-12-28', add: '2025-12-28' },
+    { id: 'g7b', path: '~/Pictures/Edited/Goa-trip-042.jpg', mod: '2026-01-03', add: '2026-01-03' },
+    { id: 'g7c', path: '~/Desktop/Goa-trip-042.jpg', mod: '2026-01-04', add: '2026-01-04' } ] },
+  { id: 'g8', name: 'IMG_4821.HEIC', type: 'img', mb: 4.2, versions: [
+    { id: 'g8a', path: '~/Pictures/2025/Camera/IMG_4821.HEIC', mod: '2025-08-16', add: '2025-08-16' },
+    { id: 'g8b', path: '~/Pictures/Imports/IMG_4821.HEIC', mod: '2025-08-20', add: '2025-08-20' },
+    { id: 'g8c', path: '~/Downloads/IMG_4821.HEIC', mod: '2025-11-02', add: '2025-11-02' },
+    { id: 'g8d', path: '~/Desktop/IMG_4821.HEIC', mod: '2026-02-14', add: '2026-02-14' } ] }
+];
+const RULES = [
+  { id: 'oldest', label: 'Oldest (the original)' }, { id: 'newest', label: 'Most recently modified' },
+  { id: 'path', label: 'Shortest file path' }, { id: 'folder', label: 'In the first folder of your list' }
+];
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function fmtDate(iso) { const p = iso.split('-'); return MONTHS[Number(p[1]) - 1] + ' ' + Number(p[2]) + ', ' + p[0]; }
+function fmtMB(mb) {
+  if (mb >= 1024) return (mb / 1024).toFixed(2).replace(/\.?0+$/, '') + ' GB';
+  if (mb >= 100) return Math.round(mb) + ' MB';
+  return (Math.round(mb * 10) / 10) + ' MB';
+}
+function dirName(path) { const parts = path.split('/'); return parts[parts.length - 2] || path; }
+function num(n) { return n.toLocaleString('en-US'); }
+function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      closed: false, screen: 'onboard', folders: [], saved: false, hasResults: false,
+      picker: false, picked: {}, subfolders: true, skipHidden: true,
+      themeMode: props.dark === false ? 'light' : 'dark',
+      removeMode: 'trash', confirmAlways: false,
+      scanPct: 0, paused: false,
+      removed: {}, filter: 'all', groupId: null, keepSel: {}, rule: 'oldest',
+      dialog: null, toast: null
+    };
+  }
+  componentDidMount() {
+    try {
+      const ids = JSON.parse(window.localStorage.getItem(KEY) || 'null');
+      if (Array.isArray(ids)) {
+        const folders = ids.map((id) => ROOTS.find((r) => r.id === id)).filter(Boolean);
+        if (folders.length) {
+          this.setState({ folders, saved: true, hasResults: true, screen: 'dups' });
+          this.showToast({ text: 'Welcome back. Using your ' + plural(folders.length, 'saved folder', 'saved folders') + '.' });
+        }
+      }
+    } catch (e) {}
+  }
+  componentWillUnmount() { clearInterval(this.iv); clearTimeout(this.tt); }
+  persist(folders) { try { window.localStorage.setItem(KEY, JSON.stringify(folders.map((f) => f.id))); } catch (e) {} }
+  showToast(toast) {
+    clearTimeout(this.tt);
+    this.setState({ toast });
+    this.tt = setTimeout(() => this.setState({ toast: null }), 5000);
+  }
+  setFolders(folders) {
+    this.setState({ folders });
+    if (this.state.saved) this.persist(folders);
+  }
+  startScan() {
+    clearInterval(this.iv);
+    this.setState({ screen: 'scan', scanPct: 0, paused: false, removed: {}, keepSel: {}, dialog: null });
+    this.iv = setInterval(() => {
+      if (this.state.paused) return;
+      const p = Math.min(100, this.state.scanPct + 1.25);
+      this.setState({ scanPct: p, hasResults: p >= 100 ? true : this.state.hasResults });
+      if (p >= 100) clearInterval(this.iv);
+    }, 50);
+  }
+  remaining(g) { return g.versions.filter((v) => !this.state.removed[v.id]); }
+  activeGroups() { return GROUPS.filter((g) => this.remaining(g).length >= 2); }
+  pickByRule(rem, rule) {
+    const fs = this.state.folders;
+    const score = (v) => {
+      if (rule === 'newest') return -Date.parse(v.mod);
+      if (rule === 'path') return v.path.length;
+      if (rule === 'folder') { const i = fs.findIndex((f) => v.path.indexOf(f.path + '/') === 0); return i < 0 ? 99 : i; }
+      return Date.parse(v.mod);
+    };
+    return rem.slice().sort((a, b) => score(a) - score(b))[0];
+  }
+  keepFor(g) {
+    const rem = this.remaining(g);
+    const sel = this.state.keepSel[g.id];
+    if (sel && rem.some((v) => v.id === sel)) return sel;
+    return rem.length ? this.pickByRule(rem, 'oldest').id : null;
+  }
+  requestRemove(ids, label) {
+    if (!ids.length) return;
+    if (this.state.removeMode === 'permanent' || this.state.confirmAlways) this.setState({ dialog: { kind: 'one', ids, label } });
+    else this.applyRemove(ids, label);
+  }
+  applyRemove(ids, label) {
+    const trash = this.state.removeMode === 'trash';
+    const removed = { ...this.state.removed };
+    ids.forEach((id) => { removed[id] = trash ? 'trash' : 'deleted'; });
+    this.setState({ removed, dialog: null });
+    this.showToast({ text: (trash ? 'Moved ' + label + ' to Trash' : 'Permanently deleted ' + label), undoIds: trash ? ids : null });
+  }
+  restore(ids) {
+    const removed = { ...this.state.removed };
+    ids.forEach((id) => { delete removed[id]; });
+    this.setState({ removed, toast: null });
+  }
+  groupNav(dir) {
+    const list = GROUPS.filter((g) => this.remaining(g).length >= 2 || g.id === this.state.groupId);
+    if (!list.length) return this.setState({ screen: 'dups' });
+    const i = list.findIndex((g) => g.id === this.state.groupId);
+    const next = list[(i + dir + list.length) % list.length];
+    this.setState({ groupId: next.id, screen: 'compare' });
+  }
+
+  renderVals() {
+    const s = this.state;
+    let dark = s.themeMode === 'dark';
+    if (s.themeMode === 'system') { try { dark = window.matchMedia('(prefers-color-scheme: dark)').matches; } catch (e) { dark = true; } }
+    const t = dark ? THEMES.dark : THEMES.light;
+    const scr = { onboard: s.screen === 'onboard', scan: s.screen === 'scan', dups: s.screen === 'dups', compare: s.screen === 'compare', settings: s.screen === 'settings' };
+    const navOn = { bg: t.accentSoft, color: t.text }, navOff = { bg: 'transparent', color: t.muted };
+    const trash = s.removeMode === 'trash';
+
+    const active = this.activeGroups();
+    let extra = 0, reclaim = 0, freed = 0, freedCount = 0;
+    active.forEach((g) => { const n = this.remaining(g).length - 1; extra += n; reclaim += n * g.mb; });
+    GROUPS.forEach((g) => g.versions.forEach((v) => { if (s.removed[v.id]) { freed += g.mb; freedCount++; } }));
+
+    const folderRows = s.folders.map((f) => ({ ...f, remove: () => this.setFolders(this.state.folders.filter((x) => x.id !== f.id)) }));
+    const have = {}; s.folders.forEach((f) => { have[f.id] = true; });
+    const suggestions = SUGGESTED.filter((id) => !have[id]).map((id) => {
+      const r = ROOTS.find((x) => x.id === id);
+      return { ...r, add: () => this.setFolders([...this.state.folders, r]) };
+    });
+    const pickable = ROOTS.filter((r) => !have[r.id]);
+    const pickedCount = pickable.filter((r) => s.picked[r.id]).length;
+
+    // scan
+    const pct = Math.floor(s.scanPct);
+    const done = pct >= 100;
+    const frac = pct / 100;
+    const stageIdx = pct < 25 ? 0 : pct < 50 ? 1 : 2;
+    const stageDefs = [
+      { label: 'List files', sub: num(Math.round(77904 * Math.min(1, frac * 4))) + ' found' },
+      { label: 'Match by size', sub: pct < 25 ? 'Waiting' : num(Math.round(5140 * Math.min(1, (frac - 0.25) * 4))) + ' candidates' },
+      { label: 'Verify contents', sub: done ? 'Byte-for-byte match' : pct < 50 ? 'Waiting' : 'Comparing bytes' }
+    ];
+    const stages = stageDefs.map((d, i) => {
+      const isDone = done || i < stageIdx, isActive = !done && i === stageIdx;
+      return { ...d, isDone, isActive, isPending: !isDone && !isActive, bg: isDone ? t.okSoft : isActive ? t.accentSoft : t.panel, border: isActive ? t.accentLine : 'transparent' };
+    });
+    const allPaths = []; GROUPS.forEach((g) => g.versions.forEach((v) => allPaths.push(v.path)));
+    const nf = Math.max(1, s.folders.length);
+    const scanRows = s.folders.map((f, i) => {
+      const v = Math.max(0, Math.min(100, Math.round((frac * nf - i) * 100)));
+      return { name: f.name, pct: v + '%', label: v >= 100 ? 'Done' : v === 0 ? 'Waiting' : v + '%', color: v >= 100 ? t.ok : '#3D5AFE' };
+    });
+    const foundN = done ? GROUPS.length : Math.floor(GROUPS.length * Math.max(0, frac - 0.5) * 2);
+    let fCopies = 0, fSpace = 0;
+    GROUPS.slice(GROUPS.length - foundN).forEach((g) => { fCopies += g.versions.length - 1; fSpace += (g.versions.length - 1) * g.mb; });
+
+    // duplicates list
+    const counts = { all: active.length, img: 0, vid: 0, doc: 0, aud: 0, zip: 0 };
+    active.forEach((g) => { counts[g.type]++; });
+    const chipDefs = [['all', 'All'], ['img', 'Images'], ['vid', 'Videos'], ['doc', 'Documents'], ['aud', 'Audio'], ['zip', 'Archives']];
+    const chips = chipDefs.map(([id, label]) => {
+      const on = s.filter === id;
+      return { label: label + ' · ' + counts[id], on, pick: () => this.setState({ filter: id }), bg: on ? '#3D5AFE' : t.panel, color: on ? '#FFFFFF' : t.text, border: on ? '#3D5AFE' : t.line };
+    });
+    const shown = active.filter((g) => s.filter === 'all' || g.type === s.filter);
+    const groupRows = shown.map((g) => {
+      const rem = this.remaining(g);
+      const dirs = rem.map((v) => dirName(v.path));
+      return {
+        name: g.name, tint: t.tints[g.type],
+        isImg: g.type === 'img', isDoc: g.type === 'doc', isVid: g.type === 'vid', isAud: g.type === 'aud', isZip: g.type === 'zip',
+        where: dirs.slice(0, 3).join(' · ') + (dirs.length > 3 ? ' · ' + (dirs.length - 3) + ' more' : ''),
+        copies: '×' + rem.length, size: fmtMB(g.mb), waste: fmtMB((rem.length - 1) * g.mb),
+        open: () => this.setState({ screen: 'compare', groupId: g.id })
+      };
+    });
+
+    // compare
+    const g = GROUPS.find((x) => x.id === s.groupId) || GROUPS[0];
+    const rem = this.remaining(g);
+    const keepId = this.keepFor(g);
+    const oldestId = g.versions.slice().sort((a, b) => Date.parse(a.mod) - Date.parse(b.mod))[0].id;
+    const others = rem.filter((v) => v.id !== keepId).map((v) => v.id);
+    const resolved = rem.length <= 1;
+    const navList = GROUPS.filter((x) => this.remaining(x).length >= 2 || x.id === g.id);
+    const posI = navList.findIndex((x) => x.id === g.id);
+    const versions = g.versions.map((v) => {
+      const gone = s.removed[v.id];
+      const isKeep = !gone && v.id === keepId;
+      return {
+        folder: dirName(v.path), path: v.path,
+        dates: 'Modified ' + fmtDate(v.mod) + ' · Added ' + fmtDate(v.add),
+        isOldest: v.id === oldestId, isKeep, notKeep: !gone && !isKeep, isLive: !gone, isGone: !!gone,
+        goneLabel: gone === 'trash' ? 'Moved to Trash' : 'Permanently deleted', canUndo: gone === 'trash',
+        border: isKeep ? t.accentLine : t.line, bg: isKeep ? t.accentSoft : t.panel,
+        opacity: gone ? '0.6' : '1', strike: gone ? 'line-through' : 'none',
+        keep: () => this.setState({ keepSel: { ...this.state.keepSel, [g.id]: v.id } }),
+        remove: () => this.requestRemove([v.id], '1 copy of ' + g.name),
+        undo: () => this.restore([v.id]),
+        reveal: () => this.showToast({ text: 'Opening ' + dirName(v.path) + ' in your file manager' })
+      };
+    });
+    const hasNext = active.some((x) => x.id !== g.id);
+    const cg = {
+      name: g.name, tint: t.tints[g.type], kind: KIND[g.type], size: fmtMB(g.mb),
+      isImg: g.type === 'img', isDoc: g.type === 'doc', isVid: g.type === 'vid', isAud: g.type === 'aud', isZip: g.type === 'zip',
+      meta: fmtMB(g.mb) + ' each · ' + plural(rem.length, 'copy', 'copies') + (resolved ? '' : ' · ' + fmtMB((rem.length - 1) * g.mb) + ' to reclaim'),
+      resolved, open: !resolved,
+      keepLabel: 'Keep selected, remove ' + plural(others.length, 'other', 'others'),
+      footerLine: 'Keeping 1 copy in ' + dirName((g.versions.find((v) => v.id === keepId) || g.versions[0]).path) + ' · removing ' + others.length + ' frees ' + fmtMB(others.length * g.mb) + (trash ? ' · goes to Trash' : ' · deleted permanently')
+    };
+
+    // dialog
+    const d = s.dialog;
+    let dlg = { on: false, isAll: false };
+    if (d && d.kind === 'all') {
+      dlg = { on: true, isAll: true, title: 'Remove all identical copies?',
+        body: 'One copy of every file is kept. The other ' + plural(extra, 'copy', 'copies') + ' across ' + plural(active.length, 'group', 'groups') + ' are removed, freeing ' + fmtMB(reclaim) + '.',
+        cta: 'Remove ' + plural(extra, 'copy', 'copies') };
+    } else if (d && d.kind === 'one') {
+      dlg = { on: true, isAll: false, title: trash ? 'Move to Trash?' : 'Delete permanently?',
+        body: (trash ? 'This moves ' : 'This permanently deletes ') + d.label + '.' + (trash ? '' : ' It can’t be recovered.'),
+        cta: trash ? 'Move to Trash' : 'Delete permanently' };
+    }
+    dlg.note = trash ? 'Files go to the Trash, so you can restore them.' : 'Files are deleted permanently and can’t be restored.';
+    dlg.noteBg = trash ? t.panel : t.dangerSoft;
+    dlg.noteColor = trash ? t.muted : t.danger;
+
+    const toast = s.toast ? { on: true, text: s.toast.text, canUndo: !!s.toast.undoIds, undo: () => this.restore(s.toast.undoIds || []) } : { on: false };
+
+    return {
+      t, isDark: dark, isLight: !dark, scr,
+      closed: s.closed, open: !s.closed,
+      closedHint: s.saved ? 'Dedupe is closed. Open it again: your folders are remembered.' : 'Dedupe is closed. Open it again to continue setup.',
+      openApp: () => {
+        const back = this.state.saved;
+        this.setState({ closed: false, screen: back ? 'dups' : 'onboard' });
+        if (back) this.showToast({ text: 'Welcome back. Using your ' + plural(this.state.folders.length, 'saved folder', 'saved folders') + '.' });
+      },
+      closeApp: () => { clearInterval(this.iv); this.setState({ closed: true, dialog: null, picker: false, toast: null, scanPct: this.state.hasResults ? 100 : 0 }); },
+      toggleTheme: () => this.setState({ themeMode: dark ? 'light' : 'dark' }),
+      showShell: !scr.onboard,
+      n: { dup: scr.dups || scr.compare ? navOn : navOff, scan: scr.scan ? navOn : navOff, set: scr.settings ? navOn : navOff },
+      goDups: () => this.setState({ screen: 'dups' }),
+      goSettings: () => this.setState({ screen: 'settings' }),
+      rescan: () => this.startScan(),
+      activeCount: String(active.length),
+      reclaimLabel: fmtMB(reclaim),
+      freedSide: freedCount ? fmtMB(freed) + ' freed this session' : 'Not cleaned yet',
+
+      folderRows, noFolders: s.folders.length === 0, startOpacity: s.folders.length ? '1' : '0.45',
+      folderCount: s.folders.length ? plural(s.folders.length, 'folder', 'folders') + ' to scan' : 'Folders to scan',
+      suggestions, hasSuggestions: suggestions.length > 0,
+      subfolders: s.subfolders, skipHidden: s.skipHidden,
+      toggleSub: () => this.setState({ subfolders: !this.state.subfolders }),
+      toggleHidden: () => this.setState({ skipHidden: !this.state.skipHidden }),
+      startFirstScan: () => {
+        if (!this.state.folders.length) return;
+        this.persist(this.state.folders);
+        this.setState({ saved: true });
+        this.startScan();
+      },
+
+      picker: s.picker,
+      openPicker: () => this.setState({ picker: true, picked: {} }),
+      closePicker: () => this.setState({ picker: false }),
+      pickItems: pickable.map((r) => ({ ...r, on: !!s.picked[r.id], bg: s.picked[r.id] ? t.accentSoft : 'transparent', border: s.picked[r.id] ? t.accentLine : t.line,
+        toggle: () => this.setState({ picked: { ...this.state.picked, [r.id]: !this.state.picked[r.id] } }) })),
+      pickEmpty: pickable.length === 0,
+      addPickedLabel: pickedCount ? 'Add ' + plural(pickedCount, 'folder', 'folders') : 'Add',
+      addPicked: () => {
+        const add = ROOTS.filter((r) => !have[r.id] && this.state.picked[r.id]);
+        this.setState({ picker: false });
+        if (add.length) this.setFolders([...this.state.folders, ...add]);
+      },
+
+      pct, pctLabel: pct + '%', pctWidth: pct + '%', barColor: done ? t.ok : '#3D5AFE',
+      scanDone: done, scanRunning: !done,
+      scanTitle: done ? 'Scan complete' : 'Scanning ' + plural(s.folders.length, 'folder', 'folders'),
+      scanSub: done ? 'Found ' + plural(GROUPS.length, 'group', 'groups') + ' of identical files' : (s.paused ? 'Paused' : 'This usually takes a few minutes'),
+      stageLine: done ? 'All files checked' : s.paused ? 'Paused' : ['Listing files', 'Matching sizes', 'Verifying file contents'][stageIdx],
+      filesLine: num(Math.round(77904 * frac)) + ' of 77,904 files',
+      currentFile: done ? 'Finished' : allPaths[Math.floor(frac * 37) % allPaths.length],
+      stages, scanRows,
+      foundGroups: String(foundN), foundCopies: String(fCopies), foundSpace: fmtMB(fSpace),
+      pauseLabel: s.paused ? 'Resume' : 'Pause',
+      togglePause: () => this.setState({ paused: !this.state.paused }),
+      cancelScan: () => { clearInterval(this.iv); this.setState({ screen: this.state.hasResults ? 'dups' : 'onboard' }); },
+
+      hasGroups: active.length > 0, allClean: active.length === 0,
+      dupSummary: active.length ? plural(active.length, 'group', 'groups') + ' · ' + plural(extra, 'extra copy', 'extra copies') + ' · all 100% identical' : 'Everything is tidy',
+      removeAllLabel: 'Remove all identical copies · ' + fmtMB(reclaim),
+      openRemoveAll: () => this.setState({ dialog: { kind: 'all' } }),
+      chips, groupRows, filterEmpty: shown.length === 0,
+      cleanLine: freedCount ? 'You freed ' + fmtMB(freed) + ' by removing ' + plural(freedCount, 'copy', 'copies') + '.' : 'No identical files were found in your folders.',
+
+      cg, versions,
+      cmpPos: 'Group ' + (posI + 1) + ' of ' + navList.length,
+      prevGroup: () => this.groupNav(-1), nextGroup: () => this.groupNav(1),
+      keepOthers: () => this.requestRemove(others, plural(others.length, 'copy', 'copies') + ' of ' + g.name),
+      nextOrBackLabel: hasNext ? 'Next group' : 'Back to list',
+      nextOrBack: () => (hasNext ? this.groupNav(1) : this.setState({ screen: 'dups' })),
+
+      modes: [
+        { id: 'trash', label: 'Move to Trash', sub: 'Recommended. You can restore files until the Trash is emptied.' },
+        { id: 'permanent', label: 'Delete permanently', sub: 'Frees space right away. Files can’t be recovered.' }
+      ].map((m) => {
+        const on = s.removeMode === m.id;
+        return { ...m, on, pick: () => this.setState({ removeMode: m.id }), border: on ? t.accentLine : t.line, bg: on ? t.accentSoft : 'transparent', ring: on ? '#3D5AFE' : t.muted, dot: on ? '#3D5AFE' : 'transparent' };
+      }),
+      confirmAlways: s.confirmAlways,
+      sw: { bg: s.confirmAlways ? '#3D5AFE' : t.track, justify: s.confirmAlways ? 'flex-end' : 'flex-start' },
+      toggleConfirm: () => this.setState({ confirmAlways: !this.state.confirmAlways }),
+      themes: [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']].map(([id, label]) => {
+        const on = s.themeMode === id;
+        return { label, on, pick: () => this.setState({ themeMode: id }), bg: on ? '#3D5AFE' : 'transparent', color: on ? '#FFFFFF' : t.text };
+      }),
+      resetApp: () => {
+        try { window.localStorage.removeItem(KEY); } catch (e) {}
+        clearInterval(this.iv);
+        this.setState({ folders: [], saved: false, hasResults: false, removed: {}, keepSel: {}, screen: 'onboard', scanPct: 0, toast: null });
+      },
+
+      dlg,
+      rules: RULES.map((r) => {
+        const on = s.rule === r.id;
+        return { ...r, on, pick: () => this.setState({ rule: r.id }), bg: on ? t.accentSoft : 'transparent', border: on ? t.accentLine : t.line };
+      }),
+      dlgCancel: () => this.setState({ dialog: null }),
+      dlgSettings: () => this.setState({ dialog: null, screen: 'settings' }),
+      dlgConfirm: () => {
+        const dd = this.state.dialog;
+        if (!dd) return;
+        if (dd.kind === 'one') return this.applyRemove(dd.ids, dd.label);
+        const ids = [];
+        this.activeGroups().forEach((gg) => {
+          const r = this.remaining(gg);
+          const keep = this.pickByRule(r, this.state.rule).id;
+          r.forEach((v) => { if (v.id !== keep) ids.push(v.id); });
+        });
+        this.applyRemove(ids, plural(ids.length, 'copy', 'copies'));
+      },
+      toast
+    };
+  }
+}
+</script>
+</body>
+</html>

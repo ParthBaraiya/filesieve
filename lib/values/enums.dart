@@ -62,3 +62,44 @@ enum AppThemeMode {
 
 /// RemovalMode — what "Remove" does to a duplicate file.
 enum RemovalMode { trash, permanent }
+
+/// FileCategory — the type buckets used by the Duplicates filter chips.
+enum FileCategory {
+  image,
+  video,
+  document,
+  audio,
+  archive,
+  other;
+
+  String get label => switch (this) {
+    FileCategory.image => 'Images',
+    FileCategory.video => 'Videos',
+    FileCategory.document => 'Documents',
+    FileCategory.audio => 'Audio',
+    FileCategory.archive => 'Archives',
+    FileCategory.other => 'Other',
+  };
+
+  /// Singular name shown on the compare screen ("Type: Image").
+  String get kindLabel => switch (this) {
+    FileCategory.image => 'Image',
+    FileCategory.video => 'Video',
+    FileCategory.document => 'Document',
+    FileCategory.audio => 'Audio',
+    FileCategory.archive => 'Archive',
+    FileCategory.other => 'File',
+  };
+}
+
+/// KeepRule — which copy "Remove all identical copies" keeps in each group.
+enum KeepRule {
+  oldest('Oldest (the original)'),
+  newest('Most recently modified'),
+  shortestPath('Shortest file path'),
+  firstFolder('In the first folder of your list');
+
+  const KeepRule(this.label);
+
+  final String label;
+}

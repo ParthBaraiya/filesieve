@@ -1,0 +1,214 @@
+{
+ "schemaVersion": 1,
+ "skillVersion": "1.0.0",
+ "createdAt": "2026-11-12T21:38:46+05:30",
+ "updatedAt": "2026-11-12T22:08:47.245877+05:30",
+ "environment": {
+  "flutter": "3.47.9",
+  "dart": "3.13.7",
+  "python": "3.15.2",
+  "os": {
+   "system": "windows",
+   "release": "11",
+   "machine": "AMD64"
+  },
+  "flutterPath": "C:/Users/Admin/fvm/default/bin/flutter.BAT",
+  "tools": {
+   "git": "git version 2.51.0.windows.2",
+   "mason": null,
+   "cookiecutter": null,
+   "browser": "msedge",
+   "playwright": false,
+   "fvm": "3.2.1",
+   "puro": null,
+   "asdf": null
+  },
+  "checkedAt": "2026-11-12T21:38:46+05:30",
+  "commandPrefix": null,
+  "mismatches": [
+   {
+    "id": "M1",
+    "what": "Flutter SDK",
+    "found": "3.47.9 (default fvm)",
+    "required": ".fvmrc pins 3.41.9; pubspec ^3.11.3 satisfied",
+    "blocksPass": 4,
+    "status": "workaround",
+    "resolution": "proceeding with installed default SDK; fvm not on PATH",
+    "raisedAt": "2026-11-12T21:42:38.123538+05:30",
+    "resolvedAt": null
+   }
+  ]
+ },
+ "project": {
+  "root": ".",
+  "state": "flutter",
+  "targetPackage": ".",
+  "createdBySkill": false
+ },
+ "inputs": {
+  "inventory": "codegen/inputs.json",
+  "roots": [
+   "fileshieve.dc.html"
+  ],
+  "lastChanges": {
+   "firstRun": true,
+   "added": [],
+   "changed": [],
+   "removed": [],
+   "affectedScreens": [],
+   "sharedChanged": false
+  }
+ },
+ "targets": {
+  "platforms": [
+   "windows",
+   "macos",
+   "linux"
+  ],
+  "platformsSource": "project",
+  "viewport": {
+   "width": 1600,
+   "height": 1000,
+   "source": "project"
+  }
+ },
+ "scope": {
+  "requested": {
+   "type": "app",
+   "screens": [
+    "onboard",
+    "scan",
+    "dups",
+    "compare",
+    "settings",
+    "dialogs"
+   ],
+   "request": "codegen/request.md"
+  },
+  "approved": {
+   "screens": [
+    "onboard",
+    "scan",
+    "dups",
+    "compare",
+    "settings",
+    "dialogs"
+   ],
+   "approvedAt": "2026-11-12T21:42:38.123538+05:30",
+   "approvedBy": "user",
+   "plan": "codegen/implementation/approved-plan.md",
+   "decisions": {
+    "targetPlatforms": [
+     "windows",
+     "macos",
+     "linux"
+    ],
+    "architecture": {
+     "layout": "feature-first (lib/modules, views, repository, values, utils, models)",
+     "stateManagement": "bloc",
+     "navigation": "go_router",
+     "di": "get_it",
+     "conventionsFrom": [
+      ".github/copilot-instructions.md"
+     ]
+    },
+    "dataProviders.implementations": [
+     "real"
+    ]
+   }
+  }
+ },
+ "currentPass": 7,
+ "status": "complete",
+ "passes": {
+  "0": {
+   "status": "complete",
+   "completedAt": "2026-11-12T21:38:46+05:30",
+   "artifacts": [
+    "codegen/request.md",
+    "codegen/inputs.json"
+   ]
+  },
+  "1": {
+   "status": "complete",
+   "completedAt": "2026-11-12T21:38:46+05:30",
+   "artifacts": [
+    "codegen/analysis/screens.md"
+   ]
+  },
+  "2": {
+   "status": "complete",
+   "completedAt": "2026-11-12T21:38:46+05:30",
+   "artifacts": [
+    "codegen/decisions/config.json"
+   ]
+  },
+  "3": {
+   "status": "complete",
+   "completedAt": "2026-11-12T21:42:38.123538+05:30",
+   "artifacts": [
+    "codegen/implementation/approved-plan.md"
+   ]
+  },
+  "4": {
+   "status": "complete",
+   "completedAt": "2026-11-12T22:08:47.245877+05:30",
+   "artifacts": []
+  },
+  "5": {
+   "status": "complete",
+   "completedAt": "2026-11-12T22:08:47.245877+05:30",
+   "artifacts": []
+  },
+  "6": {
+   "status": "complete",
+   "completedAt": "2026-11-12T22:08:47.245877+05:30",
+   "artifacts": []
+  },
+  "7": {
+   "status": "complete",
+   "completedAt": "2026-11-12T22:08:47.245877+05:30",
+   "artifacts": []
+  },
+  "8": {
+   "status": "pending"
+  }
+ },
+ "batches": {
+  "size": 3,
+  "implemented": [
+   "onboard",
+   "scan",
+   "dups",
+   "compare",
+   "settings",
+   "dialogs"
+  ],
+  "remaining": [],
+  "next": [],
+  "current": null
+ },
+ "decisions": {
+  "config": "codegen/decisions/config.json"
+ },
+ "assumptions": [
+  "Desktop app: viewport 1600x1000 from existing ScreenUtilInit"
+ ],
+ "blockers": [],
+ "verification": {
+  "default": {
+   "at": "2026-11-12T22:08:47.245877+05:30",
+   "scope": "all",
+   "status": "passed",
+   "errors": 0,
+   "warnings": 2,
+   "log": "flutter analyze: 2 pre-existing unused-import warnings; flutter test: 101 passed"
+  },
+  "optIn": [],
+  "results": "codegen/validation/results.json"
+ },
+ "documentation": {
+  "status": "not-started"
+ },
+ "migrations": []
+}

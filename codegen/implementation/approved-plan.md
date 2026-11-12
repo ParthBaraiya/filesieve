@@ -1,0 +1,1 @@
+Approved by user: apply fileshieve.dc.html design. Batches: (1) theme tokens+shell, onboarding, scan; (2) duplicates list, compare; (3) settings, dialogs+toast. Real repositories. Fonts downloaded (Space Grotesk, JetBrains Mono). Trash via OS commands (no package exists). Native folder picker kept. History removed from sidebar only. Branch feature/dedupe-redesign.

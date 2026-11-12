@@ -107,6 +107,23 @@ class AppStrings {
   static const String setupStartScan = 'Start scan';
   static const String setupRemoveFolder = 'Remove folder';
 
+  // Scan progress screen
+  static const String scanComplete = 'Scan complete';
+  static const String scanCancel = 'Cancel';
+  static const String scanReviewDuplicates = 'Review duplicates';
+  static const String scanUsuallyTakes = 'This usually takes a few minutes';
+  static const String scanAllChecked = 'All files checked';
+  static const String scanFinished = 'Finished';
+  static const String scanStageListFiles = 'List files';
+  static const String scanStageMatchBySize = 'Match by size';
+  static const String scanStageVerify = 'Verify contents';
+  static const String scanStageWaiting = 'Waiting';
+  static const String scanStageDone = 'Done';
+  static const String scanStatGroups = 'Duplicate groups';
+  static const String scanStatCopies = 'Extra copies';
+  static const String scanStatSpace = 'Space to reclaim';
+  static const String scanFailedBack = 'Back to folders';
+
   // Settings — Storage & Cache (Phase 1 constants)
   static const String settingsSectionStorageTitle = 'Storage & Cache';
   static const String settingsCacheEntryObjectBoxLabel = 'ObjectBox Store';

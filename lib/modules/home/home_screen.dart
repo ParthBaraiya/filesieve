@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'home_screen_cubit.dart';
 import 'home_screen_state.dart';
@@ -21,12 +20,9 @@ class HomeScreen extends StatelessWidget {
     return BlocBuilder<HomeScreenCubit, HomeScreenState>(
       builder: (context, state) {
         if (state is HomeScreenScanning) {
-          return Padding(
-            padding: .symmetric(horizontal: 32.w, vertical: 24.h),
-            child: ScanProgressBody(
-              onCancel: () =>
-                  context.read<HomeScreenCubit>().scanner.cancelScan(),
-            ),
+          return ScanProgressBody(
+            folderCount: state.folders.length,
+            onCancel: () => context.read<HomeScreenCubit>().scanner.cancelScan(),
           );
         }
 

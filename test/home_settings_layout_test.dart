@@ -49,7 +49,9 @@ class _SlowFinder implements DuplicateFinderRepositoryBase {
     bool includeSubfolders = true,
     bool skipHidden = true,
     void Function(DuplicateGroup)? onGroupFound,
+    void Function(List<String> paths)? onFilesScanned,
   }) async {
+    onFilesScanned?.call(const [r'C:\a\one.txt', r'C:\a\two.txt']);
     onProgress(
       const ScanProgress(
         stageTotal: 200,

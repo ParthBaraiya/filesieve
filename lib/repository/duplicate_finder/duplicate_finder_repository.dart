@@ -11,6 +11,7 @@ import '../hash_cache/hash_cache_repository.dart';
 import '../hash_cache/no_op_hash_cache_repository.dart';
 import 'duplicate_finder_repository_base.dart';
 import '../../utils/cancel_token.dart';
+import '../../utils/folder_file_walker.dart';
 
 // ---------------------------------------------------------------------------
 // DuplicateFinderRepositoryImpl — main-isolate adapter
@@ -50,6 +51,7 @@ class DuplicateFinderRepository implements DuplicateFinderRepositoryBase {
     bool includeSubfolders = true,
     bool skipHidden = true,
     void Function(DuplicateGroup)? onGroupFound,
+    void Function(List<String> paths)? onFilesScanned,
   }) async {
     // All worker→main messages (progress, result, error) arrive on this port.
     final resultRp = ReceivePort();
@@ -109,6 +111,7 @@ class DuplicateFinderRepository implements DuplicateFinderRepositoryBase {
           );
           resultRp.close(); // no further messages expected after error
         case _ScanFiles():
+          if (msg.paths.isNotEmpty) onFilesScanned?.call(msg.paths);
           onProgress(
             ScanProgress(
               stageTotal: msg.fileCount,
@@ -147,26 +150,34 @@ Future<void> _workerEntrypoint(_WorkerSpawnMessage msg) async {
 
   // Collect files from all provided folder paths inside the isolate.
   final files = <File>[];
-  for (final folderPath in msg.folderPaths) {
-    try {
-      for (final entity in Directory(folderPath).listSync(
-        recursive: msg.includeSubfolders,
-      )) {
-        if (msg.skipHidden && _isHiddenOrSystem(entity.path, folderPath)) {
-          continue;
-        }
-        if (entity is File) files.add(entity);
-        msg.progressPort.send(
-          _ScanFiles(
-            fileCount: files.length,
-            lastFile: files.lastOrNull?.path ?? '',
-          ),
-        );
-      }
-    } on FileSystemException {
-      // silently skip unreadable directories
-    }
+  // File paths are sent in batches so the UI can list every scanned file
+  // without one message per file.
+  const batchSize = 200;
+  var pending = <String>[];
+  void flush() {
+    msg.progressPort.send(
+      _ScanFiles(
+        fileCount: files.length,
+        lastFile: files.lastOrNull?.path ?? '',
+        paths: pending,
+      ),
+    );
+    pending = <String>[];
   }
+
+  for (final folderPath in msg.folderPaths) {
+    walkFiles(
+      folderPath,
+      recursive: msg.includeSubfolders,
+      skipHidden: msg.skipHidden,
+      onFile: (file) {
+        files.add(file);
+        pending.add(file.path);
+        if (pending.length >= batchSize) flush();
+      },
+    );
+  }
+  flush();
 
   // Attach to the main isolate's ObjectBox store (if a path was supplied).
   // A null store means the no-op cache is used instead.
@@ -225,7 +236,12 @@ sealed class _WorkerMessage {}
 final class _ScanFiles extends _WorkerMessage {
   final int fileCount;
   final String lastFile;
-  _ScanFiles({required this.fileCount, required this.lastFile});
+  final List<String> paths;
+  _ScanFiles({
+    required this.fileCount,
+    required this.lastFile,
+    required this.paths,
+  });
 }
 
 final class _ProgressMessage extends _WorkerMessage {
@@ -279,20 +295,4 @@ class _WorkerSpawnMessage {
   final bool skipHidden;
   final SendPort progressPort;
   final SendPort cancelHandshakePort;
-}
-
-/// True when any path segment below [root] is hidden: a dot-prefixed name, or
-/// a well-known Windows system folder. (Windows "hidden" file attributes are
-/// not readable from Dart without native code, so they are not checked.)
-bool _isHiddenOrSystem(String path, String root) {
-  final relative = path.length > root.length ? path.substring(root.length) : '';
-  for (final segment in relative.split(RegExp(r'[\\/]'))) {
-    if (segment.isEmpty) continue;
-    if (segment.startsWith('.')) return true;
-    final lower = segment.toLowerCase();
-    if (lower == '\$recycle.bin' || lower == 'system volume information') {
-      return true;
-    }
-  }
-  return false;
 }

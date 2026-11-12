@@ -13,5 +13,6 @@ abstract class DuplicateFinderRepositoryBase {
     bool includeSubfolders = true,
     bool skipHidden = true,
     void Function(DuplicateGroup)? onGroupFound,
+    void Function(List<String> paths)? onFilesScanned,
   });
 }

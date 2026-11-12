@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../models/scan_folder_model.dart';
+import '../../../utils/folder_file_walker.dart';
 import '../../../values/app_strings.dart';
 import '../../app_settings/app_settings_cubit.dart';
 import '../home_screen_cubit.dart';
@@ -47,7 +48,12 @@ class SetupFolderListWidget extends StatelessWidget {
           ),
           Divider(color: palette.line),
           for (var i = 0; i < folders.length; i++) ...[
-            _FolderRow(index: i, folder: folders[i]),
+            _FolderRow(
+              index: i,
+              folder: folders[i],
+              includeSubfolders: settings.state.includeSubfolders,
+              skipHidden: settings.state.skipHiddenFiles,
+            ),
             Divider(color: palette.line),
           ],
           if (folders.isEmpty) ...[
@@ -87,15 +93,53 @@ class SetupFolderListWidget extends StatelessWidget {
   }
 }
 
-class _FolderRow extends StatelessWidget {
-  const _FolderRow({required this.index, required this.folder});
+class _FolderRow extends StatefulWidget {
+  const _FolderRow({
+    required this.index,
+    required this.folder,
+    required this.includeSubfolders,
+    required this.skipHidden,
+  });
 
   final int index;
   final ScanFolderModel folder;
+  final bool includeSubfolders;
+  final bool skipHidden;
+
+  @override
+  State<_FolderRow> createState() => _FolderRowState();
+}
+
+class _FolderRowState extends State<_FolderRow> {
+  late Future<int> _count;
+
+  @override
+  void initState() {
+    super.initState();
+    _count = _load();
+  }
+
+  @override
+  void didUpdateWidget(_FolderRow old) {
+    super.didUpdateWidget(old);
+    // Recount when the scan options change, so the number matches the scan.
+    if (old.folder.path != widget.folder.path ||
+        old.includeSubfolders != widget.includeSubfolders ||
+        old.skipHidden != widget.skipHidden) {
+      _count = _load();
+    }
+  }
+
+  Future<int> _load() => countFiles(
+    widget.folder.path,
+    recursive: widget.includeSubfolders,
+    skipHidden: widget.skipHidden,
+  );
 
   @override
   Widget build(BuildContext context) {
     final palette = context.palette;
+    final folder = widget.folder;
 
     return Padding(
       padding: EdgeInsets.fromLTRB(16.w, 8.h, 8.w, 8.h),
@@ -139,10 +183,27 @@ class _FolderRow extends StatelessWidget {
               ],
             ),
           ),
+          SizedBox(width: 12.w),
+          FutureBuilder<int>(
+            future: _count,
+            builder: (context, snapshot) {
+              final text = snapshot.hasError
+                  ? '—'
+                  : snapshot.hasData
+                  ? '${snapshot.data} ${snapshot.data == 1 ? 'file' : 'files'}'
+                  : AppStrings.setupCountingFiles;
+              return Text(
+                text,
+                key: ValueKey('setup.fileCount.${widget.index}'),
+                style: TextStyle(fontSize: 13.sp, color: palette.muted),
+              );
+            },
+          ),
           IconButton(
-            key: ValueKey('setup.removeFolder.$index'),
+            key: ValueKey('setup.removeFolder.${widget.index}'),
             tooltip: AppStrings.setupRemoveFolder,
-            onPressed: () => context.read<HomeScreenCubit>().removeFolder(index),
+            onPressed: () =>
+                context.read<HomeScreenCubit>().removeFolder(widget.index),
             icon: Icon(Icons.close, size: 16.r, color: palette.muted),
           ),
         ],

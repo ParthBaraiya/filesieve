@@ -25,6 +25,7 @@ class FakeFinder implements DuplicateFinderRepositoryBase {
     bool includeSubfolders = true,
     bool skipHidden = true,
     void Function(DuplicateGroup)? onGroupFound,
+    void Function(List<String> paths)? onFilesScanned,
   }) async {
     for (final g in groups) {
       onGroupFound?.call(g);

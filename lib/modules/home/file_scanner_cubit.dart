@@ -19,6 +19,13 @@ class FileScannerCubit extends Cubit<FileScannerState> {
 
   final _subscriptions = <DuplicateGroupCubit, StreamSubscription>{};
 
+  final _scannedFiles = <String>[];
+
+  /// Every file path listed by the current (or last) scan. Kept after the scan
+  /// completes so the scan screen can keep showing them.
+  UnmodifiableListView<String> get scannedFiles =>
+      UnmodifiableListView(_scannedFiles);
+
   Future<void> startScan(
     Iterable<String> folders, {
     bool includeSubfolders = true,
@@ -27,6 +34,7 @@ class FileScannerCubit extends Cubit<FileScannerState> {
     if (state is FileScannerStateScanningStarted) return;
 
     final cancelToken = CancelToken();
+    _scannedFiles.clear();
     emit(
       .scanning(
         cancelToken: cancelToken,
@@ -45,6 +53,7 @@ class FileScannerCubit extends Cubit<FileScannerState> {
         folders: folders.map((f) => Directory(f)).toList(),
         includeSubfolders: includeSubfolders,
         skipHidden: skipHidden,
+        onFilesScanned: _scannedFiles.addAll,
         onProgress: (progress) {
           emit(
             FileScannerState.scanning(
@@ -96,6 +105,7 @@ class FileScannerCubit extends Cubit<FileScannerState> {
     await Future.wait(_subscriptions.values.map((s) => s.cancel()));
     await Future.wait(_subscriptions.keys.map((c) => c.close()));
     _subscriptions.clear();
+    _scannedFiles.clear();
     emit(const FileScannerState.initial());
   }
 

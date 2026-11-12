@@ -114,6 +114,8 @@ class AppStrings {
   static const String scanUsuallyTakes = 'This usually takes a few minutes';
   static const String scanAllChecked = 'All files checked';
   static const String scanFinished = 'Finished';
+  static const String scanFilesTitle = 'Scanned files';
+  static const String setupCountingFiles = 'Counting…';
   static const String scanStageListFiles = 'List files';
   static const String scanStageMatchBySize = 'Match by size';
   static const String scanStageVerify = 'Verify contents';

@@ -12,6 +12,7 @@ import 'package:go_router/go_router.dart';
 import '../../../values/app_palette.dart';
 import '../../../values/app_routes.dart';
 import '../../../values/app_strings.dart';
+import 'scan_files_card_widget.dart';
 import 'scan_progress_card_widget.dart';
 import 'scan_stats_card_widget.dart';
 
@@ -84,6 +85,10 @@ class ScanProgressBody extends StatelessWidget {
                 extraCopies: extraCopies,
                 reclaimableBytes: reclaimable,
               ),
+              if (home.scanner.scannedFiles.isNotEmpty) ...[
+                SizedBox(height: 20.h),
+                ScanFilesCardWidget(files: home.scanner.scannedFiles),
+              ],
             ],
           ),
         );

@@ -40,13 +40,20 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
   // Scan
   // -------------------------------------------------------------------------
 
-  Future<void> startScan() async {
+  Future<void> startScan({
+    bool includeSubfolders = true,
+    bool skipHidden = true,
+  }) async {
     if (state is! HomeScreenFoldersAdded) return;
 
     final currentFolders = state.allFolders;
     emit(HomeScreenState.scanning(folders: List.unmodifiable(currentFolders)));
     await _repository.createSession(currentFolders);
-    await scanner.startScan(currentFolders.map((e) => e.path));
+    await scanner.startScan(
+      currentFolders.map((e) => e.path),
+      includeSubfolders: includeSubfolders,
+      skipHidden: skipHidden,
+    );
   }
 
   //#endregion

@@ -10,6 +10,8 @@ abstract class DuplicateFinderRepositoryBase {
     required void Function(ScanProgress) onProgress,
     required CancelToken cancelToken,
     bool byteByByteCompare = false,
+    bool includeSubfolders = true,
+    bool skipHidden = true,
     void Function(DuplicateGroup)? onGroupFound,
   });
 }

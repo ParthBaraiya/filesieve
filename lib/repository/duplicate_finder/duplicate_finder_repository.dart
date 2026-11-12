@@ -47,6 +47,8 @@ class DuplicateFinderRepository implements DuplicateFinderRepositoryBase {
     required void Function(ScanProgress) onProgress,
     required CancelToken cancelToken,
     bool byteByByteCompare = false,
+    bool includeSubfolders = true,
+    bool skipHidden = true,
     void Function(DuplicateGroup)? onGroupFound,
   }) async {
     // All worker→main messages (progress, result, error) arrive on this port.
@@ -62,6 +64,8 @@ class DuplicateFinderRepository implements DuplicateFinderRepositoryBase {
         folderPaths: folders.map((d) => d.path).toList(),
         concurrencyLimit: concurrencyLimit,
         byteByByteCompare: byteByByteCompare,
+        includeSubfolders: includeSubfolders,
+        skipHidden: skipHidden,
         progressPort: resultRp.sendPort,
         cancelHandshakePort: handshakeRp.sendPort,
       ),
@@ -145,7 +149,12 @@ Future<void> _workerEntrypoint(_WorkerSpawnMessage msg) async {
   final files = <File>[];
   for (final folderPath in msg.folderPaths) {
     try {
-      for (final entity in Directory(folderPath).listSync(recursive: true)) {
+      for (final entity in Directory(folderPath).listSync(
+        recursive: msg.includeSubfolders,
+      )) {
+        if (msg.skipHidden && _isHiddenOrSystem(entity.path, folderPath)) {
+          continue;
+        }
         if (entity is File) files.add(entity);
         msg.progressPort.send(
           _ScanFiles(
@@ -256,6 +265,8 @@ class _WorkerSpawnMessage {
     required this.folderPaths,
     required this.concurrencyLimit,
     required this.byteByByteCompare,
+    required this.includeSubfolders,
+    required this.skipHidden,
     required this.progressPort,
     required this.cancelHandshakePort,
   });
@@ -264,6 +275,24 @@ class _WorkerSpawnMessage {
   final List<String> folderPaths;
   final int concurrencyLimit;
   final bool byteByByteCompare;
+  final bool includeSubfolders;
+  final bool skipHidden;
   final SendPort progressPort;
   final SendPort cancelHandshakePort;
+}
+
+/// True when any path segment below [root] is hidden: a dot-prefixed name, or
+/// a well-known Windows system folder. (Windows "hidden" file attributes are
+/// not readable from Dart without native code, so they are not checked.)
+bool _isHiddenOrSystem(String path, String root) {
+  final relative = path.length > root.length ? path.substring(root.length) : '';
+  for (final segment in relative.split(RegExp(r'[\\/]'))) {
+    if (segment.isEmpty) continue;
+    if (segment.startsWith('.')) return true;
+    final lower = segment.toLowerCase();
+    if (lower == '\$recycle.bin' || lower == 'system volume information') {
+      return true;
+    }
+  }
+  return false;
 }

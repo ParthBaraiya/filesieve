@@ -19,7 +19,11 @@ class FileScannerCubit extends Cubit<FileScannerState> {
 
   final _subscriptions = <DuplicateGroupCubit, StreamSubscription>{};
 
-  Future<void> startScan(Iterable<String> folders) async {
+  Future<void> startScan(
+    Iterable<String> folders, {
+    bool includeSubfolders = true,
+    bool skipHidden = true,
+  }) async {
     if (state is FileScannerStateScanningStarted) return;
 
     final cancelToken = CancelToken();
@@ -39,6 +43,8 @@ class FileScannerCubit extends Cubit<FileScannerState> {
       final groups = <DuplicateGroupCubit>[];
       await _scanRepository.find(
         folders: folders.map((f) => Directory(f)).toList(),
+        includeSubfolders: includeSubfolders,
+        skipHidden: skipHidden,
         onProgress: (progress) {
           emit(
             FileScannerState.scanning(

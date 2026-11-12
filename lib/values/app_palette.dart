@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'enums.dart';
+
 /// AppPalette — design tokens of the Dedupe glass design that the Material
 /// [ColorScheme] has no slot for (translucent panels, file-type tints, the
 /// backdrop gradient). Read it with `context.palette`.
@@ -177,6 +179,16 @@ class AppPalette extends ThemeExtension<AppPalette> {
     tintAudio: const Color(0xFF92400E),
     tintArchive: const Color(0xFF0F766E),
   );
+
+  /// Accent colour used for a file type's icon.
+  Color tintOf(FileCategory category) => switch (category) {
+    FileCategory.image => tintImage,
+    FileCategory.video => tintVideo,
+    FileCategory.document => tintDocument,
+    FileCategory.audio => tintAudio,
+    FileCategory.archive => tintArchive,
+    FileCategory.other => muted,
+  };
 
   @override
   AppPalette copyWith() => this;

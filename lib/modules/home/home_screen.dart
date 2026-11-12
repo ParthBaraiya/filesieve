@@ -3,15 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'home_screen_cubit.dart';
 import 'home_screen_state.dart';
-import 'widgets/duplicate_file_preview_widget.dart';
 import 'widgets/scan_setup_body.dart';
 import 'widgets/scan_progress_body.dart';
 
 /// HomeScreen — the main body content for the home / onboarding
 /// screen.
 ///
-/// When folders have been added ([HomeScreenStateX.hasFolders]), displays the
-/// scan configuration body. Otherwise displays the onboarding layout.
+/// Shows the scan progress while a scan runs, otherwise the folder setup.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -24,10 +22,6 @@ class HomeScreen extends StatelessWidget {
             folderCount: state.folders.length,
             onCancel: () => context.read<HomeScreenCubit>().scanner.cancelScan(),
           );
-        }
-
-        if (state is HomeScreenFilePreview) {
-          return DuplicateFilePreviewWidget(state: state);
         }
 
         return const ScanSetupBody();

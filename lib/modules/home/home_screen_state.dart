@@ -39,10 +39,6 @@ sealed class HomeScreenState with _$HomeScreenState {
     @Default('') String currentFilePath,
   }) = HomeScreenScanning;
 
-  const factory HomeScreenState.filePreview({
-    HomeScreenScanning? scannedState,
-    required DuplicateGroupCubit currentGroup,
-  }) = HomeScreenFilePreview;
 }
 
 extension HomeScreenStateX on HomeScreenState {
@@ -52,15 +48,7 @@ extension HomeScreenStateX on HomeScreenState {
     HomeScreenDropRejected(:final folders) => folders,
     HomeScreenFoldersAdded(:final folders) => folders,
     HomeScreenScanning(:final folders) => folders,
-    HomeScreenFilePreview(:final scannedState) =>
-      scannedState?.folders ?? [],
   };
 
   bool get hasFolders => allFolders.isNotEmpty;
-
-  bool get isScanned =>
-      (this is HomeScreenScanning &&
-          (this as HomeScreenScanning).progress.stage == .completed) ||
-      (this is HomeScreenFilePreview &&
-          (this as HomeScreenFilePreview).scannedState != null);
 }

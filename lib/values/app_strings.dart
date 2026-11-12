@@ -124,6 +124,58 @@ class AppStrings {
   static const String scanStatSpace = 'Space to reclaim';
   static const String scanFailedBack = 'Back to folders';
 
+  // Duplicates list
+  static const String dupTitle = 'Duplicates';
+  static const String dupTidy = 'Everything is tidy';
+  static const String dupColFile = 'File';
+  static const String dupColCopies = 'Copies';
+  static const String dupColSizeEach = 'Size each';
+  static const String dupColReclaimable = 'Reclaimable';
+  static const String dupFilterAll = 'All';
+  static const String dupFilterEmpty = 'No duplicates of this type left.';
+  static const String dupCleanTitle = 'No duplicates left';
+  static const String dupCleanNone = 'No identical files were found in your folders.';
+  static const String dupScanAgain = 'Scan again';
+  static const String dupNotScannedTitle = 'Nothing scanned yet';
+  static const String dupNotScannedBody =
+      'Add folders and run a scan to find identical files.';
+  static const String dupGoToScan = 'Go to scan';
+
+  // Compare
+  static const String cmpBack = 'All duplicates';
+  static const String cmpPrevious = 'Previous group';
+  static const String cmpNext = 'Next group';
+  static const String cmpIdentical = '100% identical';
+  static const String cmpSorted = 'Sorted. One copy kept, the duplicates are gone.';
+  static const String cmpBackToList = 'Back to list';
+  static const String cmpType = 'Type';
+  static const String cmpSize = 'Size';
+  static const String cmpMatch = 'Match';
+  static const String cmpByteForByte = 'Byte for byte';
+  static const String cmpOldest = 'Oldest';
+  static const String cmpKeeping = 'Keeping';
+  static const String cmpKeepThis = 'Keep this one';
+  static const String cmpRemove = 'Remove';
+  static const String cmpShowInFolder = 'Show in folder';
+  static const String cmpRestore = 'Restore';
+  static const String cmpMovedToTrash = 'Moved to Trash';
+  static const String cmpDeleted = 'Permanently deleted';
+  static const String cmpSkip = 'Skip';
+
+  // Confirm dialog and toast
+  static const String dlgRemoveAllTitle = 'Remove all identical copies?';
+  static const String dlgKeepRuleLegend = 'In each group, keep the copy that is';
+  static const String dlgTrashTitle = 'Move to Trash?';
+  static const String dlgDeleteTitle = 'Delete permanently?';
+  static const String dlgTrashNote = 'Files go to the Trash, so you can restore them.';
+  static const String dlgDeleteNote =
+      'Files are deleted permanently and can’t be restored.';
+  static const String dlgChange = 'Change';
+  static const String dlgCancel = 'Cancel';
+  static const String dlgMoveToTrash = 'Move to Trash';
+  static const String dlgDeletePermanently = 'Delete permanently';
+  static const String toastUndo = 'Undo';
+
   // Settings — Storage & Cache (Phase 1 constants)
   static const String settingsSectionStorageTitle = 'Storage & Cache';
   static const String settingsCacheEntryObjectBoxLabel = 'ObjectBox Store';

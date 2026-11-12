@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:file_selector/file_selector.dart';
-import 'package:filesieve/models/duplicate_group_model.dart';
 import 'package:filesieve/modules/home/file_scanner_cubit.dart';
 import 'package:filesieve/utils/extensions.dart';
 import 'package:filesieve/utils/file_picker/fs_picker_base.dart';

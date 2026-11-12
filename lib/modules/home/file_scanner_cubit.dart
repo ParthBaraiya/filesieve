@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
 
-import 'package:filesieve/models/duplicate_group_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../repository/duplicate_finder/duplicate_finder_repository_base.dart';

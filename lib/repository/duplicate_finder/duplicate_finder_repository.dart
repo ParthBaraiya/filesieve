@@ -131,6 +131,9 @@ class DuplicateFinderRepository implements DuplicateFinderRepositoryBase {
 // Worker isolate entrypoint (MUST be top-level — Isolate.spawn requirement)
 // ---------------------------------------------------------------------------
 
+/// Minimum gap between progress messages sent to the UI isolate.
+const _progressInterval = Duration(milliseconds: 60);
+
 /// Worker isolate entry point for the duplicate-detection engine.
 ///
 /// Opens the ObjectBox [Store] via [Store.attach] when a [storePath] is
@@ -195,11 +198,29 @@ Future<void> _workerEntrypoint(_WorkerSpawnMessage msg) async {
       concurrencyLimit: msg.concurrencyLimit,
     );
 
+    // The pipeline reports progress once per file, which can be thousands of
+    // messages a second. Each one rebuilds the scan screen on the UI isolate,
+    // so forward at most one every [_progressInterval] — but never drop a stage
+    // change or the last update of a stage.
+    final sinceLastProgress = Stopwatch()..start();
+    ScanProgressStage? lastStage;
+
     try {
       final groups = await service.find(
         files: files,
         cancelToken: localCancelToken,
         onProgress: (progress) {
+          final stageChanged = progress.stage != lastStage;
+          final stageDone =
+              progress.stageTotal > 0 &&
+              progress.stageProcessed >= progress.stageTotal;
+          if (!stageChanged &&
+              !stageDone &&
+              sinceLastProgress.elapsed < _progressInterval) {
+            return;
+          }
+          lastStage = progress.stage;
+          sinceLastProgress.reset();
           msg.progressPort.send(
             _ProgressMessage(
               stageTotal: progress.stageTotal,

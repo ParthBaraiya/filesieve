@@ -128,8 +128,6 @@ For real distribution, sign with a certificate from a trusted CA, or publish thr
 dart run msix:create --certificate-path <path-to.pfx> --certificate-password <password>
 ```
 
-Do not commit `.pfx` files or passwords. A prebuilt package is checked in at [files/filesieve.msix](files/filesieve.msix) for reference.
-
 ## Project structure
 
 ```

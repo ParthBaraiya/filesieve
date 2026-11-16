@@ -81,7 +81,7 @@ MSIX settings live under `msix_config` in [pubspec.yaml](pubspec.yaml):
 | `display_name` | Dedupe |
 | `publisher_display_name` | Binate Solutions |
 | `identity_name` | `com.binatesolutions.filesieve` |
-| `msix_version` | `1.0.1.0` |
+| `msix_version` | `1.1.0.3` |
 | `logo_path` | `windows/runner/resources/app_icon.ico` |
 | `capabilities` | `internetClient` |
 

@@ -3,6 +3,22 @@
 All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow the `version` in `pubspec.yaml`.
 
+## [1.1.0] - 2026-11-17
+
+### Added
+- "Remove all identical copies" now asks which folder to keep, one step per combination of folders (for example f1 + f2 + f3, then f1 + f3). Each duplicate group belongs to exactly one combination, and the copies in the folders you don't pick are removed. Groups whose copies are all in one folder keep their oldest copy without a prompt.
+- Removal progress ("Removing files… 12 of 87") with a progress bar, so the results screen no longer looks frozen.
+- "New scan" and "Re-run scan" buttons on the finished scan screen.
+
+### Changed
+- When the chosen folder holds several copies of a file, the oldest one is kept.
+
+### Fixed
+- The UI freezing while a scan hashes and verifies files: the scan worker now sends progress updates at a limited rate.
+
+### Removed
+- The oldest / newest / shortest path / first folder keep rules in the "Remove all" dialog, replaced by the folder choice above.
+
 ## [1.0.1] - 2026-11-16
 
 ### Changed

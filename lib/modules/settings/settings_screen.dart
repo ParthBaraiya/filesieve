@@ -1,7 +1,7 @@
 import 'package:filesieve/utils/extensions.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../values/app_strings.dart';
 import 'settings_screen_cubit.dart';
@@ -26,9 +26,8 @@ class SettingsScreen extends StatelessWidget {
     return BlocListener<SettingsScreenCubit, SettingsScreenState>(
       listener: (context, state) {
         if (state is SettingsScreenOpenFolderError) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.message)));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(state.message)));
         }
       },
       child: SingleChildScrollView(

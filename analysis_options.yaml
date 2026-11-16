@@ -36,6 +36,7 @@ linter:
   rules:
     implementation_imports: false
     avoid_unused_constructor_parameters: false
+    prefer_initializing_formals: false
     # avoid_print: false  # Uncomment to disable the `avoid_print` rule
     # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
 

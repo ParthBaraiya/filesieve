@@ -18,7 +18,7 @@ import 'package:filesieve/repository/scan_session/scan_session_repository_base.d
 import 'package:filesieve/utils/cancel_token.dart';
 import 'package:filesieve/values/app_theme.dart';
 import 'package:filesieve/values/enums.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';

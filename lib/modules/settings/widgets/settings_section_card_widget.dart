@@ -1,5 +1,5 @@
 import 'package:filesieve/utils/extensions.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 /// SettingsSectionCardWidget — a titled glass card used by every settings

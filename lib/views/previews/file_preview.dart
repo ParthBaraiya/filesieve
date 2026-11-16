@@ -1,11 +1,10 @@
-import 'package:filesieve/utils/fs_file/fs_file.dart';
-import 'package:filesieve/utils/fs_file/fs_file_utils.dart';
+import 'package:omnifile/omnifile.dart';
 import 'package:flutter/material.dart';
 
 class FsFilePreview extends StatefulWidget {
   const FsFilePreview({super.key, required this.file});
 
-  final FsFile file;
+  final OmniFile file;
 
   @override
   State<FsFilePreview> createState() => _FsFilePreviewState();
@@ -16,7 +15,7 @@ class _FsFilePreviewState extends State<FsFilePreview> {
   Widget build(BuildContext context) {
     final extension = widget.file.extension;
 
-    if (FsFileUtils.isImage(extension)) {
+    if (OmniFileUtils.isImage(extension)) {
       return _ImagePreview(image: widget.file);
     }
 
@@ -27,7 +26,7 @@ class _FsFilePreviewState extends State<FsFilePreview> {
 class _ImagePreview extends StatelessWidget {
   const _ImagePreview({super.key, required this.image});
 
-  final FsFile image;
+  final OmniFile image;
 
   @override
   Widget build(BuildContext context) {

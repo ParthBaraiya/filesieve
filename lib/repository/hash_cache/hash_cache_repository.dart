@@ -1,4 +1,4 @@
-import 'package:filesieve/utils/fs_file/fs_file.dart';
+import 'package:omnifile/omnifile.dart';
 
 import '../../models/file_hash_entity.dart';
 import '../../objectbox.g.dart';
@@ -35,7 +35,7 @@ class HashCacheRepository implements HashCacheRepositoryBase {
   /// Reads the existing entity first so that any already-stored [FileHashEntity.fullHash]
   /// is preserved.
   @override
-  Future<void> savePartialHash(FsFile meta, String hash) async {
+  Future<void> savePartialHash(OmniFile meta, String hash) async {
     final existing = getEntity(meta.path);
 
     _box.put(
@@ -55,7 +55,7 @@ class HashCacheRepository implements HashCacheRepositoryBase {
   /// Reads the existing entity first so that any already-stored [FileHashEntity.partialHash]
   /// is preserved.
   @override
-  Future<void> saveFullHash(FsFile meta, String hash) async {
+  Future<void> saveFullHash(OmniFile meta, String hash) async {
     final existing = getEntity(meta.path);
     _box.put(
       FileHashEntity(

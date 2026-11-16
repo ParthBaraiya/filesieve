@@ -7,7 +7,7 @@ import 'package:filesieve/repository/app_settings/app_settings_repository_base.d
 import 'package:filesieve/repository/duplicate_finder/duplicate_finder_repository_base.dart';
 import 'package:filesieve/repository/file_removal/file_removal_repository_base.dart';
 import 'package:filesieve/utils/cancel_token.dart';
-import 'package:filesieve/utils/fs_file/fs_file.dart';
+import 'package:omnifile/omnifile.dart';
 import 'package:filesieve/values/enums.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -75,8 +75,8 @@ DuplicateGroup makeGroup(String name, int size, List<(String, int)> copies) {
   return DuplicateGroup(
     files: [
       for (final (folder, day) in copies)
-        FsFile(
-          source: FsFileSource.local,
+        OmniFile(
+          source: OmniFileSource.local,
           path: 'C:\\$folder\\$name',
           size: size,
           lastModified: DateTime(2026, 1, 1).add(Duration(days: day)),

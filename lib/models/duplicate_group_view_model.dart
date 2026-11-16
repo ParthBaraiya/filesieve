@@ -1,7 +1,6 @@
 import 'package:path/path.dart' as p;
 
-import '../utils/fs_file/fs_file.dart';
-import '../utils/fs_file/fs_file_utils.dart';
+import 'package:omnifile/omnifile.dart';
 import '../values/enums.dart';
 import 'duplicate_group_model.dart';
 
@@ -15,7 +14,7 @@ class DuplicateVersionView {
     required this.removedAs,
   });
 
-  final FsFile file;
+  final OmniFile file;
   final String path;
 
   /// Name of the folder that holds this copy.
@@ -125,10 +124,10 @@ class DuplicateGroupView {
 
   static FileCategory categoryOf(String? extension) {
     final ext = extension?.toLowerCase();
-    if (FsFileUtils.isImage(ext)) return FileCategory.image;
-    if (FsFileUtils.isVideo(ext)) return FileCategory.video;
-    if (FsFileUtils.isAudio(ext)) return FileCategory.audio;
-    if (FsFileUtils.isArchive(ext)) return FileCategory.archive;
+    if (OmniFileUtils.isImage(ext)) return FileCategory.image;
+    if (OmniFileUtils.isVideo(ext)) return FileCategory.video;
+    if (OmniFileUtils.isAudio(ext)) return FileCategory.audio;
+    if (OmniFileUtils.isArchive(ext)) return FileCategory.archive;
     if (_documentExtensions.contains(ext)) return FileCategory.document;
     return FileCategory.other;
   }

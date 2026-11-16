@@ -5,7 +5,7 @@
 import 'dart:io';
 
 import 'package:filesieve/utils/classes/fs_semaphore.dart';
-import 'package:filesieve/utils/fs_file/fs_file.dart';
+import 'package:omnifile/omnifile.dart';
 
 import '../../models/duplicate_group_model.dart';
 import '../../models/scan_progress_model.dart';
@@ -60,13 +60,13 @@ class DuplicateFinderService {
     // -----------------------------------------------------------------------
     // Stage 1: Metadata collection
     // -----------------------------------------------------------------------
-    final metaList = <FsFile>[];
+    final metaList = <OmniFile>[];
     for (final file in files) {
       try {
         final stat = file.statSync();
         if (stat.size == 0) continue; // zero-byte files cannot be duplicates
         metaList.add(
-          FsFile(
+          OmniFile(
             source: .local,
             path: file.path,
             size: stat.size,
@@ -96,7 +96,7 @@ class DuplicateFinderService {
     // -----------------------------------------------------------------------
     // Stage 2: Group by size — drop singletons, sort descending
     // -----------------------------------------------------------------------
-    final sizeMap = <int, List<FsFile>>{};
+    final sizeMap = <int, List<OmniFile>>{};
     for (final meta in metaList) {
       sizeMap.putIfAbsent((await meta.size)!, () => []).add(meta);
     }
@@ -121,7 +121,7 @@ class DuplicateFinderService {
     // -----------------------------------------------------------------------
     // Stage 3: Partial hash pass (concurrent, semaphore-guarded)
     // -----------------------------------------------------------------------
-    final metaToPartialHash = <FsFile, String>{};
+    final metaToPartialHash = <OmniFile, String>{};
     {
       final partialTotal = sizeCandidates.length;
       int partialProcessed = 0;
@@ -179,7 +179,7 @@ class DuplicateFinderService {
     // -----------------------------------------------------------------------
     // Stage 4: Group by partial hash — drop singletons
     // -----------------------------------------------------------------------
-    final partialHashMap = <String, List<FsFile>>{};
+    final partialHashMap = <String, List<OmniFile>>{};
     final items = metaToPartialHash.entries.toList(growable: false);
     var progress = 0;
     for (final entry in items) {
@@ -213,7 +213,7 @@ class DuplicateFinderService {
     //   → reuse the already-computed partial hash; no second file read.
     // Files > chunkSize: compute full hash (concurrent, semaphore-guarded).
     // -----------------------------------------------------------------------
-    final fullHashMap = <String, List<FsFile>>{};
+    final fullHashMap = <String, List<OmniFile>>{};
     final fullTotal = partialCandidates.length;
     int fullProcessed = 0;
     onProgress(

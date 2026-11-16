@@ -1,4 +1,4 @@
-import 'package:filesieve/utils/fs_file/fs_file.dart';
+import 'package:omnifile/omnifile.dart';
 
 import '../../models/file_hash_entity.dart';
 import 'hash_cache_repository_base.dart';
@@ -17,8 +17,8 @@ class NoOpHashCacheRepository implements HashCacheRepositoryBase {
   FileHashEntity? getEntity(String? path) => null;
 
   @override
-  Future<void> savePartialHash(FsFile meta, String hash) => Future.value();
+  Future<void> savePartialHash(OmniFile meta, String hash) => Future.value();
 
   @override
-  Future<void> saveFullHash(FsFile meta, String hash) => Future.value();
+  Future<void> saveFullHash(OmniFile meta, String hash) => Future.value();
 }

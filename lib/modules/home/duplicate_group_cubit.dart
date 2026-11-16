@@ -3,13 +3,13 @@ import 'dart:io';
 import 'package:filesieve/models/duplicate_group_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../utils/fs_file/fs_file.dart';
+import 'package:omnifile/omnifile.dart';
 
 class DuplicateGroupCubit extends Cubit<DuplicateGroupState> {
   DuplicateGroupCubit({required DuplicateGroup group})
     : super(DuplicateGroupState(group: group));
 
-  void deleteFile(FsFile file) {
+  void deleteFile(OmniFile file) {
     if (state.group.files.length == 1) return;
 
     File(file.path!).deleteSync();

@@ -1,0 +1,129 @@
+name: Release
+
+# Runs when a commit that changes the `version:` in pubspec.yaml is pushed to main.
+# Builds the Windows app, tags the commit with the version (e.g. 1.1.0) and
+# publishes a release named v<version> with the changelog and the Windows build.
+on:
+  push:
+    branches: [main]
+    paths: [pubspec.yaml]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  detect:
+    name: Detect version change
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.check.outputs.release }}
+      version: ${{ steps.check.outputs.version }}
+      previous_tag: ${{ steps.check.outputs.previous_tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compare version with previous commit
+        id: check
+        shell: bash
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          read_version() { sed -n 's/^version:[[:space:]]*\([^+[:space:]]*\).*/\1/p' | head -n1; }
+
+          version=$(read_version < pubspec.yaml)
+          if [ -z "$version" ]; then
+            echo "::error::Could not read version from pubspec.yaml"; exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+          old_version=""
+          if [ -n "$BEFORE" ] && ! [[ "$BEFORE" =~ ^0+$ ]] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            old_version=$(git show "$BEFORE:pubspec.yaml" 2>/dev/null | read_version || true)
+          fi
+
+          if [ "$version" = "$old_version" ]; then
+            echo "Version unchanged ($version); skipping."
+            echo "release=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/$version" >/dev/null 2>&1; then
+            echo "Tag $version already exists; skipping."
+            echo "release=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          if ! grep -q "^## \[$version\]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no '## [$version]' section"; exit 1
+          fi
+
+          # Previous release tag: the old pubspec version if tagged, else the latest other tag.
+          previous_tag=""
+          if [ -n "$old_version" ] && git rev-parse -q --verify "refs/tags/$old_version" >/dev/null; then
+            previous_tag="$old_version"
+          else
+            previous_tag=$(git tag --sort=-v:refname | grep -vx "$version" | head -n1 || true)
+          fi
+          echo "previous_tag=$previous_tag" >> "$GITHUB_OUTPUT"
+          echo "release=true" >> "$GITHUB_OUTPUT"
+
+  release:
+    name: Build Windows and publish release
+    needs: detect
+    if: needs.detect.outputs.release == 'true'
+    runs-on: windows-latest
+    env:
+      VERSION: ${{ needs.detect.outputs.version }}
+      PREVIOUS_TAG: ${{ needs.detect.outputs.previous_tag }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read Flutter version from .fvmrc
+        id: fvm
+        shell: bash
+        run: echo "flutter=$(sed -n 's/.*"flutter"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' .fvmrc)" >> "$GITHUB_OUTPUT"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ steps.fvm.outputs.flutter }}
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Windows
+        run: flutter build windows --release
+
+      - name: Package build
+        shell: pwsh
+        run: |
+          $zip = "filesieve-windows-x64-$env:VERSION.zip"
+          Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath $zip
+          "ASSET=$zip" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Write release notes
+        shell: bash
+        run: |
+          # Changelog section for this version (without the heading).
+          awk -v v="$VERSION" '
+            /^## \[/ { if (found) exit; if (index($0, "## [" v "]") == 1) { found = 1; next } }
+            found { print }
+          ' CHANGELOG.md | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}' | sed '/./,$!d' > notes.md
+
+          if [ -n "$PREVIOUS_TAG" ]; then
+            printf '\n**Full Changelog**: https://github.com/%s/compare/%s...%s\n' \
+              "$GITHUB_REPOSITORY" "$PREVIOUS_TAG" "$VERSION" >> notes.md
+          fi
+          cat notes.md
+
+      - name: Create tag and release
+        shell: bash
+        run: |
+          gh release create "$VERSION" "$ASSET" \
+            --target "$GITHUB_SHA" \
+            --title "v$VERSION" \
+            --notes-file notes.md

@@ -1,6 +1,6 @@
-# FileSieve
+# Dedupe
 
-FileSieve is a Windows desktop app (built with Flutter) that finds duplicate files. Pick one or more folders, and it scans them, groups files by content, and lets you review and remove the duplicates.
+Dedupe is a Windows desktop app (built with Flutter) that finds duplicate files. Pick one or more folders, and it scans them, groups files by content, and lets you review and remove the duplicates.
 
 ## Features
 
@@ -78,7 +78,7 @@ MSIX settings live under `msix_config` in [pubspec.yaml](pubspec.yaml):
 
 | Key | Value |
 | --- | --- |
-| `display_name` | FileSieve |
+| `display_name` | Dedupe |
 | `publisher_display_name` | Binate Solutions |
 | `identity_name` | `com.binatesolutions.filesieve` |
 | `msix_version` | `1.0.0.0` |
@@ -118,7 +118,7 @@ Without a code-signing certificate, the `msix` package signs with a self-signed 
 - Run `dart run msix:create --install-certificate true` (needs an elevated PowerShell) so the certificate is installed for you, or
 - Double-click the `.msix` file and follow the prompt. If Windows refuses because the publisher is untrusted, install the certificate first (right-click the `.msix` > Properties > Digital Signatures > Details > View Certificate > Install Certificate > Local Machine > Trusted People).
 
-To uninstall: Settings > Apps > Installed apps > FileSieve.
+To uninstall: Settings > Apps > Installed apps > Dedupe.
 
 ### 4. Distribute
 

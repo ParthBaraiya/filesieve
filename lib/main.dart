@@ -43,14 +43,14 @@ Future<void> main() async {
         repository: settingsRepository,
         initial: settings,
       ),
-      child: const FileSieveApp(),
+      child: const DedupeApp(),
     ),
   );
 
   doWhenWindowReady(() {
     const initialSize = Size(1600, 1000);
     appWindow.minSize = initialSize;
-    appWindow.title = "FileSieve";
+    appWindow.title = "Dedupe";
     appWindow.size = initialSize;
     appWindow.alignment = Alignment.center;
     appWindow.show();
@@ -113,8 +113,8 @@ final router = GoRouter(
   ],
 );
 
-class FileSieveApp extends StatelessWidget {
-  const FileSieveApp({super.key});
+class DedupeApp extends StatelessWidget {
+  const DedupeApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -127,7 +127,7 @@ class FileSieveApp extends StatelessWidget {
           (cubit) => cubit.state.themeMode,
         );
         return MaterialApp.router(
-          title: 'FileSieve',
+          title: 'Dedupe',
           theme: AppTheme.light(),
           darkTheme: AppTheme.dark(),
           themeMode: switch (themeMode) {

@@ -3,12 +3,12 @@
 class AppStrings {
   AppStrings._();
 
-  static const String appName = 'FileSieve';
+  static const String appName = 'Dedupe';
 
   // Home screen headline / subtitle
   static const String homeHeadline = 'Clean up your workspace.';
   static const String homeSubtitle =
-      'FileSieve uses clinical-grade checksum algorithms to find identical files '
+      'Dedupe uses clinical-grade checksum algorithms to find identical files '
       'across your local and network drives.';
 
   // Feature cards

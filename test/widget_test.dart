@@ -15,7 +15,7 @@ void main() {
           repository: MemorySettings(),
           initial: const AppSettingsModel(),
         ),
-        child: const FileSieveApp(),
+        child: const DedupeApp(),
       ),
     );
     expect(find.byType(MaterialApp), findsOneWidget);

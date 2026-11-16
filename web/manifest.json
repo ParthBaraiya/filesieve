@@ -1,6 +1,6 @@
 {
-    "name": "filesieve",
-    "short_name": "filesieve",
+    "name": "Dedupe",
+    "short_name": "Dedupe",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#3D5AFE",

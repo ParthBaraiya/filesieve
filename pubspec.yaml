@@ -102,6 +102,9 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  assets:
+    - assets/icon.png
+
   fonts:
     - family: Inter
       fonts:
@@ -125,7 +128,7 @@ flutter:
   # see https://flutter.dev/to/font-from-package
 
 msix_config:
-  display_name: FileSieve
+  display_name: Dedupe
   publisher_display_name: Binate Solutions
   identity_name: com.binatesolutions.filesieve
   msix_version: 1.0.0.0

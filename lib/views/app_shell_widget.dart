@@ -5,7 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../modules/app_settings/app_settings_cubit.dart';
-import '../values/app_palette.dart';
 import '../values/app_strings.dart';
 
 /// AppShellWidget — the top-level layout shell for all main screens.
@@ -67,18 +66,11 @@ class _TitleBar extends StatelessWidget {
                   padding: const EdgeInsets.only(left: 16),
                   child: Row(
                     children: [
-                      Container(
-                        width: 22,
-                        height: 22,
-                        decoration: BoxDecoration(
-                          color: AppPalette.brand,
-                          borderRadius: BorderRadius.circular(7),
-                        ),
-                        child: const Icon(
-                          Icons.filter_alt_outlined,
-                          size: 14,
-                          color: Colors.white,
-                        ),
+                      Image.asset(
+                        'assets/icon.png',
+                        width: 24,
+                        height: 24,
+                        filterQuality: FilterQuality.medium,
                       ),
                       const SizedBox(width: 10),
                       Text(

@@ -1,5 +1,7 @@
 # Dedupe
 
+![Dedupe Banner](files/banner.png)
+
 Dedupe is a Windows desktop app (built with Flutter) that finds duplicate files. Pick one or more folders, and it scans them, groups files by content, and lets you review and remove the duplicates.
 
 ## Features

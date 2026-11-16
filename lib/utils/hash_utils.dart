@@ -13,7 +13,7 @@ class HashUtils {
   /// On non-Windows falls back to the Dart `crypto` package.
   static String partialHash(String path, {int chunkSize = 1048576}) {
     if (Platform.isWindows) {
-      return nativeMd5Partial(path, chunkSize);
+      return HashNativeBindings.instance.md5Partial(path, chunkSize);
     }
     return _dartPartialHash(path, chunkSize: chunkSize);
   }
@@ -23,7 +23,7 @@ class HashUtils {
   /// On non-Windows falls back to the Dart `crypto` package.
   static String fullHash(String path) {
     if (Platform.isWindows) {
-      return nativeMd5Full(path);
+      return HashNativeBindings.instance.md5Full(path);
     }
     return _dartFullHash(path);
   }
@@ -35,7 +35,7 @@ class HashUtils {
   /// pure Dart — no temporary buffers are allocated beyond the read buffer.
   static bool byteCompare(String pathA, String pathB) {
     if (Platform.isWindows) {
-      return nativeByteCompare(pathA, pathB);
+      return HashNativeBindings.instance.byteCompare(pathA, pathB);
     }
     return _dartByteCompare(pathA, pathB);
   }

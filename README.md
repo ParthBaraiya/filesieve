@@ -13,8 +13,6 @@ Dedupe is a Windows desktop app (built with Flutter) that finds duplicate files.
 - Cancellable scans with stage-relative progress
 - Scan history, settings, and a custom dark theme
 
-The scan algorithm is described in [files/file_comparison_logic.md](files/file_comparison_logic.md).
-
 ## Tech stack
 
 | Area | Packages |

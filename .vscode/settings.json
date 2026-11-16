@@ -10,5 +10,5 @@
     ".specify/scripts/bash/": true,
     ".specify/scripts/powershell/": true
   },
-  "dart.flutterSdkPath": ".fvm/versions/3.41.9"
+  "dart.flutterSdkPath": ".fvm/versions/3.50.0"
 }

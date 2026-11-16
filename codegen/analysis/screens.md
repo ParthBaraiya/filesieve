@@ -1,5 +1,0 @@
-# Design analysis (fileshieve.dc.html)
-Tokens: dark+light themes (wall gradient, glass, panel, panelStrong, line, muted, accent #3D5AFE, accentText, danger, ok, tints per file type). Fonts: Inter, Space Grotesk (headings), JetBrains Mono (paths).
-Screens: onboard (3-step chip, drop zone, suggested, folder list, include-subfolders/skip-hidden, Start scan) | scan (title, pause/cancel, progress %, 3 stage cards, current file, 3 stat cards, By-folder bars) | dups (filter chips by type, table File/Copies/Size each/Reclaimable, remove-all button, all-clean empty state) | compare (back, group n of N + prev/next, 100% identical badge, preview tile + type/size/match, version cards Keep/Remove/Restore/Show in folder, sticky footer Skip / Keep selected remove N) | settings (removal method radio trash|permanent, confirm switch, watched folders, appearance system|light|dark, reset app).
-Overlays: folder picker, confirm dialog (single, or remove-all with keep-rule radios: oldest/newest/shortest path/first folder), toast with Undo.
-Shell: custom title bar (theme toggle, min/max/close), sidebar (Duplicates+count, Scan, Settings, watched folders list, Reclaimable card).

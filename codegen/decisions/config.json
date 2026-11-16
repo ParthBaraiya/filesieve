@@ -1,7 +1,0 @@
-{"schemaVersion":1,"batchSize":3,"targetPlatforms":["windows","macos","linux"],"referenceViewport":{"width":1600,"height":1000},"breakpoints":null,"sourceLocale":"en","themeModes":["system","light","dark"],
-"architecture":{"layout":"feature-first (lib/modules, views, repository, values, utils, models)","stateManagement":"bloc","navigation":"go_router","di":"get_it","conventionsFrom":[".github/copilot-instructions.md"]},
-"localization":{"system":null},"providers":{},"dataProviders":{"baseline":"existing repositories (real)","implementations":["real"],"selected":"real"},
-"assets":{"svgPackage":null,"fonts":{"Inter":"bundled","Space Grotesk":"pending","JetBrains Mono":"pending"},"remoteImages":"placeholder"},
-"codeGeneration":["build_runner","freezed"],"git":{"commit":true,"branch":"feature/dedupe-redesign","baselineErrors":null},
-"instructionSources":[{"source":".github/copilot-instructions.md","covers":["architecture","naming","widgets"],"invocation":"auto"},{"source":"skill:automator:flutter-widget","covers":["widgets"],"invocation":"auto"},{"source":"skill:automator:marionette-semantics","covers":["keys"],"invocation":"auto"}],
-"instructionConflicts":[],"verification":{"default":["dart-analyze","layout-check"],"optIn":[]}}

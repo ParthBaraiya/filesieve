@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:filesieve/modules/home/file_scanner_cubit.dart';
+import 'package:filesieve/modules/home/file_scanner_state.dart';
 import 'package:filesieve/utils/extensions.dart';
 import 'package:filesieve/utils/file_picker/fs_picker_base.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -44,13 +45,49 @@ class HomeScreenCubit extends Cubit<HomeScreenState> {
   }) async {
     if (state is! HomeScreenFoldersAdded) return;
 
-    final currentFolders = state.allFolders;
-    emit(HomeScreenState.scanning(folders: List.unmodifiable(currentFolders)));
-    await _repository.createSession(currentFolders);
+    _includeSubfolders = includeSubfolders;
+    _skipHidden = skipHidden;
+    await _runScan(state.allFolders);
+  }
+
+  /// Re-runs the scan over the same folders as a fresh session. Only valid
+  /// once the current scan has finished (or failed).
+  Future<void> rerunScan() async {
+    if (state is! HomeScreenScanning || _scanRunning) return;
+    final folders = state.allFolders;
+    await scanner.reset();
+    await _runScan(folders);
+  }
+
+  /// Leaves the scan screen for the folder setup, keeping the chosen folders
+  /// so they can be changed before starting a new session.
+  Future<void> newScan() async {
+    if (state is! HomeScreenScanning) return;
+    final folders = state.allFolders;
+    await scanner.reset();
+    emit(
+      folders.isEmpty
+          ? const HomeScreenState.initial()
+          : HomeScreenState.foldersAdded(folders: List.unmodifiable(folders)),
+    );
+  }
+
+  bool get _scanRunning {
+    final s = scanner.state;
+    return s is FileScannerStateScanningStarted &&
+        !s.progress.stage.isCompleted;
+  }
+
+  bool _includeSubfolders = true;
+  bool _skipHidden = true;
+
+  Future<void> _runScan(List<ScanFolderModel> folders) async {
+    emit(HomeScreenState.scanning(folders: List.unmodifiable(folders)));
+    await _repository.createSession(folders);
     await scanner.startScan(
-      currentFolders.map((e) => e.path),
-      includeSubfolders: includeSubfolders,
-      skipHidden: skipHidden,
+      folders.map((e) => e.path),
+      includeSubfolders: _includeSubfolders,
+      skipHidden: _skipHidden,
     );
   }
 

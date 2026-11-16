@@ -110,6 +110,8 @@ class AppStrings {
   // Scan progress screen
   static const String scanComplete = 'Scan complete';
   static const String scanCancel = 'Cancel';
+  static const String scanRerun = 'Re-run scan';
+  static const String scanNew = 'New scan';
   static const String scanReviewDuplicates = 'Review duplicates';
   static const String scanUsuallyTakes = 'This usually takes a few minutes';
   static const String scanAllChecked = 'All files checked';

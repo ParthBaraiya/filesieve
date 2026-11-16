@@ -76,6 +76,8 @@ class ScanProgressBody extends StatelessWidget {
                 done: done,
                 onCancel: onCancel,
                 onReview: () => context.go(AppRoutes.results),
+                onRerun: home.rerunScan,
+                onNewScan: home.newScan,
               ),
               SizedBox(height: 20.h),
               ScanProgressCardWidget(progress: progress),
@@ -104,6 +106,8 @@ class _Header extends StatelessWidget {
     required this.done,
     required this.onCancel,
     required this.onReview,
+    required this.onRerun,
+    required this.onNewScan,
   });
 
   final String title;
@@ -111,6 +115,8 @@ class _Header extends StatelessWidget {
   final bool done;
   final VoidCallback onCancel;
   final VoidCallback onReview;
+  final VoidCallback onRerun;
+  final VoidCallback onNewScan;
 
   @override
   Widget build(BuildContext context) {
@@ -144,23 +150,42 @@ class _Header extends StatelessWidget {
           ],
         ),
         if (done)
-          FilledButton(
-            key: const ValueKey('scan.reviewDuplicates'),
-            onPressed: onReview,
-            style: FilledButton.styleFrom(
-              backgroundColor: AppPalette.brand,
-              minimumSize: Size(0, 44.h),
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11.r)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(AppStrings.scanReviewDuplicates),
-                SizedBox(width: 10.w),
-                Icon(Icons.arrow_forward, size: 16.r),
-              ],
-            ),
+          Wrap(
+            spacing: 10.w,
+            runSpacing: 10.h,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              _SecondaryButton(
+                key: const ValueKey('scan.newScan'),
+                icon: Icons.add,
+                label: AppStrings.scanNew,
+                onPressed: onNewScan,
+              ),
+              _SecondaryButton(
+                key: const ValueKey('scan.rerun'),
+                icon: Icons.refresh,
+                label: AppStrings.scanRerun,
+                onPressed: onRerun,
+              ),
+              FilledButton(
+                key: const ValueKey('scan.reviewDuplicates'),
+                onPressed: onReview,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppPalette.brand,
+                  minimumSize: Size(0, 44.h),
+                  padding: EdgeInsets.symmetric(horizontal: 20.w),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11.r)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(AppStrings.scanReviewDuplicates),
+                    SizedBox(width: 10.w),
+                    Icon(Icons.arrow_forward, size: 16.r),
+                  ],
+                ),
+              ),
+            ],
           )
         else
           OutlinedButton(
@@ -175,6 +200,37 @@ class _Header extends StatelessWidget {
             child: const Text(AppStrings.scanCancel),
           ),
       ],
+    );
+  }
+}
+
+class _SecondaryButton extends StatelessWidget {
+  const _SecondaryButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 16.r),
+      label: Text(label),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: palette.text,
+        side: BorderSide(color: palette.line),
+        minimumSize: Size(0, 44.h),
+        padding: EdgeInsets.symmetric(horizontal: 16.w),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11.r)),
+      ),
     );
   }
 }

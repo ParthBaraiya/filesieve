@@ -43,6 +43,10 @@ class DuplicatesListBody extends StatelessWidget {
             onRemoveAll: cubit.openRemoveAll,
           ),
           SizedBox(height: 18.h),
+          if (state.busy && state.removeTotal > 0) ...[
+            _RemovalProgress(done: state.removeDone, total: state.removeTotal),
+            SizedBox(height: 18.h),
+          ],
           if (active.isNotEmpty) ...[
             DuplicateFilterChipsWidget(
               selected: state.filter,
@@ -124,6 +128,52 @@ class _Header extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// Shown while files are being removed so the screen doesn't look frozen.
+class _RemovalProgress extends StatelessWidget {
+  const _RemovalProgress({required this.done, required this.total});
+
+  final int done;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+
+    return Container(
+      key: const ValueKey('results.removeProgress'),
+      padding: EdgeInsets.all(16.r),
+      decoration: BoxDecoration(
+        color: palette.panel,
+        borderRadius: BorderRadius.circular(14.r),
+        border: Border.all(color: palette.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Removing files… $done of $total',
+            style: TextStyle(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w600,
+              color: palette.text,
+            ),
+          ),
+          SizedBox(height: 10.h),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4.r),
+            child: LinearProgressIndicator(
+              value: total == 0 ? null : done / total,
+              minHeight: 6.h,
+              color: AppPalette.destructive,
+              backgroundColor: palette.line,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

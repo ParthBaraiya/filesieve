@@ -53,6 +53,10 @@ abstract class ResultsScreenState with _$ResultsScreenState {
 
     /// True while files are being removed (blocks a second submit).
     @Default(false) bool busy,
+
+    /// Files handled so far / in total during the current removal.
+    @Default(0) int removeDone,
+    @Default(0) int removeTotal,
     @Default(0) int freedBytes,
     @Default(0) int freedCount,
 

@@ -182,7 +182,14 @@ class ResultsScreenCubit extends Cubit<ResultsScreenState> {
 
   Future<void> _applyRemove(List<String> paths, String label) async {
     if (state.busy) return;
-    emit(state.copyWith(busy: true, dialog: null));
+    emit(
+      state.copyWith(
+        busy: true,
+        dialog: null,
+        removeDone: 0,
+        removeTotal: paths.length,
+      ),
+    );
 
     final mode = _settings.state.removalMode;
     final bytesByPath = {
@@ -202,12 +209,15 @@ class ResultsScreenCubit extends Cubit<ResultsScreenState> {
       } on FileRemovalException {
         failed++;
       }
+      emit(state.copyWith(removeDone: done.length + failed));
     }
 
     _syncGroups(removed: removed);
     emit(
       state.copyWith(
         busy: false,
+        removeDone: 0,
+        removeTotal: 0,
         freedBytes: state.freedBytes + freed,
         freedCount: state.freedCount + done.length,
       ),

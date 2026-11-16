@@ -30,7 +30,6 @@ void main() {
       scanner: scanner,
       settings: settings,
       remover: remover,
-      watchedFolders: () => ['C:\\Docs', 'C:\\A'],
     );
     await scanner.startScan(['C:\\A']);
     await Future<void>.delayed(Duration.zero);
@@ -90,28 +89,54 @@ void main() {
     expect(remover.removed, isEmpty);
   });
 
-  test('remove all keeps one copy per group by the chosen rule', () async {
+  test('remove all groups files by the exact set of folders they are in', () {
+    final combos = cubit.state.folderCombos;
+    // big.mp4 is in A, B, Docs; small.txt is in A, B. Each group is in one combo.
+    expect(combos.length, 2);
+    expect(combos.every((c) => c.fileCount == 1), isTrue);
+    expect(combos.map((c) => c.folders.length).toSet(), {2, 3});
+    expect(cubit.state.choiceCombos.length, 2);
+  });
+
+  test('remove all needs a folder choice for every combo before it removes', () async {
     cubit.openRemoveAll();
-    cubit.setKeepRule(KeepRule.newest);
+    await cubit.confirmDialog();
+    expect(remover.removed, isEmpty);
+
+    cubit.nextRemoveStep(); // nothing chosen yet -> stays on step 0
+    expect(cubit.state.removeStep, 0);
+  });
+
+  test('remove all keeps the chosen folder per combo and removes the rest', () async {
+    cubit.openRemoveAll();
+    final combos = cubit.state.choiceCombos;
+    // Pick the first folder of each combo (sorted by path: A before B/Docs).
+    for (final c in combos) {
+      cubit.chooseFolder(c.key, c.folders.first);
+      cubit.nextRemoveStep();
+    }
+    expect(cubit.state.removeStep, combos.length);
     await cubit.confirmDialog();
 
-    // big.mp4: newest is day 9 (Docs); small.txt: newest is day 5 (B).
-    expect(remover.removed.keys, containsAll(['C:\\A\\big.mp4', 'C:\\B\\big.mp4', 'C:\\A\\small.txt']));
+    expect(remover.removed.containsKey(r'C:\A\big.mp4'), isFalse);
+    expect(remover.removed.containsKey(r'C:\A\small.txt'), isFalse);
+    expect(
+      remover.removed.keys,
+      containsAll([r'C:\B\big.mp4', r'C:\Docs\big.mp4', r'C:\B\small.txt']),
+    );
     expect(remover.removed.length, 3);
     expect(cubit.state.activeGroups, isEmpty);
     expect(cubit.state.freedBytes, 2100);
   });
 
-  test('keep rule "first folder" follows the watched folder order', () async {
+  test('back goes to the previous combo and keeps its answer', () {
     cubit.openRemoveAll();
-    cubit.setKeepRule(KeepRule.firstFolder);
-    await cubit.confirmDialog();
-
-    // watched order: Docs, then A. big.mp4 keeps Docs copy; small.txt has no
-    // Docs copy so it keeps the A copy.
-    expect(remover.removed.containsKey('C:\\Docs\\big.mp4'), isFalse);
-    expect(remover.removed.containsKey('C:\\A\\small.txt'), isFalse);
-    expect(remover.removed.length, 3);
+    final combos = cubit.state.choiceCombos;
+    cubit.chooseFolder(combos[0].key, combos[0].folders.last);
+    cubit.nextRemoveStep();
+    cubit.previousRemoveStep();
+    expect(cubit.state.removeStep, 0);
+    expect(cubit.state.folderChoices[combos[0].key], combos[0].folders.last);
   });
 
   test('restore puts files back and reduces freed bytes', () async {

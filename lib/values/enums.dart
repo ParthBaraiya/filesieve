@@ -91,15 +91,3 @@ enum FileCategory {
     FileCategory.other => 'File',
   };
 }
-
-/// KeepRule — which copy "Remove all identical copies" keeps in each group.
-enum KeepRule {
-  oldest('Oldest (the original)'),
-  newest('Most recently modified'),
-  shortestPath('Shortest file path'),
-  firstFolder('In the first folder of your list');
-
-  const KeepRule(this.label);
-
-  final String label;
-}

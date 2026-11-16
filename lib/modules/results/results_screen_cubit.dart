@@ -19,11 +19,9 @@ class ResultsScreenCubit extends Cubit<ResultsScreenState> {
     required FileScannerCubit scanner,
     required AppSettingsCubit settings,
     required FileRemovalRepositoryBase remover,
-    required List<String> Function() watchedFolders,
   }) : _scanner = scanner,
        _settings = settings,
        _remover = remover,
-       _watchedFolders = watchedFolders,
        super(const ResultsScreenState()) {
     _subscription = scanner.stream.listen(_onScannerState);
     _syncGroups();
@@ -32,7 +30,6 @@ class ResultsScreenCubit extends Cubit<ResultsScreenState> {
   final FileScannerCubit _scanner;
   final AppSettingsCubit _settings;
   final FileRemovalRepositoryBase _remover;
-  final List<String> Function() _watchedFolders;
 
   late final StreamSubscription<FileScannerState> _subscription;
   Timer? _toastTimer;
@@ -133,13 +130,33 @@ class ResultsScreenCubit extends Cubit<ResultsScreenState> {
     emit(
       state.copyWith(
         dialog: const ResultsDialog(kind: ResultsDialogKind.removeAll),
+        folderChoices: const {},
+        removeStep: 0,
       ),
     );
   }
 
-  void setKeepRule(KeepRule rule) => emit(state.copyWith(keepRule: rule));
+  /// Records the folder to keep for the combo [comboKey].
+  void chooseFolder(String comboKey, String folder) => emit(
+    state.copyWith(folderChoices: {...state.folderChoices, comboKey: folder}),
+  );
 
-  void cancelDialog() => emit(state.copyWith(dialog: null));
+  /// Moves to the next "Remove all" step; needs the current choice first.
+  void nextRemoveStep() {
+    final combos = state.choiceCombos;
+    final step = state.removeStep;
+    if (step >= combos.length) return;
+    if (!state.folderChoices.containsKey(combos[step].key)) return;
+    emit(state.copyWith(removeStep: step + 1));
+  }
+
+  void previousRemoveStep() {
+    if (state.removeStep == 0) return;
+    emit(state.copyWith(removeStep: state.removeStep - 1));
+  }
+
+  void cancelDialog() =>
+      emit(state.copyWith(dialog: null, folderChoices: const {}, removeStep: 0));
 
   Future<void> confirmDialog() async {
     final dialog = state.dialog;
@@ -148,36 +165,16 @@ class ResultsScreenCubit extends Cubit<ResultsScreenState> {
       return _applyRemove(dialog.paths, dialog.label);
     }
     final paths = <String>[];
-    for (final group in state.activeGroups) {
-      final keep = _pickByRule(group, state.keepRule);
-      for (final v in group.remaining) {
-        if (v.path != keep.path) paths.add(v.path);
-      }
+    for (final combo in state.folderCombos) {
+      // A single-folder combo has nothing to choose; otherwise every combo
+      // must have been answered.
+      final keep = combo.needsChoice
+          ? state.folderChoices[combo.key]
+          : combo.folders.first;
+      if (keep == null) return;
+      paths.addAll(combo.pathsToRemove(keep));
     }
     await _applyRemove(paths, _plural(paths.length, 'copy', 'copies'));
-  }
-
-  DuplicateVersionView _pickByRule(DuplicateGroupView group, KeepRule rule) {
-    final rem = group.remaining;
-    final epoch = DateTime.fromMillisecondsSinceEpoch(0);
-    DateTime modified(DuplicateVersionView v) => v.modified ?? epoch;
-    final sorted = [...rem];
-    switch (rule) {
-      case KeepRule.oldest:
-        sorted.sort((a, b) => modified(a).compareTo(modified(b)));
-      case KeepRule.newest:
-        sorted.sort((a, b) => modified(b).compareTo(modified(a)));
-      case KeepRule.shortestPath:
-        sorted.sort((a, b) => a.path.length.compareTo(b.path.length));
-      case KeepRule.firstFolder:
-        final folders = _watchedFolders();
-        int rank(DuplicateVersionView v) {
-          final i = folders.indexWhere((f) => v.path.startsWith(f));
-          return i < 0 ? folders.length : i;
-        }
-        sorted.sort((a, b) => rank(a).compareTo(rank(b)));
-    }
-    return sorted.first;
   }
 
   Future<void> _applyRemove(List<String> paths, String label) async {

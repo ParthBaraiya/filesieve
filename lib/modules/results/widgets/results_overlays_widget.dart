@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import '../../../values/app_palette.dart';
 import '../../../values/app_routes.dart';
 import '../../../values/app_strings.dart';
+import '../../../models/duplicate_group_view_model.dart';
 import '../../../values/enums.dart';
 import '../../app_settings/app_settings_cubit.dart';
 import '../results_screen_cubit.dart';
@@ -26,7 +27,8 @@ class ResultsOverlaysWidget extends StatelessWidget {
       buildWhen: (a, b) =>
           a.dialog != b.dialog ||
           a.toast != b.toast ||
-          a.keepRule != b.keepRule ||
+          a.folderChoices != b.folderChoices ||
+          a.removeStep != b.removeStep ||
           a.busy != b.busy,
       builder: (context, state) {
         return Stack(
@@ -67,15 +69,29 @@ class _ConfirmDialog extends StatelessWidget {
     final extra = state.extraCopies;
     final groupCount = state.activeGroups.length;
 
-    final title = isAll
+    final combos = state.choiceCombos;
+    final onChoiceStep = isAll && state.removeStep < combos.length;
+    final combo = onChoiceStep ? combos[state.removeStep] : null;
+    final hasSingleFolderGroups = state.folderCombos.any((c) => !c.needsChoice);
+
+    final title = onChoiceStep
+        ? AppStrings.dlgChooseFolderTitle
+        : isAll
         ? AppStrings.dlgRemoveAllTitle
         : trash
         ? AppStrings.dlgTrashTitle
         : AppStrings.dlgDeleteTitle;
-    final body = isAll
-        ? 'One copy of every file is kept. The other $extra ${extra == 1 ? 'copy' : 'copies'} '
+    final body = onChoiceStep
+        ? 'Step ${state.removeStep + 1} of ${combos.length} · '
+              '${combo!.fileCount} ${combo.fileCount == 1 ? 'file is' : 'files are'} '
+              'in all ${combo.folders.length} of these folders. '
+              'Copies in the folders you don’t pick are removed.'
+        : isAll
+        ? 'In each group, one copy is kept: the oldest one in the folder you chose. '
+              'The other $extra ${extra == 1 ? 'copy' : 'copies'} '
               'across $groupCount ${groupCount == 1 ? 'group' : 'groups'} are removed, '
               'freeing ${formatBytes(state.reclaimableBytes)}.'
+              '${hasSingleFolderGroups ? ' Groups whose copies are all in one folder keep their oldest copy.' : ''}'
         : '${trash ? 'This moves' : 'This permanently deletes'} ${dialog.label}.'
               '${trash ? '' : ' It can’t be recovered.'}';
     final cta = isAll
@@ -161,12 +177,15 @@ class _ConfirmDialog extends StatelessWidget {
                               ),
                             ],
                           ),
-                          if (isAll) ...[
-                            SizedBox(height: 18.h),
-                            _KeepRules(selected: state.keepRule, onSelected: cubit.setKeepRule),
-                          ],
                           SizedBox(height: 18.h),
-                          _Note(trash: trash),
+                          if (combo != null)
+                            _FolderChoices(
+                              folders: combo.folders,
+                              selected: state.folderChoices[combo.key],
+                              onSelected: (f) => cubit.chooseFolder(combo.key, f),
+                            )
+                          else
+                            _Note(trash: trash),
                           SizedBox(height: 18.h),
                           Wrap(
                             alignment: WrapAlignment.end,
@@ -188,19 +207,51 @@ class _ConfirmDialog extends StatelessWidget {
                                 ),
                                 child: const Text(AppStrings.dlgCancel),
                               ),
-                              FilledButton(
-                                key: const ValueKey('results.dialog.confirm'),
-                                onPressed: state.busy ? null : cubit.confirmDialog,
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: AppPalette.destructive,
-                                  minimumSize: Size(0, 42.h),
-                                  padding: EdgeInsets.symmetric(horizontal: 18.w),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10.r),
+                              if (isAll && state.removeStep > 0)
+                                OutlinedButton(
+                                  key: const ValueKey('results.dialog.back'),
+                                  onPressed: cubit.previousRemoveStep,
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: palette.text,
+                                    side: BorderSide(color: palette.line),
+                                    minimumSize: Size(0, 42.h),
+                                    padding: EdgeInsets.symmetric(horizontal: 18.w),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10.r),
+                                    ),
                                   ),
+                                  child: const Text(AppStrings.dlgBack),
                                 ),
-                                child: Text(cta),
-                              ),
+                              if (onChoiceStep)
+                                FilledButton(
+                                  key: const ValueKey('results.dialog.next'),
+                                  onPressed: state.folderChoices.containsKey(combo!.key)
+                                      ? cubit.nextRemoveStep
+                                      : null,
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: AppPalette.brand,
+                                    minimumSize: Size(0, 42.h),
+                                    padding: EdgeInsets.symmetric(horizontal: 18.w),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10.r),
+                                    ),
+                                  ),
+                                  child: const Text(AppStrings.dlgNext),
+                                )
+                              else
+                                FilledButton(
+                                  key: const ValueKey('results.dialog.confirm'),
+                                  onPressed: state.busy ? null : cubit.confirmDialog,
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: AppPalette.destructive,
+                                    minimumSize: Size(0, 42.h),
+                                    padding: EdgeInsets.symmetric(horizontal: 18.w),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10.r),
+                                    ),
+                                  ),
+                                  child: Text(cta),
+                                ),
                             ],
                           ),
                         ],
@@ -217,11 +268,17 @@ class _ConfirmDialog extends StatelessWidget {
   }
 }
 
-class _KeepRules extends StatelessWidget {
-  const _KeepRules({required this.selected, required this.onSelected});
+/// One radio row per folder; the picked folder keeps its copies.
+class _FolderChoices extends StatelessWidget {
+  const _FolderChoices({
+    required this.folders,
+    required this.selected,
+    required this.onSelected,
+  });
 
-  final KeepRule selected;
-  final ValueChanged<KeepRule> onSelected;
+  final List<String> folders;
+  final String? selected;
+  final ValueChanged<String> onSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -231,7 +288,7 @@ class _KeepRules extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          AppStrings.dlgKeepRuleLegend,
+          'Keep the copies in',
           style: TextStyle(
             fontSize: 12.sp,
             fontWeight: FontWeight.w600,
@@ -239,53 +296,79 @@ class _KeepRules extends StatelessWidget {
           ),
         ),
         SizedBox(height: 8.h),
-        for (final rule in KeepRule.values)
-          Padding(
-            padding: EdgeInsets.only(bottom: 6.h),
-            child: Semantics(
-              inMutuallyExclusiveGroup: true,
-              checked: rule == selected,
-              child: Material(
-                key: ValueKey('results.keepRule.${rule.name}'),
-                color: rule == selected ? palette.accentSoft : Colors.transparent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.r),
-                  side: BorderSide(
-                    color: rule == selected ? palette.accentLine : palette.line,
-                  ),
-                ),
-                child: InkWell(
-                  onTap: () => onSelected(rule),
-                  borderRadius: BorderRadius.circular(10.r),
-                  child: SizedBox(
-                    height: 40.h,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w),
-                      child: Row(
-                        children: [
-                          Icon(
-                            rule == selected
-                                ? Icons.radio_button_checked
-                                : Icons.radio_button_unchecked,
-                            size: 18.r,
-                            color: rule == selected ? AppPalette.brand : palette.muted,
-                          ),
-                          SizedBox(width: 10.w),
-                          Expanded(
-                            child: Text(
-                              rule.label,
-                              style: TextStyle(fontSize: 14.sp, color: palette.text),
-                            ),
-                          ),
-                        ],
+        for (var i = 0; i < folders.length; i++)
+          _FolderChoiceRow(
+            key: ValueKey('results.folderChoice.$i'),
+            folder: folders[i],
+            isSelected: selected != null && isSameFolder(selected!, folders[i]),
+            onTap: () => onSelected(folders[i]),
+          ),
+      ],
+    );
+  }
+}
+
+class _FolderChoiceRow extends StatelessWidget {
+  const _FolderChoiceRow({
+    super.key,
+    required this.folder,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final String folder;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: 6.h),
+      child: Semantics(
+        inMutuallyExclusiveGroup: true,
+        checked: isSelected,
+        child: Material(
+          color: isSelected ? palette.accentSoft : Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.r),
+            side: BorderSide(
+              color: isSelected ? palette.accentLine : palette.line,
+            ),
+          ),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(10.r),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: 40.h),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                child: Row(
+                  children: [
+                    Icon(
+                      isSelected
+                          ? Icons.radio_button_checked
+                          : Icons.radio_button_unchecked,
+                      size: 18.r,
+                      color: isSelected ? AppPalette.brand : palette.muted,
+                    ),
+                    SizedBox(width: 10.w),
+                    Expanded(
+                      child: Text(
+                        folder,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 14.sp, color: palette.text),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ),
           ),
-      ],
+        ),
+      ),
     );
   }
 }

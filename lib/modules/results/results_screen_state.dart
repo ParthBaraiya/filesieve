@@ -44,7 +44,11 @@ abstract class ResultsScreenState with _$ResultsScreenState {
 
     /// Group key -> path of the copy the user chose to keep.
     @Default(<String, String>{}) Map<String, String> keepSelection,
-    @Default(KeepRule.oldest) KeepRule keepRule,
+
+    /// "Remove all" wizard: combo key -> folder the user chose to keep, and
+    /// the step being shown (one per combo that needs a choice, then confirm).
+    @Default(<String, String>{}) Map<String, String> folderChoices,
+    @Default(0) int removeStep,
 
     /// Key of the group open in the compare view; null shows the list.
     String? openGroupKey,
@@ -63,6 +67,13 @@ abstract class ResultsScreenState with _$ResultsScreenState {
     /// True once a scan has been started in this session.
     @Default(false) bool hasScanned,
   }) = _ResultsScreenState;
+
+  /// Folder combinations among the groups that still need a decision.
+  List<FolderCombo> get folderCombos => FolderCombo.fromGroups(groups);
+
+  /// Combos where the user must pick a folder (copies span 2+ folders).
+  List<FolderCombo> get choiceCombos =>
+      folderCombos.where((c) => c.needsChoice).toList();
 
   /// Groups that still have two or more copies.
   List<DuplicateGroupView> get activeGroups =>

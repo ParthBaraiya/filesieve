@@ -168,7 +168,9 @@ class AppStrings {
 
   // Confirm dialog and toast
   static const String dlgRemoveAllTitle = 'Remove all identical copies?';
-  static const String dlgKeepRuleLegend = 'In each group, keep the copy that is';
+  static const String dlgChooseFolderTitle = 'Which folder should keep its copies?';
+  static const String dlgBack = 'Back';
+  static const String dlgNext = 'Next';
   static const String dlgTrashTitle = 'Move to Trash?';
   static const String dlgDeleteTitle = 'Delete permanently?';
   static const String dlgTrashNote = 'Files go to the Trash, so you can restore them.';

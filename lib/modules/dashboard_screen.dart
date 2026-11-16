@@ -64,9 +64,6 @@ class _DashboardScreenState extends State<DashboardScreenContent> {
               scanner: home.scanner,
               settings: context.read<AppSettingsCubit>(),
               remover: const FileRemovalRepository(),
-              watchedFolders: () => [
-                for (final f in home.state.allFolders) f.path,
-              ],
             );
           },
           child: Stack(

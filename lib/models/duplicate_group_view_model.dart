@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:path/path.dart' as p;
 
 import 'package:omnifile/omnifile.dart';
@@ -25,6 +27,70 @@ class DuplicateVersionView {
   final RemovalMode? removedAs;
 
   bool get isRemoved => removedAs != null;
+
+  /// Full path of the directory that holds this copy.
+  String get folderPath => p.normalize(p.dirname(path));
+}
+
+/// Whether two directory paths are the same folder (case-insensitive on
+/// Windows).
+bool isSameFolder(String a, String b) => Platform.isWindows
+    ? p.normalize(a).toLowerCase() == p.normalize(b).toLowerCase()
+    : p.normalize(a) == p.normalize(b);
+
+/// FolderCombo — every duplicate group whose remaining copies sit in exactly
+/// the same set of folders. A group belongs to exactly one combo, so a file
+/// found in f1, f2 and f3 is never also counted under f1 + f3.
+class FolderCombo {
+  const FolderCombo({required this.key, required this.folders, required this.groups});
+
+  /// Stable id: the sorted folder paths joined together.
+  final String key;
+
+  /// The distinct folders, sorted by path.
+  final List<String> folders;
+  final List<DuplicateGroupView> groups;
+
+  /// Number of files (duplicate groups) in this combination.
+  int get fileCount => groups.length;
+
+  /// More than one folder means the user has to choose which one to keep.
+  bool get needsChoice => folders.length > 1;
+
+  /// Combos for [groups] (active ones only), largest first.
+  static List<FolderCombo> fromGroups(Iterable<DuplicateGroupView> groups) {
+    final folderSets = <String, List<String>>{};
+    final byKey = <String, List<DuplicateGroupView>>{};
+    for (final g in groups) {
+      if (!g.isActive) continue;
+      final folders = <String>[];
+      for (final v in g.remaining) {
+        if (!folders.any((f) => isSameFolder(f, v.folderPath))) {
+          folders.add(v.folderPath);
+        }
+      }
+      folders.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      final key = folders
+          .map((f) => Platform.isWindows ? f.toLowerCase() : f)
+          .join('|');
+      folderSets.putIfAbsent(key, () => folders);
+      byKey.putIfAbsent(key, () => []).add(g);
+    }
+    final combos = [
+      for (final e in byKey.entries)
+        FolderCombo(key: e.key, folders: folderSets[e.key]!, groups: e.value),
+    ]..sort((a, b) {
+        final c = b.fileCount.compareTo(a.fileCount);
+        return c != 0 ? c : a.key.compareTo(b.key);
+      });
+    return combos;
+  }
+
+  /// Paths to remove when [keepFolder] is the chosen folder: in every group
+  /// the oldest copy inside that folder is kept and all other copies go.
+  List<String> pathsToRemove(String keepFolder) => [
+        for (final g in groups) ...g.pathsToRemoveKeepingIn(keepFolder),
+      ];
 }
 
 /// DuplicateGroupView — a [DuplicateGroup] seen through this session's
@@ -100,6 +166,18 @@ class DuplicateGroupView {
       if (v.path == selectedPath) return v;
     }
     return defaultKeep();
+  }
+
+  /// Paths to remove so only the oldest remaining copy inside [folder] stays.
+  /// Falls back to the oldest remaining copy if none sits in [folder].
+  List<String> pathsToRemoveKeepingIn(String folder) {
+    final rem = remaining;
+    final inFolder = rem.where((v) => isSameFolder(v.folderPath, folder)).toList();
+    final keep = _byModified(inFolder.isEmpty ? rem : inFolder, newest: false);
+    return [
+      for (final v in rem)
+        if (v.path != keep.path) v.path,
+    ];
   }
 
   /// Folders holding the remaining copies, e.g. "Downloads · Desktop · 2 more".

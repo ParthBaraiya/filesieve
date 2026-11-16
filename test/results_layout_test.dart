@@ -61,7 +61,6 @@ void main() {
       scanner: scanner,
       settings: settings,
       remover: FakeRemover(),
-      watchedFolders: () => const [],
     );
     await scanner.startScan(['C:\\x']);
     await tester.pump();
@@ -133,7 +132,7 @@ void main() {
               arrange: (cubit) async => cubit.openRemoveAll());
           expect(tester.takeException(), isNull);
           expect(find.byKey(const ValueKey('results.dialog')), findsOneWidget);
-          expect(find.byKey(const ValueKey('results.keepRule.oldest')), findsOneWidget);
+          expect(find.byKey(const ValueKey('results.folderChoice.0')), findsOneWidget);
         });
       }
     }
@@ -143,6 +142,9 @@ void main() {
     await pump(tester, size: sizes.first, textScale: 1, dark: false,
         arrange: (cubit) async {
       cubit.openRemoveAll();
+      for (final c in cubit.state.choiceCombos) {
+        cubit.chooseFolder(c.key, c.folders.first);
+      }
       await cubit.confirmDialog();
     });
     expect(tester.takeException(), isNull);

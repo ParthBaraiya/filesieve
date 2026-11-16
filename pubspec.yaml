@@ -16,7 +16,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: ^3.11.3
@@ -131,6 +131,6 @@ msix_config:
   display_name: Dedupe
   publisher_display_name: Binate Solutions
   identity_name: com.binatesolutions.filesieve
-  msix_version: 1.0.0.0
+  msix_version: 1.0.1.0
   logo_path: windows/runner/resources/app_icon.ico
   capabilities: internetClient
